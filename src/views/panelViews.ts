@@ -44,7 +44,7 @@ export class AlternativesView extends PreactPanelView {
 		return "Alternatives";
 	}
 	override getIcon() {
-		return "git-fork";
+		return "split";
 	}
 	protected content() {
 		return h(AlternativesContainer, { focusRequest: this.focusRequest });

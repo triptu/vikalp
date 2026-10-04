@@ -38,7 +38,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 	editorCommand({
 		id: "alternatives-for-selection",
 		name: "Alternatives for selection",
-		icon: "git-fork",
+		icon: "split",
 		hotkeys: mod("A", true),
 		run: (view) => startAlternatives(plugin.alternativesDeps, view),
 	});
@@ -96,7 +96,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 
 	editorCommand({ id: "stash-selection", name: "Stash in Overflow", icon: "layers", hotkeys: mod("X", true), run: (view) => stash(plugin, view) });
 	plugin.addCommand({ id: "toggle-overflow", name: "Toggle Overflow panel", icon: "layers", callback: () => void plugin.panels.toggle(OVERFLOW_VIEW, "right") });
-	plugin.addCommand({ id: "toggle-alternatives", name: "Toggle Alternatives panel", icon: "git-fork", callback: () => void plugin.panels.toggle(ALTERNATIVES_VIEW, "left") });
+	plugin.addCommand({ id: "toggle-alternatives", name: "Toggle Alternatives panel", icon: "split", callback: () => void plugin.panels.toggle(ALTERNATIVES_VIEW, "left") });
 	plugin.addCommand({ id: "toggle-lint", name: "Toggle Lint panel", icon: "scan-text", callback: () => void plugin.panels.toggle(LINT_VIEW, "right") });
 
 	editorCommand({ id: "run-linter", name: "Run linter", icon: "scan-text", run: () => void plugin.linter.run() });
@@ -108,7 +108,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 
 	editorCommand({ id: "copy-clean-text", name: "Copy clean text", run: (view) => copyClean(view, false) });
 	editorCommand({ id: "copy-clean-selection", name: "Copy clean selection", run: (view) => copyClean(view, true) });
-	editorCommand({ id: "read-through", name: "Read-through mode", icon: "book-open", hotkeys: mod("R", true), run: (view) => plugin.readThrough.toggle(view) });
+	editorCommand({ id: "read-through", name: "Read-through mode", icon: "glasses", hotkeys: mod("R", true), run: (view) => plugin.readThrough.toggle(view) });
 }
 
 export function editSpanNote(plugin: VikalpPlugin, view: EditorView) {

@@ -4,9 +4,9 @@ import { ghostRange, reviveRange, settleSpans } from "../editor/actions";
 import { ghosts } from "../editor/collections";
 import { runAction } from "../editor/interaction";
 import { noteModeField } from "../editor/noteFields";
-import { spanAt, spanMeta } from "../editor/spansField";
+import { listSpans, spanAt, spanMeta } from "../editor/spansField";
 import type VikalpPlugin from "../main";
-import { copyClean, editSpanNote, stash } from "./commands";
+import { copyClean, editSpanNote, settleAll, stash } from "./commands";
 import { startAlternatives } from "./viewActions";
 
 /** Adds Vikalp's items to the editor's right-click menu. */
@@ -23,7 +23,7 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 		menu.addItem((item) =>
 			item
 				.setTitle(span && !hasSelection ? "Alternatives for this span" : "Alternatives for selection")
-				.setIcon("git-fork")
+				.setIcon("split")
 				.setSection("vikalp")
 				.onClick(() => startAlternatives(plugin.alternativesDeps, view)),
 		);
@@ -78,6 +78,24 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 					.onClick(() => runAction(view, settleSpans(view.state, [span.id]))),
 			);
 		}
+	}
+	if (listSpans(view.state).some((candidate) => candidate.range && !candidate.meta.hiddenIn)) {
+		menu.addItem((item) =>
+			item
+				.setTitle("Settle all alternatives")
+				.setIcon("check-check")
+				.setSection("vikalp")
+				.onClick(() => void settleAll(plugin, view)),
+		);
+	}
+	if (!hasSelection && ghosts.list(view.state).length > 0) {
+		menu.addItem((item) =>
+			item
+				.setTitle("Copy clean text")
+				.setIcon("clipboard-copy")
+				.setSection("vikalp")
+				.onClick(() => copyClean(view, false)),
+		);
 	}
 	if (hasSelection) {
 		menu.addItem((item) =>

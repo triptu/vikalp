@@ -119,7 +119,6 @@ export function createAlternativesActions(deps: AlternativesDeps): AlternativesA
 			runAction(view, removeAiVersions(view.state, spanId, switchOptions()));
 		}),
 		focusEditor: () => {
-			deps.panels.closeAlternatives();
 			controller.setPanelFocused(false);
 			controller.editor?.focus();
 		},

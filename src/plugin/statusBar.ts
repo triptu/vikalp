@@ -7,20 +7,16 @@ export interface StatusBarActions {
 	toggleMarkers(): void;
 	openLint(): void;
 	toggleLab(anchor: HTMLElement): void;
-	showCostLog(): void;
-	toggleReadThrough(): void;
 }
 
 /**
- * Vikalp's status bar: word count (also the markers switch), lint marks, the
- * Lab button with the model mode, session cost, and read-through.
+ * Vikalp's status bar: word count (also the markers switch), lint marks, and
+ * the Lab button with the model mode and session cost.
  */
 export class StatusBar {
 	private readonly words: HTMLElement;
 	private readonly lint: HTMLElement;
 	private readonly lab: HTMLElement;
-	private readonly cost: HTMLElement;
-	private readonly readThrough: HTMLElement;
 	private unsubscribe: () => void = () => {};
 
 	constructor(
@@ -29,13 +25,7 @@ export class StatusBar {
 		private readonly getSettings: () => VikalpSettings,
 		actions: StatusBarActions,
 	) {
-		this.readThrough = this.item(plugin, "vk-status-read", actions.toggleReadThrough);
-		setIcon(this.readThrough.createSpan({ cls: "vk-status-icon" }), "book-open");
-		setTooltip(this.readThrough, "Read-through mode (⌘⇧R)", { placement: "top" });
-
 		this.lint = this.item(plugin, "vk-status-lint", actions.openLint);
-		this.cost = this.item(plugin, "vk-status-cost", actions.showCostLog);
-		setTooltip(this.cost, "AI spend this session. Click for the log.", { placement: "top" });
 		this.lab = this.item(plugin, "vk-status-lab", () => actions.toggleLab(this.lab));
 		this.words = this.item(plugin, "vk-status-words", actions.toggleMarkers);
 
@@ -53,15 +43,10 @@ export class StatusBar {
 	render() {
 		const state = this.store.getState();
 		const note = state.note;
-		for (const element of [this.words, this.lint, this.readThrough]) element.toggleClass("vk-hidden", !note);
+		for (const element of [this.words, this.lint]) element.toggleClass("vk-hidden", !note);
 		this.renderWords(state);
 		this.renderLint(state);
 		this.renderLab(state);
-		const settings = this.getSettings();
-		const spent = sessionCost(state);
-		this.cost.toggleClass("vk-hidden", !settings.showCost || state.costs.length === 0);
-		this.cost.setText(formatCost(spent));
-		this.readThrough.toggleClass("is-active", Boolean(note?.readThrough));
 	}
 
 	private renderWords({ note }: VikalpUiState) {
@@ -87,10 +72,12 @@ export class StatusBar {
 	private renderLab(state: VikalpUiState) {
 		this.lab.empty();
 		this.lab.createSpan({ cls: "vk-status-lab-label", text: "Lab" });
-		this.lab.createSpan({ cls: "vk-status-lab-mode", text: MODEL_MODE_LABELS[state.modelMode] });
+		const showCost = this.getSettings().showCost && state.costs.length > 0;
+		const mode = MODEL_MODE_LABELS[state.modelMode];
+		this.lab.createSpan({ cls: "vk-status-lab-mode", text: showCost ? `${mode} · ${formatCost(sessionCost(state))}` : mode });
 		const running = state.lab.runningPass !== null || state.trim.status === "reading" || state.aiPendingSpans.length > 0;
 		this.lab.toggleClass("is-busy", running);
-		setTooltip(this.lab, "Open the Lab: AI marks, trim and model mode", { placement: "top" });
+		setTooltip(this.lab, "The Lab: AI marks, trim, model mode and cost", { placement: "top" });
 	}
 
 	dispose() {

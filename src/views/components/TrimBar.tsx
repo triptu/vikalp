@@ -50,7 +50,6 @@ export function TrimBar({ trim, proposalCount, proposalWords, primary, actions }
 					<span className="vk-trim-title">Walk through</span>
 					<span className="vk-trim-numbers">{proposalCount} left</span>
 				</div>
-				<div className="vk-trim-hint">Keep restores the words. Cut deletes them. Skip leaves them faded.</div>
 				<div className="vk-trim-actions">
 					<button onClick={() => actions.walkStep("keep")}>
 						Keep <kbd>K</kbd>

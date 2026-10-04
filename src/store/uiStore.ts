@@ -23,6 +23,8 @@ export interface LintHitView {
 	severity: Severity;
 	scope: LintScope;
 	source: "rule" | "lab";
+	/** True when a model (Jev or an LLM) made this hit, so it carries an AI label. */
+	byAi: boolean;
 	excerpt: string;
 	from: number;
 	suggestion?: string;
@@ -69,6 +71,8 @@ export interface LintRunState {
 	notice: string | null;
 	ruleErrors: string[];
 	notePath: string | null;
+	/** AI cost of the last run. */
+	cost: number;
 }
 
 export interface LabPassState {
@@ -108,7 +112,7 @@ export const initialUiState: VikalpUiState = {
 	panelSpanId: null,
 	panelFocused: false,
 	aiPendingSpans: [],
-	lint: { running: false, ranAt: null, judgmentTotal: 0, judgmentDone: 0, notice: null, ruleErrors: [], notePath: null },
+	lint: { running: false, ranAt: null, judgmentTotal: 0, judgmentDone: 0, notice: null, ruleErrors: [], notePath: null, cost: 0 },
 	trim: { level: "original", status: "idle", beforeWords: 0, message: null, rejected: 0, walking: false, notePath: null },
 	lab: { runningPass: null, message: null },
 	costs: [],
