@@ -10,5 +10,7 @@ export interface TrimProposalMeta {
 	id: string;
 	why: string;
 	words: number;
+	/** Set when a grammar check says the cut may leave a broken sentence. */
+	risky?: boolean;
 }
 export const trimProposals = createRangeCollection<TrimProposalMeta>({ undoable: false });

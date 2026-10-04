@@ -70,6 +70,8 @@ export interface LintHit {
 	suggestion?: string;
 	/** "lab" for marks made by an AI pass. */
 	source: "rule" | "lab";
+	/** Set on rule hits that came from a judgment (Jev or LLM) rather than a local engine. */
+	judgment?: boolean;
 	model?: string;
 }
 
