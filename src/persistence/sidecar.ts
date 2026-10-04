@@ -10,6 +10,7 @@ export interface FileAdapter {
 	mkdir(path: string): Promise<void>;
 	list(path: string): Promise<{ files: string[]; folders: string[] }>;
 	stat(path: string): Promise<{ mtime: number } | null>;
+	rename(from: string, to: string): Promise<void>;
 }
 
 const TRASH_DAYS = 30;
@@ -26,20 +27,34 @@ export class SidecarRepository {
 	constructor(
 		private readonly adapter: FileAdapter,
 		pluginDir: string,
+		private readonly onCorrupt: (notePath: string, backupPath: string) => void = () => {},
 	) {
 		this.notesDir = `${pluginDir}/notes`;
 		this.trashDir = `${pluginDir}/trash`;
 	}
 
+	/**
+	 * Reads a note's sidecar. A sidecar that can't be parsed is kept aside as
+	 * `.corrupt-<time>.json` (never overwritten) and the note loads empty.
+	 */
 	async load(notePath: string): Promise<NoteFile | null> {
 		const file = await this.fileFor(notePath);
-		if (!(await this.adapter.exists(file))) return null;
+		const tempFile = `${file}.tmp`;
+		if (!(await this.adapter.exists(file))) {
+			if (!(await this.adapter.exists(tempFile))) return null;
+			await this.adapter.rename(tempFile, file);
+		}
+		const raw = await this.adapter.read(file);
 		try {
-			const raw = await this.adapter.read(file);
+			const note = migrateNoteFile(JSON.parse(raw), notePath);
 			this.lastWritten.set(file, raw);
-			return migrateNoteFile(JSON.parse(raw), notePath);
+			return note;
 		} catch (error) {
-			console.warn(`Vikalp: could not read ${file}`, error);
+			console.warn(`Vikalp: could not parse ${file}`, error);
+			const backup = `${file.replace(/\.json$/, "")}.corrupt-${Date.now()}.json`;
+			await this.adapter.write(backup, raw);
+			await this.adapter.remove(file);
+			this.onCorrupt(notePath, backup);
 			return null;
 		}
 	}
@@ -55,7 +70,10 @@ export class SidecarRepository {
 		const json = JSON.stringify(note, null, "\t");
 		if (this.lastWritten.get(file) === json) return;
 		await this.ensureDir(this.notesDir);
-		await this.adapter.write(file, json);
+		const tempFile = `${file}.tmp`;
+		await this.adapter.write(tempFile, json);
+		if (await this.adapter.exists(file)) await this.adapter.remove(file);
+		await this.adapter.rename(tempFile, file);
 		this.lastWritten.set(file, json);
 	}
 

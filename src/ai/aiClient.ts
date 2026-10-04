@@ -143,10 +143,6 @@ export class AiClient {
 			...(error ? { error } : {}),
 		});
 	}
-
-	recordFallback(record: CostRecord) {
-		this.recordCost(record);
-	}
 }
 
 function extractToolArguments<Output>(message: AssistantMessage, toolName: string): Output {

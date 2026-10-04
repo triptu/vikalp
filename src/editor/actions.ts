@@ -72,7 +72,8 @@ export function createSpanFromSelection(
 		ok: true,
 		spanId: meta.id,
 		created: true,
-		spec: { effects: createSpan.of({ meta, range }), userEvent: VIKALP_EVENT.create },
+		// Not in undo history: a span with one version is invisible scaffolding until a second version arrives.
+		spec: { effects: createSpan.of({ meta, range }), annotations: noHistory },
 	};
 }
 

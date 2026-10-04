@@ -1,42 +1,9 @@
-import type { LintHitView, LintRunState } from "../../store/uiStore";
-import type { LintActions } from "../context";
+import type { LintPanelModel } from "../hooks/useLintPanel";
 import { formatCost, relativeTime } from "../format";
 import { Icon } from "./Icon";
 
-export interface LintPanelProps {
-	hasNote: boolean;
-	hits: LintHitView[];
-	run: LintRunState;
-	isCurrentNote: boolean;
-	labRunning: string | null;
-	actions: LintActions;
-	now: number;
-}
-
-interface HitGroup {
-	label: string;
-	source: "rule" | "lab";
-	byAi: boolean;
-	severity: LintHitView["severity"];
-	hits: LintHitView[];
-}
-
-const SEVERITY_ORDER = { error: 0, warning: 1, suggestion: 2 } as const;
-
-function groupHits(hits: LintHitView[]): HitGroup[] {
-	const groups = new Map<string, HitGroup>();
-	for (const hit of hits) {
-		const key = `${hit.source}:${hit.label}`;
-		const group = groups.get(key) ?? { label: hit.label, source: hit.source, byAi: false, severity: hit.severity, hits: [] };
-		group.hits.push(hit);
-		if (hit.byAi) group.byAi = true;
-		if (SEVERITY_ORDER[hit.severity] < SEVERITY_ORDER[group.severity]) group.severity = hit.severity;
-		groups.set(key, group);
-	}
-	return [...groups.values()].sort((a, b) => (a.source === b.source ? b.hits.length - a.hits.length : a.source === "lab" ? -1 : 1));
-}
-
-export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actions, now }: LintPanelProps) {
+export function LintPanel({ model, now }: { model: LintPanelModel; now: number }) {
+	const { hasNote, total, documentHits, groups, fixableCount, running, ranAt, run, isCurrentNote, labRunning, actions } = model;
 	if (!hasNote) {
 		return (
 			<div className="vk-panel vk-lint">
@@ -46,12 +13,6 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 			</div>
 		);
 	}
-	const documentHits = hits.filter((hit) => hit.scope === "document");
-	const inlineHits = hits.filter((hit) => hit.scope !== "document");
-	const groups = groupHits(inlineHits);
-	const fixable = hits.filter((hit) => hit.suggestion !== undefined && hit.source === "lab");
-	const running = isCurrentNote && run.running;
-	const ranAt = isCurrentNote ? run.ranAt : null;
 
 	return (
 		<div className="vk-panel vk-lint">
@@ -60,14 +21,14 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 					{running ? <span className="vk-spinner" /> : <Icon name="scan-text" />}
 					{running ? "Linting…" : "Run linter"}
 				</button>
-				{hits.length > 0 && (
+				{total > 0 && (
 					<button className="vk-small-button" onClick={actions.clear}>
 						Clear
 					</button>
 				)}
 			</div>
 			<div className="vk-lint-summary">
-				{hits.length === 0 ? (ranAt ? "No marks. Reads clean." : "Nothing run yet.") : `${hits.length} ${hits.length === 1 ? "mark" : "marks"}`}
+				{total === 0 ? (ranAt ? "No marks. Reads clean." : "Nothing run yet.") : `${total} ${total === 1 ? "mark" : "marks"}`}
 				{ranAt && <span className="vk-faint"> · ran {relativeTime(ranAt, now)}</span>}
 				{ranAt && run.cost > 0 && <span className="vk-faint"> · {formatCost(run.cost)}</span>}
 			</div>
@@ -106,17 +67,17 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 				</div>
 			)}
 
-			{fixable.length > 1 && (
+			{fixableCount > 1 && (
 				<div className="vk-fix-all">
 					<button className="vk-small-button" onClick={actions.applyAllFixes}>
-						Apply all {fixable.length} fixes…
+						Apply all {fixableCount} fixes…
 					</button>
 				</div>
 			)}
 
 			<div className="vk-hit-groups">
 				{groups.map((group) => (
-					<details key={`${group.source}:${group.label}`} className={`vk-hit-group vk-severity-${group.severity}`} open>
+					<details key={group.key} className={`vk-hit-group vk-severity-${group.severity}`} open>
 						<summary>
 							<span className={`vk-severity-chip vk-severity-${group.severity}`} />
 							<span className="vk-hit-group-label">{group.label}</span>

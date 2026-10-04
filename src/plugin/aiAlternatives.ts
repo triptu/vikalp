@@ -6,7 +6,7 @@ import { ALTERNATIVES_SYSTEM, ALTERNATIVES_TOOL, alternativesPrompt, alternative
 import type { VikalpSettings } from "../core/settings";
 import { findBlocks } from "../core/text/markdown";
 import { addVersionToSpan } from "../editor/actions";
-import { runAction } from "../editor/interaction";
+import { noHistory } from "../editor/transactions";
 import { spanMeta, spanRange } from "../editor/spansField";
 import type { UiStore } from "../store/uiStore";
 
@@ -61,7 +61,8 @@ export class AiAlternatives {
 				if (!latest) return;
 				const result = addVersionToSpan(view.state, spanId, text, "ai", { articleFix: false, activate: false, model: this.client.modelId(mode) });
 				if (result.ok && result.version) {
-					runAction(view, result);
+					// Kept out of undo history so Cmd+Z doesn't step through invisible additions; "Remove AI versions" clears them.
+					view.dispatch({ ...result.spec, annotations: noHistory });
 					addedCount++;
 				}
 			}

@@ -1,11 +1,11 @@
-import { MarkdownView, setIcon, type App } from "obsidian";
+import { MarkdownView, type App } from "obsidian";
 import { h, render } from "preact";
 import type { VikalpSettings } from "../core/settings";
 import type { UiStore } from "../store/uiStore";
 import { LabContainer, Providers, TrimBarContainer } from "../views/containers";
 import type { VikalpViewContext } from "../views/context";
+import { renderIcon } from "../views/panelViews";
 
-const renderIcon = (element: HTMLElement, name: string) => setIcon(element, name);
 
 /** The Lab popover, anchored above its status bar button. Closes on outside click or Esc. */
 export class LabPopoverHost {
@@ -29,10 +29,6 @@ export class LabPopoverHost {
 		private readonly getSettings: () => VikalpSettings,
 	) {}
 
-	get isOpen() {
-		return this.container !== null;
-	}
-
 	toggle(anchor: HTMLElement | null) {
 		if (this.container) this.close();
 		else this.open(anchor);
@@ -49,6 +45,7 @@ export class LabPopoverHost {
 		);
 		this.position();
 		window.setTimeout(() => {
+			if (this.container !== container) return;
 			document.addEventListener("mousedown", this.onOutsideClick, true);
 			document.addEventListener("keydown", this.onKey, true);
 		}, 0);

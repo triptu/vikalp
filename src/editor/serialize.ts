@@ -10,7 +10,9 @@ import { listSpans, loadSpans } from "./spansField";
 export function serializeNote(state: EditorState, path: string, lintRanAt: number | null): { note: NoteFile; isEmpty: boolean } {
 	const doc = state.doc.toString();
 	const mode = state.field(noteModeField);
-	const spans = listSpans(state).map(({ meta, range }) => {
+	const spans = listSpans(state)
+		.filter(({ meta }) => meta.versions.length > 1)
+		.map(({ meta, range }) => {
 		const synced = range ? syncActiveText(meta, doc.slice(range.from, range.to)) : meta;
 		const anchor: Anchor = range ? makeAnchor(doc, range) : unplacedAnchor(synced);
 		return { ...synced, anchor };

@@ -6,6 +6,8 @@ import type { TrimLevel, UiStore } from "../store/uiStore";
 
 export interface AlternativesActions {
 	selectVersion(spanId: string, versionId: string): void;
+	/** Shows the version `step` places away from the current one, wrapping around. */
+	stepVersion(spanId: string, step: number): void;
 	addVersion(spanId: string, text: string): void;
 	deleteVersion(spanId: string, versionId: string): void;
 	askAi(spanId: string): void;

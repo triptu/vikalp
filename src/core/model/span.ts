@@ -52,7 +52,3 @@ export function versionAfterDelete(span: SpanMeta, versionId: string, prefer: "p
 	const neighbour = prefer === "next" ? (index + 1) % count : index === 0 ? 1 : index - 1;
 	return span.versions[neighbour]!;
 }
-
-export function hasAiVersions(span: SpanMeta): boolean {
-	return span.versions.some((version) => version.source === "ai");
-}

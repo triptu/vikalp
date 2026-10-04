@@ -2,6 +2,7 @@ import { EditorSelection } from "@codemirror/state";
 import { EditorView, type ViewUpdate } from "@codemirror/view";
 import { Notice, type App } from "obsidian";
 import { AiError, type AiClient } from "../ai/aiClient";
+import { makeAnchor, resolveAnchor } from "../core/anchor/anchor";
 import { placeQuotes } from "../core/ai/placement";
 import { JUDGMENT_SYSTEM, JUDGMENT_TOOL, LLM_RULE_TOOL, judgmentPrompt, judgmentSchema, llmRulePrompt, llmRuleSchema, type JudgmentOutput, type LlmRuleOutput } from "../core/ai/prompts/judgment";
 import { numberSentences, renderNumbered } from "../core/ai/units";
@@ -12,6 +13,7 @@ import { parseRule, serializeRule } from "../core/rules/parse";
 import { judgmentTasks, runLocalRules, type JudgmentTask } from "../core/rules/run";
 import type { Rule, WordlistRule } from "../core/rules/types";
 import { lintMarks, type LintMarkMeta } from "../editor/collections";
+import { notePathOf } from "../editor/noteFields";
 import { VIKALP_EVENT, isolated, noHistory } from "../editor/transactions";
 import type { RangeEntry } from "../editor/rangeCollection";
 import type { UiStore } from "../store/uiStore";
@@ -166,25 +168,25 @@ export class LinterService {
 		if (!canJudge) return;
 		const costsBefore = this.store.getState().costs.length;
 		try {
-			await this.runJudgments(view, path, tasks, token);
+			await this.runJudgments(view, path, tasks, token, doc);
 		} finally {
 			const runCost = this.store.getState().costs.slice(costsBefore).reduce((sum, entry) => sum + entry.cost, 0);
 			if (token === this.runToken) this.patchRun({ running: false, cost: runCost });
 		}
 	}
 
-	private async runJudgments(view: EditorView, path: string, tasks: JudgmentTask[], token: number) {
+	private async runJudgments(view: EditorView, path: string, tasks: JudgmentTask[], token: number, runDoc: string) {
 		const settings = this.getSettings();
 		const classifierTasks = tasks.filter((task) => task.threshold !== null);
 		const llmRuleTasks = tasks.filter((task) => task.threshold === null);
-		const stillCurrent = () => token === this.runToken && this.controller.editor === view;
+		const stillCurrent = () => token === this.runToken && this.controller.editor === view && notePathOf(view) === path;
 		const done = (count: number) => {
 			if (stillCurrent()) this.patchRun({ judgmentDone: this.store.getState().lint.judgmentDone + count });
 		};
 
 		const flag = (task: JudgmentTask, probability: number, model: string) => {
 			if (!stillCurrent() || probability < (task.threshold ?? 1)) return;
-			this.addJudgmentHit(view, path, task, task.unit, task.message, model);
+			this.addJudgmentHit(view, path, task, task.unit, task.message, model, runDoc);
 		};
 
 		let fallbackCount = 0;
@@ -201,7 +203,7 @@ export class LinterService {
 		const llmRules = [...new Set(llmRuleTasks.map((task) => task.rule))];
 		for (const rule of llmRules) {
 			if (!stillCurrent()) return;
-			await this.runLlmRule(view, path, rule, llmRuleTasks.filter((task) => task.rule === rule));
+			await this.runLlmRule(view, path, rule, llmRuleTasks.filter((task) => task.rule === rule), stillCurrent);
 			done(llmRuleTasks.filter((task) => task.rule === rule).length);
 		}
 		if (fallbackCount > 0 && stillCurrent()) {
@@ -295,7 +297,7 @@ export class LinterService {
 		if (last) this.store.setState({ costs: [...costs.slice(0, -1), { ...last, fallback: true }] });
 	}
 
-	private async runLlmRule(view: EditorView, path: string, rule: Rule, tasks: JudgmentTask[]) {
+	private async runLlmRule(view: EditorView, path: string, rule: Rule, tasks: JudgmentTask[], stillCurrent: () => boolean) {
 		if (rule.engine !== "llm") return;
 		const doc = view.state.doc.toString();
 		const sentences = numberSentences(doc);
@@ -309,16 +311,31 @@ export class LinterService {
 				toolDescription: "Submit the hits.",
 				schema: llmRuleSchema,
 			});
-			if (this.controller.editor !== view) return;
+			if (!stillCurrent()) return;
 			const currentDoc = view.state.doc.toString();
 			const { placed } = placeQuotes(currentDoc, sentences, (value.hits ?? []).map((hit) => ({ unit_id: hit.unit_id, quote: hit.quote, extra: hit.reason })));
-			for (const quote of placed) this.addJudgmentHit(view, path, tasks[0]!, quote, quote.extra || tasks[0]!.message, model);
+			for (const quote of placed) this.addJudgmentHit(view, path, tasks[0]!, quote, quote.extra || tasks[0]!.message, model, null);
 		} catch (error) {
 			this.patchRun({ notice: error instanceof AiError ? error.message : `${rule.label} failed: ${String(error)}` });
 		}
 	}
 
-	private addJudgmentHit(view: EditorView, path: string, task: JudgmentTask, range: { from: number; to: number }, message: string, model: string) {
+	/**
+	 * Adds one judgment mark. `runDoc` is the text the unit was measured on; the
+	 * unit is found again in the current text, since the user may have typed
+	 * while the model was thinking. Units that can't be found are dropped.
+	 */
+	private addJudgmentHit(
+		view: EditorView,
+		path: string,
+		task: JudgmentTask,
+		measured: { from: number; to: number },
+		message: string,
+		model: string,
+		runDoc: string | null,
+	) {
+		const range = runDoc === null ? measured : resolveAnchor(view.state.doc.toString(), makeAnchor(runDoc, measured));
+		if (!range || range.to > view.state.doc.length) return;
 		const text = view.state.doc.sliceString(range.from, range.to);
 		if (this.ignoredFor(path).has(ignoreKey(task.rule.id, text))) return;
 		const duplicate = lintMarks.list(view.state).some((entry) => entry.meta.ruleId === task.rule.id && entry.range.from === range.from && entry.range.to === range.to);
@@ -359,7 +376,7 @@ export class LinterService {
 	ignore(view: EditorView, hitId: string) {
 		const entry = lintMarks.list(view.state).find((candidate) => candidate.meta.id === hitId);
 		if (!entry) return;
-		const path = this.controller.activePath ?? "";
+		const path = notePathOf(view) ?? "";
 		this.ignoredFor(path).add(ignoreKey(entry.meta.ruleId, view.state.doc.sliceString(entry.range.from, entry.range.to)));
 		view.dispatch({ effects: lintMarks.effects.remove.of([hitId]), annotations: noHistory });
 	}
@@ -440,6 +457,12 @@ export class LinterService {
 		await this.loadRules();
 		new Notice(`Added “${phrase}” to ${rule.label}.`);
 		if (this.controller.editor === view) this.runLocal(view);
+	}
+
+	dispose() {
+		this.runToken++;
+		if (this.liveTimer !== null) window.clearTimeout(this.liveTimer);
+		this.liveTimer = null;
 	}
 
 	/** Live mode: re-runs local rules a moment after typing stops. */
