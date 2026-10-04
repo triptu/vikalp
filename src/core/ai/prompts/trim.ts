@@ -37,7 +37,8 @@ How to answer:
 - After all deletions, every sentence that remains must still be grammatical and read naturally. If cutting a phrase would leave a dangling comma or a broken sentence, include the punctuation in the quote or choose a different cut.
 - Prefer cutting repetition, throat-clearing, filler, hedges, weak qualifiers, redundant examples and sentences that restate the previous one. Keep the writer's meaning, voice and best lines.
 - Do not overlap deletions. Do not quote across sentence boundaries; use separate deletions instead.
-- Hit the requested share of words as closely as you can without damaging the piece.`;
+- List deletions from most expendable to least expendable. The writer's tool keeps them in that order until the target is reached, so put the cuts you are surest about first.
+- Aim for the requested number of words. A few extra candidates past the target are fine; list them last.`;
 
 export function trimPrompt(input: TrimInput): string {
 	const targetWords = Math.round((input.totalWords * input.targetPercent) / 100);

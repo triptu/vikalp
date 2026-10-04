@@ -3,7 +3,7 @@ import { Notice, TFile, type App } from "obsidian";
 import { AiError, type AiClient } from "../ai/aiClient";
 import { newId } from "../core/model/ids";
 import { LAB_PASSES, trimLevel, type LabPassId, type TrimLevelId } from "../core/ai/passes";
-import { placeQuotes } from "../core/ai/placement";
+import { placeQuotes, selectToTarget } from "../core/ai/placement";
 import { MARKS_SYSTEM, MARKS_TOOL, marksPrompt, marksSchema, type MarksOutput } from "../core/ai/prompts/marks";
 import { TRIM_SYSTEM, TRIM_TOOL, trimPrompt, trimSchema, type TrimOutput } from "../core/ai/prompts/trim";
 import { numberSentences, renderNumbered, type NumberedSentence } from "../core/ai/units";
@@ -190,15 +190,20 @@ export class LabService {
 			const ghostRanges = ghosts.list(view.state).map((entry) => entry.range);
 			const candidates = (value.deletions ?? [])
 				.filter((deletion) => deletion && typeof deletion.quote === "string" && !vetoed.has(deletion.quote.trim()))
-				.map((deletion) => ({ unit_id: deletion.unit_id, quote: deletion.quote, extra: deletion }));
+				.map((deletion, rank) => ({ unit_id: deletion.unit_id, quote: deletion.quote, extra: { ...deletion, rank } }));
 			const { placed, rejected } = placeQuotes(doc, sentences, candidates);
-			const usable = placed.filter((quote) => !ghostRanges.some((range) => range.from < quote.to && quote.from < range.to));
-			const entries = usable.map((quote) => ({
-				range: { from: quote.from, to: quote.to },
-				meta: { id: newId("tp"), why: quote.extra.why ?? "", words: countWords(doc.slice(quote.from, quote.to)) },
-			}));
+			const usable = placed
+				.filter((quote) => !ghostRanges.some((range) => range.from < quote.to && quote.from < range.to))
+				.map((quote) => ({ quote, words: countWords(doc.slice(quote.from, quote.to)), rank: quote.extra.rank }));
+			const chosen = selectToTarget(usable, Math.round(beforeWords * levelInfo.target));
+			const entries = chosen
+				.sort((a, b) => a.quote.from - b.quote.from)
+				.map(({ quote, words }) => ({
+					range: { from: quote.from, to: quote.to },
+					meta: { id: newId("tp"), why: quote.extra.why ?? "", words },
+				}));
 			view.dispatch({ effects: trimProposals.effects.replaceAll.of(entries), annotations: noHistory });
-			this.setTrim({ ...this.store.getState().trim, status: "ready", rejected: rejected + (placed.length - usable.length) });
+			this.setTrim({ ...this.store.getState().trim, status: "ready", rejected });
 			void this.checkGrammar(view, sentences, entries);
 		} catch (error) {
 			if (abort.signal.aborted) return;

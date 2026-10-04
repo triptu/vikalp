@@ -192,7 +192,10 @@ export default class VikalpPlugin extends Plugin {
 			lab: {
 				setModelMode: (mode) => void this.setModelMode(mode),
 				runPass: (passId) => void this.lab.runPass(passId as never),
-				setTrimLevel: (level) => void this.lab.setTrimLevel(level),
+				setTrimLevel: (level) => {
+					this.labPopover.close();
+					void this.lab.setTrimLevel(level);
+				},
 				ghostCuts: () => this.lab.ghostCuts(),
 				makeCuts: () => void this.lab.makeCuts(),
 				walkThrough: () => this.lab.walkThrough(),

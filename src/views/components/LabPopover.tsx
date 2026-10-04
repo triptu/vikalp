@@ -93,7 +93,8 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 							disabled={disabled || trim.status === "reading"}
 							onClick={() => actions.setTrimLevel(level.id)}
 						>
-							{level.short}
+							<span className="vk-segment-name">{level.name}</span>
+							{level.target > 0 && <span className="vk-segment-detail">~{Math.round(level.target * 100)}%</span>}
 						</button>
 					))}
 				</div>

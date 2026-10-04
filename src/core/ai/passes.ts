@@ -52,17 +52,18 @@ export type TrimLevelId = "original" | "slight" | "tighten" | "sharper" | "half"
 export interface TrimLevel {
 	id: TrimLevelId;
 	label: string;
-	short: string;
+	/** Name on the trim level control. */
+	name: string;
 	/** Share of words to cut. */
 	target: number;
 }
 
 export const TRIM_LEVELS: TrimLevel[] = [
-	{ id: "original", label: "Original", short: "Original", target: 0 },
-	{ id: "slight", label: "Slight trim", short: "Slight ~10%", target: 0.1 },
-	{ id: "tighten", label: "Tighten more", short: "Tighten ~20%", target: 0.2 },
-	{ id: "sharper", label: "Even sharper", short: "Sharper ~30%", target: 0.3 },
-	{ id: "half", label: "Cut in half", short: "Half ~50%", target: 0.5 },
+	{ id: "original", label: "Original", name: "Original", target: 0 },
+	{ id: "slight", label: "Slight trim", name: "Slight", target: 0.1 },
+	{ id: "tighten", label: "Tighten more", name: "Tighten", target: 0.2 },
+	{ id: "sharper", label: "Even sharper", name: "Sharper", target: 0.3 },
+	{ id: "half", label: "Cut in half", name: "Half", target: 0.5 },
 ];
 
 export function trimLevel(id: TrimLevelId): TrimLevel {

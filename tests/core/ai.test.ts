@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acceptableAlternatives, placeQuotes } from "../../src/core/ai/placement";
+import { acceptableAlternatives, placeQuotes, selectToTarget } from "../../src/core/ai/placement";
 import { alternativesPrompt } from "../../src/core/ai/prompts/alternatives";
 import { numberSentences, renderNumbered } from "../../src/core/ai/units";
 import { createSpanMeta } from "../../src/core/model/span";
@@ -63,5 +63,17 @@ describe("AI alternatives", () => {
 		expect(prompt).toContain("⟦tension⟧");
 		expect(prompt).toContain("- pressure");
 		expect(prompt).toContain("Give 5 alternatives.");
+	});
+});
+
+describe("trim targets", () => {
+	it("keeps the most expendable cuts until the target is met, without overshooting", () => {
+		const proposals = [
+			{ id: "a", words: 30, rank: 2 },
+			{ id: "b", words: 5, rank: 0 },
+			{ id: "c", words: 12, rank: 1 },
+			{ id: "d", words: 4, rank: 3 },
+		];
+		expect(selectToTarget(proposals, 20).map((proposal) => proposal.id)).toEqual(["b", "c", "d"]);
 	});
 });

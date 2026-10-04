@@ -53,3 +53,21 @@ export function acceptableAlternatives(span: SpanMeta, candidates: string[], cap
 	}
 	return accepted;
 }
+
+/**
+ * Picks trim proposals in the model's order (most expendable first) until the
+ * target word count is reached, so a "20%" trim lands near 20% even when the
+ * model proposes more. Allows a 10% overshoot of the target.
+ */
+export function selectToTarget<Proposal extends { words: number; rank: number }>(proposals: Proposal[], targetWords: number): Proposal[] {
+	const limit = Math.max(1, Math.round(targetWords * 1.1));
+	const chosen: Proposal[] = [];
+	let total = 0;
+	for (const proposal of [...proposals].sort((a, b) => a.rank - b.rank)) {
+		if (total + proposal.words > limit) continue;
+		chosen.push(proposal);
+		total += proposal.words;
+		if (total >= targetWords) break;
+	}
+	return chosen;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import type { OverflowBlock } from "../../core/model/types";
 import type { OverflowActions } from "../context";
 import { OVERFLOW_DRAG_TYPE as OVERFLOW_DRAG_MIME } from "../../core/constants";
@@ -186,16 +186,8 @@ function AutoTextarea({
 	onBlur?: () => void;
 	onKeyDown?: (event: KeyboardEvent) => void;
 }) {
-	const ref = useRef<HTMLTextAreaElement>(null);
-	useLayoutEffect(() => {
-		const element = ref.current;
-		if (!element) return;
-		element.style.height = "auto";
-		element.style.height = `${element.scrollHeight}px`;
-	}, [value]);
 	return (
 		<textarea
-			ref={ref}
 			className="vk-autotextarea"
 			rows={1}
 			value={value}
