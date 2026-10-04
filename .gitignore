@@ -1,0 +1,12 @@
+reference/
+.env
+node_modules/
+main.js
+*.map
+.DS_Store
+dev-vault/.obsidian/workspace*.json
+dev-vault/.obsidian/plugins/vikalp/
+dev-vault/.obsidian/cache
+dev-vault/.trash/
+e2e/.profile/
+e2e/.artifacts/

@@ -1,0 +1,46 @@
+{
+  "name": "vikalp",
+  "version": "0.1.0",
+  "description": "Alternative control for writing in Obsidian: versions of words, sentences and paragraphs, ghosting, overflow, a linter and an AI Lab that never writes for you.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "typecheck": "tsc -noEmit -skipLibCheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "node e2e/run.mjs",
+    "shots": "node e2e/screenshots.mjs",
+    "lint": "eslint src"
+  },
+  "keywords": [
+    "obsidian",
+    "writing"
+  ],
+  "author": "Tushar",
+  "license": "MIT",
+  "dependencies": {
+    "@earendil-works/pi-ai": "^1.0.2",
+    "approx-string-match": "^2.0.0",
+    "preact": "^11.0.0",
+    "yaml": "^2.9.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@codemirror/commands": "^6.10.0",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "^6.5.0",
+    "@codemirror/view": "^6.38.6",
+    "@lezer/common": "^1.5.3",
+    "@types/node": "^26.6.4",
+    "builtin-modules": "^5.4.0",
+    "esbuild": "^0.28.2",
+    "jsdom": "^29.1.1",
+    "obsidian": "^1.11.4",
+    "playwright-core": "^1.63.0",
+    "tslib": "^2.8.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
