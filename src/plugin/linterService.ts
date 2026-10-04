@@ -23,6 +23,8 @@ import type { NoteController } from "./noteController";
 const JEV_CONCURRENCY = 6;
 const LLM_JUDGMENT_BATCH = 40;
 const LIVE_LINT_DELAY_MS = 900;
+/** Remembers the built-in rule files as written, to tell untouched ones from edited ones. */
+const BUILTIN_RECORD = ".builtin-rules.json";
 
 /**
  * Runs the writing linter on demand: free local rules instantly, then
@@ -58,16 +60,17 @@ export class LinterService {
 		return this.rules.filter((rule) => !disabled.has(rule.id));
 	}
 
-	/** Reads rule files, writing the built-ins on first run so they can be edited. */
+	/**
+	 * Reads rule files. Built-ins are written to the folder so they can be
+	 * edited; a built-in file the user never changed is refreshed when Vikalp
+	 * ships a better version of that rule.
+	 */
 	async loadRules() {
 		const adapter = this.app.vault.adapter;
 		const dir = this.rulesDir;
 		const errors: string[] = [];
 		try {
-			if (!(await adapter.exists(dir))) {
-				await adapter.mkdir(dir);
-				for (const file of BUILTIN_RULE_FILES) await adapter.write(`${dir}/${file.fileName}`, file.yaml);
-			}
+			await this.syncBuiltinFiles(dir);
 			const { files } = await adapter.list(dir);
 			const fromDisk = new Map<string, Rule>();
 			for (const file of files.filter((name) => /\.ya?ml$/i.test(name))) {
@@ -87,6 +90,23 @@ export class LinterService {
 		}
 		this.ruleErrors = errors;
 		this.patchRun({ ruleErrors: errors });
+	}
+
+	private async syncBuiltinFiles(dir: string) {
+		const adapter = this.app.vault.adapter;
+		if (!(await adapter.exists(dir))) await adapter.mkdir(dir);
+		const recordPath = `${dir}/${BUILTIN_RECORD}`;
+		const written: Record<string, string> = (await adapter.exists(recordPath)) ? JSON.parse(await adapter.read(recordPath)) : {};
+		for (const file of BUILTIN_RULE_FILES) {
+			const path = `${dir}/${file.fileName}`;
+			const exists = await adapter.exists(path);
+			const untouched = exists && written[file.fileName] !== undefined && (await adapter.read(path)) === written[file.fileName];
+			if ((!exists && written[file.fileName] === undefined) || (untouched && written[file.fileName] !== file.yaml)) {
+				await adapter.write(path, file.yaml);
+				written[file.fileName] = file.yaml;
+			}
+		}
+		await adapter.write(recordPath, JSON.stringify(written, null, "\t"));
 	}
 
 	async reloadRules() {
@@ -423,7 +443,7 @@ export class LinterService {
 		}
 		const label = await promptText(this.app, {
 			title: `Flag “${phrase.length > 40 ? `${phrase.slice(0, 39)}…` : phrase}”`,
-			label: "Rule name (an existing one adds the phrase to it)",
+			label: "Add it to the rule",
 			value: "Pet peeves",
 			confirmLabel: "Add rule",
 		});
