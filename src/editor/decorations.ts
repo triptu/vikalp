@@ -40,6 +40,7 @@ function spanDecorations(state: EditorState): Range<Decoration>[] {
 	const found: Range<Decoration>[] = [];
 	for (const { meta, range } of listSpans(state)) {
 		if (!range || range.to <= range.from) continue;
+		if (meta.versions.length < 2 && meta.id !== mode.focusedSpan) continue;
 		const dots = { count: meta.versions.length, active: activeIndex(meta), hasNote: Boolean(meta.note?.trim()) };
 		const classes = ["vk-span", `vk-span-${meta.unit}`];
 		if (hover.spanId === meta.id) classes.push("is-hovered");
@@ -71,7 +72,7 @@ function lintDecorations(state: EditorState): Range<Decoration>[] {
 			found.push(...lineDecorations(state, range, Decoration.line({ class: `vk-lint-para vk-lint-para-${meta.severity}` })));
 			continue;
 		}
-		const sourceClass = meta.source === "lab" ? " vk-lint-lab" : "";
+		const sourceClass = meta.source === "lab" ? " vk-lint-lab" : meta.judgment ? " vk-lint-ai" : "";
 		found.push(
 			Decoration.mark({ class: `vk-lint vk-lint-${meta.severity}${sourceClass}`, attributes: { "data-vk-lint": meta.id } }).range(range.from, range.to),
 		);

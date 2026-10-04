@@ -7,7 +7,8 @@ export const ALTERNATIVES_VIEW = "vikalp-alternatives";
 export const OVERFLOW_VIEW = "vikalp-overflow";
 export const LINT_VIEW = "vikalp-lint";
 
-const renderIcon = (element: HTMLElement, name: string) => setIcon(element, name);
+/** Renders Obsidian (Lucide) icons for the Preact views. */
+export const renderIcon = (element: HTMLElement, name: string) => setIcon(element, name);
 
 /** An Obsidian side-panel view that renders one Preact tree and nothing else. */
 abstract class PreactPanelView extends ItemView {

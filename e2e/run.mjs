@@ -195,6 +195,62 @@ await flow("span notes and read-through mode", async () => {
 	});
 });
 
+await flow("two panes on one note stay in step and save the same alternatives", async () => {
+	prepareScratchVault();
+	await withObsidian({ keepVault: true }, async (driver) => {
+		await driver.openNote(ESSAY);
+		await driver.evaluate(async () => {
+			const leaf = window.app.workspace.getLeaf("split");
+			await leaf.openFile(window.app.vault.getAbstractFileByPath("Essays/The cost of the obvious.md"));
+		});
+		await driver.wait(800);
+		await driver.select("tension");
+		await driver.command("vikalp:alternatives-for-selection");
+		await driver.type("pressure");
+		await driver.press("Enter");
+		await driver.press("Escape");
+		await driver.wait(1200);
+		const panes = await driver.evaluate(() => {
+			const views = window.app.plugins.plugins.vikalp.controller.allEditors();
+			return views.map((view) => ({
+				text: view.state.doc.toString().includes("Much of the pressure"),
+				underlines: view.dom.querySelectorAll(".vk-span").length,
+			}));
+		});
+		assert(panes.length === 2, `two editors open, saw ${panes.length}`);
+		assert(panes.every((pane) => pane.text), "both panes show the new version");
+		assert(panes.every((pane) => pane.underlines === 1), `both panes draw the span (${panes.map((pane) => pane.underlines).join(", ")})`);
+	});
+	await withObsidian({ keepVault: true }, async (driver) => {
+		await driver.openNote(ESSAY);
+		await driver.wait(500);
+		const note = await noteState(driver);
+		const span = note.spans.find((candidate) => candidate.text === "pressure");
+		assert(span && !span.orphaned && span.versions.length === 2, "the saved span is intact after a restart");
+	});
+});
+
+await flow("editing while judgment rules run never breaks the editor", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote("Essays/LinkedIn draft.md");
+		await driver.command("vikalp:run-linter");
+		await driver.wait(300);
+		await driver.select("The report was written by the team and was reviewed by me, which was really very helpful.\n\nAgree?");
+		await driver.press("Backspace");
+		await driver.page.waitForFunction(() => !window.app.plugins.plugins.vikalp.store.getState().lint.running, null, { timeout: 60000 });
+		await driver.cursorAt("I'm humbled");
+		await driver.type("Truly, ");
+		const doc = await driver.docText();
+		assert(doc.startsWith("# What I learned") && doc.includes("Truly, I'm humbled"), "typing still works after late results arrive");
+		const outOfRange = await driver.evaluate(() => {
+			const note = window.app.plugins.plugins.vikalp.store.getState().note;
+			const length = window.app.plugins.plugins.vikalp.controller.editor.state.doc.length;
+			return note.lintHits.filter((hit) => hit.from > length).length;
+		});
+		assert(outOfRange === 0, "no mark points past the end of the note");
+	});
+});
+
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} passed, ${failed.length} failed`);
 process.exit(failed.length ? 1 : 0);

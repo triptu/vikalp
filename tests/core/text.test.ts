@@ -138,3 +138,15 @@ describe("word count", () => {
 		expect(countWords("The Obvious, the Easy — and the Possible!")).toBe(7);
 	});
 });
+
+describe("a/an across lines", () => {
+	it("never touches a word ending in -an on the line before", () => {
+		const doc = "## The plan\n\nOur team began.";
+		expect(articleFixBefore(doc, doc.indexOf("Our"), "The team began.")).toBeNull();
+	});
+
+	it("ignores words that merely end in a or an", () => {
+		expect(articleFixBefore("the human eraser", 10, "pencil")).toBeNull();
+		expect(articleFixBefore("a banana apple", 9, "pear")).toBeNull();
+	});
+});

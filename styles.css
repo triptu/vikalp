@@ -227,8 +227,8 @@ body {
 	border-bottom-color: color-mix(in srgb, var(--color-orange) 60%, transparent);
 }
 
-.cm-line.vk-lint-para {
-	position: relative;
+.vk-lint.vk-lint-ai {
+	border-bottom: 1px dashed color-mix(in srgb, var(--color-purple) 45%, transparent);
 }
 
 .cm-line.vk-lint-para-suggestion {

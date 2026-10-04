@@ -120,6 +120,7 @@ export const domHandlers = EditorView.domEventHandlers({
 		return false;
 	},
 	mousedown(event, view) {
+		if (view.state.field(hoverField).armed) updateHover(view, view.state.field(hoverField).spanId, false);
 		const target = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>("[data-vk-proposal]") : null;
 		if (!target?.dataset.vkProposal || event.button !== 0 || event.shiftKey) return false;
 		view.state.facet(vikalpHost)?.vetoProposal(view, target.dataset.vkProposal);

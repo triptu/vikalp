@@ -43,7 +43,7 @@ export const spansField = StateField.define<SpansValue>({
 		let next: SpansValue = mapped === value.ranges ? value : { ranges: mapped, meta: value.meta };
 		const touched = new Set<string>();
 		for (const effect of tr.effects) {
-			const result = applySpanEffect(next, effect);
+			const result = applySpanEffect(next, clampEffect(effect, tr.newDoc.length));
 			if (result) {
 				next = result.value;
 				if (result.id) touched.add(result.id);
@@ -51,11 +51,23 @@ export const spansField = StateField.define<SpansValue>({
 		}
 		const untouchedLost = [...lost].filter((id) => !touched.has(id) && next.meta.has(id));
 		if (untouchedLost.length > 0) next = handleLostSpans(next, untouchedLost, tr, value);
+		if (next.meta !== value.meta) next = orphanChildrenOfMissingParents(next);
 		return next;
 	},
 	provide: (field) =>
 		invertedEffects.of((tr) => invertSpanEffects(tr.startState.field(field), tr.state.field(field), tr)),
 });
+
+/** Drops ranges that point past the end of the document, so a stale effect can't break the editor. */
+function clampEffect(effect: StateEffect<unknown>, docLength: number): StateEffect<unknown> {
+	const value = effect.value as { range?: TextRange | null } | undefined;
+	const range = value && typeof value === "object" && "range" in value ? value.range : undefined;
+	if (!range || (range.from >= 0 && range.to <= docLength)) return effect;
+	if (effect.is(createSpan)) return createSpan.of({ ...effect.value, range: null });
+	if (effect.is(setActiveVersion)) return setActiveVersion.of({ ...effect.value, range: null });
+	if (effect.is(placeSpan)) return placeSpan.of({ ...effect.value, range: null, orphaned: true });
+	return effect;
+}
 
 function applySpanEffect(value: SpansValue, effect: StateEffect<unknown>): { value: SpansValue; id?: string } | null {
 	if (effect.is(loadSpans)) {
@@ -146,6 +158,19 @@ function handleLostSpans(value: SpansValue, lostIds: string[], tr: Transaction, 
 		else meta.set(id, { ...span, orphaned: true, lastText: anchor.exact });
 	}
 	return { ranges, meta };
+}
+
+/** A span hidden inside a paragraph version can only come back through its parent. If the parent is gone, list it as unplaced. */
+function orphanChildrenOfMissingParents(value: SpansValue): SpansValue {
+	let meta: Map<string, SpanMeta> | null = null;
+	for (const span of value.meta.values()) {
+		if (!span.hiddenIn || value.meta.has(span.hiddenIn)) continue;
+		meta ??= new Map(value.meta);
+		const orphan: SpanMeta = { ...span, orphaned: true };
+		delete orphan.hiddenIn;
+		meta.set(span.id, orphan);
+	}
+	return meta ? { ranges: value.ranges, meta } : value;
 }
 
 function invertSpanEffects(start: SpansValue, end: SpansValue, tr: Transaction): readonly StateEffect<unknown>[] {

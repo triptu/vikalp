@@ -18,6 +18,7 @@ export class StatusBar {
 	private readonly lint: HTMLElement;
 	private readonly lab: HTMLElement;
 	private unsubscribe: () => void = () => {};
+	private lastSignature = "";
 
 	constructor(
 		plugin: Plugin,
@@ -43,6 +44,21 @@ export class StatusBar {
 	render() {
 		const state = this.store.getState();
 		const note = state.note;
+		const signature = JSON.stringify([
+			note?.words,
+			note?.selectedWords,
+			note?.ghostWords,
+			note?.markersOn,
+			note?.lintHits.length,
+			state.modelMode,
+			state.costs.length,
+			state.lab.runningPass,
+			state.trim.status,
+			state.aiPendingSpans.length,
+			this.getSettings().showCost,
+		]);
+		if (signature === this.lastSignature) return;
+		this.lastSignature = signature;
 		for (const element of [this.words, this.lint]) element.toggleClass("vk-hidden", !note);
 		this.renderWords(state);
 		this.renderLint(state);

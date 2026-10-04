@@ -4,6 +4,10 @@ import type { Anchor, TextRange } from "../model/types";
 const CONTEXT_LENGTH = 32;
 const MAX_FUZZY_ERROR_RATIO = 0.2;
 const FUZZY_TEXT_LIMIT = 200_000;
+/** Text this long is distinctive enough to trust a single exact match without matching context. */
+const DISTINCTIVE_LENGTH = 24;
+/** Characters of matching context a short, moved anchor needs before we trust a match. */
+const MIN_CONTEXT_AGREEMENT = 6;
 
 export function makeAnchor(doc: string, range: TextRange): Anchor {
 	return {
@@ -17,22 +21,31 @@ export function makeAnchor(doc: string, range: TextRange): Anchor {
 
 /**
  * Finds where an anchor sits in `doc` now. Tries the stored position, then
- * exact matches near it (scored by surrounding context), then a fuzzy match
- * allowing up to 20% edits. Returns null rather than guess between ties.
+ * exact matches scored by surrounding context, then a fuzzy match allowing up
+ * to 20% edits. Short text that moved must also agree with its old context,
+ * and ties are refused: a wrong guess is worse than an orphan.
  */
 export function resolveAnchor(doc: string, anchor: Anchor): TextRange | null {
 	const { exact } = anchor;
 	if (exact === "") return null;
-	if (doc.slice(anchor.start, anchor.end) === exact) return { from: anchor.start, to: anchor.end };
+	if (anchor.start >= 0 && doc.slice(anchor.start, anchor.end) === exact) return { from: anchor.start, to: anchor.end };
 
-	for (const radius of [200, 2000, Infinity]) {
-		const windowFrom = Math.max(0, anchor.start - radius);
-		const windowTo = Math.min(doc.length, anchor.end + radius);
-		const hits = allIndexesOf(doc, exact, windowFrom, windowTo);
-		if (hits.length === 1) return { from: hits[0]!, to: hits[0]! + exact.length };
-		if (hits.length > 1) return pickByContext(doc, anchor, hits);
-	}
+	const hits = allIndexesOf(doc, exact, 0, doc.length);
+	if (hits.length > 0) return pickByContext(doc, anchor, hits);
 	return fuzzyResolve(doc, anchor);
+}
+
+function contextScore(doc: string, anchor: Anchor, from: number, to: number): number {
+	return (
+		commonSuffixLength(doc.slice(Math.max(0, from - CONTEXT_LENGTH), from), anchor.prefix) +
+		commonPrefixLength(doc.slice(to, to + CONTEXT_LENGTH), anchor.suffix)
+	);
+}
+
+/** Context a match must share with the anchor before it is trusted. */
+function requiredAgreement(anchor: Anchor): number {
+	if (anchor.exact.length >= DISTINCTIVE_LENGTH) return 0;
+	return Math.min(MIN_CONTEXT_AGREEMENT, anchor.prefix.length + anchor.suffix.length);
 }
 
 function allIndexesOf(doc: string, needle: string, from: number, to: number): number[] {
@@ -46,17 +59,17 @@ function allIndexesOf(doc: string, needle: string, from: number, to: number): nu
 }
 
 function pickByContext(doc: string, anchor: Anchor, hits: number[]): TextRange | null {
+	const hasContext = anchor.prefix.length + anchor.suffix.length > 0;
+	if (!hasContext && (hits.length > 1 || anchor.exact.length < DISTINCTIVE_LENGTH)) return null;
 	const scored = hits.map((index) => ({
 		index,
-		score:
-			commonSuffixLength(doc.slice(Math.max(0, index - CONTEXT_LENGTH), index), anchor.prefix) +
-			commonPrefixLength(doc.slice(index + anchor.exact.length, index + anchor.exact.length + CONTEXT_LENGTH), anchor.suffix),
-		distance: Math.abs(index - anchor.start),
+		score: contextScore(doc, anchor, index, index + anchor.exact.length),
+		distance: anchor.start >= 0 ? Math.abs(index - anchor.start) : 0,
 	}));
 	scored.sort((a, b) => b.score - a.score || a.distance - b.distance);
 	const [best, runnerUp] = scored;
-	if (!best) return null;
-	if (runnerUp && runnerUp.score === best.score && best.score === 0 && runnerUp.distance === best.distance) return null;
+	if (!best || best.score < requiredAgreement(anchor)) return null;
+	if (runnerUp && runnerUp.score === best.score && runnerUp.distance === best.distance) return null;
 	return { from: best.index, to: best.index + anchor.exact.length };
 }
 
@@ -74,7 +87,7 @@ function commonSuffixLength(a: string, b: string): number {
 
 function fuzzyResolve(doc: string, anchor: Anchor): TextRange | null {
 	const { exact } = anchor;
-	if (exact.length < 4 || exact.length > 32 * 64 || doc.length > FUZZY_TEXT_LIMIT) return null;
+	if (exact.length < 12 || exact.length > 32 * 64 || doc.length > FUZZY_TEXT_LIMIT) return null;
 	const maxErrors = Math.floor(exact.length * MAX_FUZZY_ERROR_RATIO);
 	const matches = search(doc, exact, maxErrors);
 	if (matches.length === 0) return null;
@@ -93,6 +106,7 @@ function fuzzyResolve(doc: string, anchor: Anchor): TextRange | null {
 		return { from: withContext[0]!.match.start, to: withContext[0]!.match.end };
 	}
 	const chosen = best.reduce((longest, match) => (match.end - match.start > longest.end - longest.start ? match : longest));
+	if (exact.length < DISTINCTIVE_LENGTH && contextScore(doc, anchor, chosen.start, chosen.end) < requiredAgreement(anchor)) return null;
 	return { from: chosen.start, to: chosen.end };
 }
 

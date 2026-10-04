@@ -39,11 +39,13 @@ export function createRangeCollection<Meta extends { id: string }>(options: { un
 			if (lost.size > 0) ({ ranges, meta } = handleLost(value, { ranges, meta }, lost, tr));
 			for (const effect of tr.effects) {
 				if (effect.is(replaceAll)) {
-					ranges = rangeSetFrom(effect.value.map((entry) => ({ id: entry.meta.id, range: entry.range })));
-					meta = new Map(effect.value.map((entry) => [entry.meta.id, entry.meta]));
+					const valid = effect.value.filter((entry) => entry.range.from >= 0 && entry.range.to <= tr.newDoc.length);
+					ranges = rangeSetFrom(valid.map((entry) => ({ id: entry.meta.id, range: entry.range })));
+					meta = new Map(valid.map((entry) => [entry.meta.id, entry.meta]));
 				} else if (effect.is(add)) {
 					const nextMeta = new Map(meta);
 					for (const entry of effect.value) {
+						if (entry.range.to > tr.newDoc.length || entry.range.from < 0) continue;
 						ranges = withRange(ranges, entry.meta.id, entry.range);
 						nextMeta.set(entry.meta.id, entry.meta);
 					}

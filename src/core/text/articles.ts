@@ -25,11 +25,12 @@ export interface ArticleFix extends TextRange {
  * that fixes a preceding "a"/"an" to match, or null when nothing needs fixing.
  */
 export function articleFixBefore(doc: string, spanFrom: number, nextText: string): ArticleFix | null {
-	const before = doc.slice(Math.max(0, spanFrom - 4), spanFrom);
-	const match = /(?:^|[^\p{L}])([Aa]n?)(\s+)$/u.exec(before);
+	const match = /([Aa]n?)([ \t]+)$/.exec(doc.slice(Math.max(0, spanFrom - 6), spanFrom));
 	if (!match) return null;
 	const article = match[1] ?? "";
 	const spacing = match[2] ?? "";
+	const articleStart = spanFrom - spacing.length - article.length;
+	if (articleStart > 0 && /[\p{L}\p{N}'’]/u.test(doc[articleStart - 1] ?? "")) return null;
 	const firstWord = /^\S+/.exec(nextText.trimStart())?.[0] ?? "";
 	if (firstWord === "") return null;
 	const wanted = articleFor(firstWord);

@@ -45,7 +45,9 @@ export default class VikalpPlugin extends Plugin {
 		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0 });
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
-		const repository = new SidecarRepository(this.app.vault.adapter as unknown as FileAdapter, pluginDir);
+		const repository = new SidecarRepository(this.app.vault.adapter as unknown as FileAdapter, pluginDir, (notePath, backup) => {
+			new Notice(`Vikalp couldn't read the saved alternatives for "${notePath}". The file was kept as ${backup.replace(/^.*\//, "")}.`, 10000);
+		});
 		this.controller = new NoteController(this.app, repository, this.store, () => this.settings);
 		this.panels = new Panels(this.app);
 		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
@@ -128,6 +130,7 @@ export default class VikalpPlugin extends Plugin {
 		this.controller.flushAll();
 		this.aiAlternatives.cancelAll();
 		this.lab.dispose();
+		this.linter.dispose();
 		this.labPopover.close();
 		this.statusBar?.dispose();
 		this.trimBar?.dispose();

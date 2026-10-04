@@ -68,3 +68,23 @@ describe("quote validation", () => {
 		expect(findQuote(doc, "It's not")).toEqual({ from: 0, to: 8 });
 	});
 });
+
+describe("anchoring prefers an orphan to a wrong guess", () => {
+	it("a ghosted word that was removed does not jump to the same word elsewhere", () => {
+		const doc = "I just think so. It was just fine.";
+		const anchor = makeAnchor(doc, { from: 2, to: 6 });
+		const edited = "I think so. It was just fine.";
+		expect(resolveAnchor(edited, anchor)).toBeNull();
+	});
+
+	it("an orphan saved without context is not re-placed on a common word", () => {
+		const anchor = { start: -1, end: -1, exact: "the", prefix: "", suffix: "" };
+		expect(resolveAnchor(essay, anchor)).toBeNull();
+	});
+
+	it("a long orphan saved without context is re-placed when its text is unique", () => {
+		const exact = "Figuring out which things go in which position";
+		const anchor = { start: -1, end: -1, exact, prefix: "", suffix: "" };
+		expect(resolveAnchor(essay, anchor)?.from).toBe(essay.indexOf(exact));
+	});
+});

@@ -9,6 +9,7 @@ import { OverflowPanel } from "./components/OverflowPanel";
 import { TrimBar } from "./components/TrimBar";
 import { ViewContext, useViewContext, type VikalpViewContext } from "./context";
 import { useAlternativesPanel } from "./hooks/useAlternativesPanel";
+import { useLintPanel } from "./hooks/useLintPanel";
 import { useStoreSlice } from "./hooks/useStore";
 
 export function Providers({ context, icon, children }: { context: VikalpViewContext; icon: IconRenderer; children?: ComponentChildren }) {
@@ -45,16 +46,7 @@ export function OverflowContainer() {
 }
 
 export function LintContainer() {
-	const { store, lint } = useViewContext();
-	const now = useNow();
-	const slice = useStoreSlice(store, (state) => ({
-		hasNote: state.note !== null,
-		hits: state.note?.lintHits ?? [],
-		run: state.lint,
-		isCurrentNote: state.lint.notePath !== null && state.lint.notePath === state.note?.path,
-		labRunning: state.lab.runningPass,
-	}));
-	return <LintPanel {...slice} actions={lint} now={now} />;
+	return <LintPanel model={useLintPanel()} now={useNow()} />;
 }
 
 export function LabContainer({ modelIdFor }: { modelIdFor: (mode: string) => string }) {

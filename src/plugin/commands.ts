@@ -2,9 +2,8 @@ import type { EditorView } from "@codemirror/view";
 import { Notice, type Command, type Hotkey } from "obsidian";
 import { removeRanges } from "../core/text/clean";
 import { cycleSpan, deleteAllGhosts, ghostRange, removeAiVersions, reviveRange, settleSpans, stashRange } from "../editor/actions";
-import { ghosts, lintMarks } from "../editor/collections";
+import { ghosts } from "../editor/collections";
 import { runAction } from "../editor/interaction";
-import { noteModeField, setNoteMode } from "../editor/noteFields";
 import { listSpans, spanAt } from "../editor/spansField";
 import { ALTERNATIVES_VIEW, LINT_VIEW, OVERFLOW_VIEW } from "../views/panelViews";
 import { confirmAction } from "./modals";
@@ -170,12 +169,4 @@ export function copyClean(view: EditorView, selectionOnly: boolean) {
 	const within = selectionOnly ? { from: selection.from, to: selection.to } : { from: 0, to: doc.length };
 	const text = removeRanges(doc, ghosts.list(view.state).map((entry) => entry.range), within);
 	void navigator.clipboard.writeText(text).then(() => new Notice(selectionOnly ? "Copied the selection without ghosted text." : "Copied the note without ghosted text."));
-}
-
-export function hasLintMarks(view: EditorView): boolean {
-	return lintMarks.list(view.state).length > 0;
-}
-
-export function setMarkers(view: EditorView, markersOn: boolean) {
-	if (view.state.field(noteModeField).markersOn !== markersOn) view.dispatch({ effects: setNoteMode.of({ markersOn }) });
 }

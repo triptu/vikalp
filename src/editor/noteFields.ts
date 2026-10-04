@@ -1,5 +1,5 @@
 import { invertedEffects } from "@codemirror/commands";
-import { StateEffect, StateField } from "@codemirror/state";
+import { StateEffect, StateField, type EditorState } from "@codemirror/state";
 import type { OverflowBlock } from "../core/model/types";
 
 export const addOverflowBlock = StateEffect.define<{ block: OverflowBlock; index: number }>();
@@ -62,6 +62,11 @@ export interface NoteMode {
 }
 
 export const setNoteMode = StateEffect.define<Partial<NoteMode>>();
+
+/** The note an editor is showing. Async work checks it to drop results meant for another note. */
+export function notePathOf(view: { state: EditorState }): string | null {
+	return view.state.field(noteModeField, false)?.path ?? null;
+}
 
 export const noteModeField = StateField.define<NoteMode>({
 	create: () => ({ path: null, loaded: false, markersOn: false, readThrough: false, focusedSpan: null, walkProposal: null }),

@@ -13,7 +13,7 @@ import { removeRanges } from "../core/text/clean";
 import { countWords } from "../core/text/segment";
 import { deletionChanges } from "../editor/actions";
 import { ghosts, lintMarks, trimProposals, type TrimProposalMeta } from "../editor/collections";
-import { noteModeField, setNoteMode } from "../editor/noteFields";
+import { noteModeField, notePathOf, setNoteMode } from "../editor/noteFields";
 import { snapshotNote } from "../editor/snapshot";
 import { VIKALP_EVENT, isolated, noHistory } from "../editor/transactions";
 import type { UiStore } from "../store/uiStore";
@@ -79,6 +79,7 @@ export class LabService {
 		}
 		this.setLab(pass.label, null);
 		this.openLintPanel();
+		const path = notePathOf(view);
 		try {
 			const voiceExcerpts = passId === "tone" ? await this.voiceExcerpts() : [];
 			const { value, model } = await this.client.structured<MarksOutput>({
@@ -90,6 +91,10 @@ export class LabService {
 				toolDescription: "Submit the marks.",
 				schema: marksSchema(passId === "typos"),
 			});
+			if (notePathOf(view) !== path) {
+				this.setLab(null, "The note changed before the marks came back, so they were dropped.");
+				return;
+			}
 			const doc = view.state.doc.toString();
 			const candidates = (value.marks ?? [])
 				.filter((mark) => mark && typeof mark.quote === "string")
@@ -184,7 +189,7 @@ export class LabService {
 				schema: trimSchema,
 				signal: abort.signal,
 			});
-			if (abort.signal.aborted || this.controller.editor !== view) return;
+			if (abort.signal.aborted || this.controller.editor !== view || notePathOf(view) !== path) return;
 			const doc = view.state.doc.toString();
 			const vetoed = new Set(this.vetoes.get(path) ?? []);
 			const ghostRanges = ghosts.list(view.state).map((entry) => entry.range);
@@ -301,10 +306,11 @@ export class LabService {
 		if (!view || trimProposals.list(view.state).length === 0) return;
 		this.setTrim({ ...this.store.getState().trim, walking: true });
 		this.walkTo(view, null);
+		view.contentDOM.blur();
 		this.walkKeyHandler = (event: KeyboardEvent) => {
 			if (event.metaKey || event.ctrlKey || event.altKey) return;
 			const target = event.target as HTMLElement | null;
-			if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+			if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable || target.closest(".cm-editor"))) return;
 			const decision = { k: "keep", c: "cut", s: "skip" }[event.key.toLowerCase()] as "keep" | "cut" | "skip" | undefined;
 			if (decision) {
 				event.preventDefault();

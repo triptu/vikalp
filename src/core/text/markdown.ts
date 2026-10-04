@@ -101,7 +101,3 @@ export function findBlocks(doc: string): Block[] {
 	closeCurrent();
 	return blocks;
 }
-
-export function blockAt(doc: string, position: number): Block | null {
-	return findBlocks(doc).find((block) => block.from <= position && position <= block.to) ?? null;
-}

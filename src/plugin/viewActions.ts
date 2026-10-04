@@ -6,6 +6,7 @@ import type { SpanUnit } from "../core/model/types";
 import {
 	addVersionToSpan,
 	createSpanFromSelection,
+	cycleSpan,
 	deleteVersionFromSpan,
 	insertOverflowBlock,
 	placeSpanOnSelection,
@@ -78,6 +79,10 @@ export function createAlternativesActions(deps: AlternativesDeps): AlternativesA
 			const version = spanMeta(view.state, spanId)?.versions.find((candidate) => candidate.id === versionId);
 			if (!version || spanMeta(view.state, spanId)?.activeVersion === versionId) return;
 			runAction(view, switchToVersion(view.state, spanId, version, switchOptions()));
+		}),
+		stepVersion: withEditor(controller, (view, spanId: string, step: number) => {
+			if ((spanMeta(view.state, spanId)?.versions.length ?? 0) < 2) return;
+			runAction(view, cycleSpan(view.state, spanId, step, switchOptions()));
 		}),
 		addVersion: withEditor(controller, (view, spanId: string, text: string) => {
 			ensureMarkersOn(view);

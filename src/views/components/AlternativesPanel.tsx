@@ -25,12 +25,6 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 
 	const activeIndex = span ? Math.max(0, span.versions.findIndex((version) => version.id === span.activeVersion)) : 0;
 
-	const step = (direction: number) => {
-		if (!span || span.versions.length < 2) return;
-		const next = span.versions[(activeIndex + direction + span.versions.length) % span.versions.length]!;
-		actions.selectVersion(span.id, next.id);
-	};
-
 	const onInputKey = (event: KeyboardEvent) => {
 		if (!span) return;
 		if (event.key === "Enter" && !event.isComposing) {
@@ -41,10 +35,10 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 			setDraft("");
 		} else if (event.key === "ArrowUp") {
 			event.preventDefault();
-			step(-1);
+			actions.stepVersion(span.id, -1);
 		} else if (event.key === "ArrowDown") {
 			event.preventDefault();
-			step(1);
+			actions.stepVersion(span.id, 1);
 		} else if (event.key === "Escape") {
 			event.preventDefault();
 			actions.focusEditor();
