@@ -54,6 +54,12 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 	return (
 		<div
 			className="vk-panel vk-alternatives"
+			onKeyDown={(event) => {
+				if (event.key === "Escape" && !event.defaultPrevented) {
+					event.preventDefault();
+					actions.focusEditor();
+				}
+			}}
 			onFocusIn={() => actions.setPanelFocused(true)}
 			onFocusOut={(event) => {
 				const next = event.relatedTarget as Node | null;

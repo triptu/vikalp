@@ -52,7 +52,7 @@ body {
 .vk-dots-row {
 	position: absolute;
 	right: 0;
-	bottom: -0.42em;
+	bottom: -0.5em;
 	display: flex;
 	gap: 2px;
 	align-items: center;
@@ -611,9 +611,9 @@ body {
 }
 
 .vk-bot svg {
-	width: 12px;
-	height: 12px;
-	color: var(--text-faint);
+	width: 13px;
+	height: 13px;
+	color: var(--text-muted);
 }
 
 .vk-version.is-active .vk-bot svg {
@@ -836,6 +836,7 @@ body {
 	resize: none;
 	overflow: hidden;
 	min-height: 0;
+	field-sizing: content;
 	background: transparent;
 	border: 1px solid transparent;
 	border-radius: var(--radius-s);
@@ -847,7 +848,7 @@ body {
 	box-shadow: none;
 }
 
-.vk-overflow-new .vk-autotextarea {
+.vk-panel .vk-overflow-new textarea.vk-autotextarea {
 	border: 1px dashed var(--background-modifier-border);
 	min-height: calc(1.5em + 14px);
 }
@@ -1252,8 +1253,21 @@ body {
 }
 
 .vk-trim-levels .vk-segment {
-	padding: 4px 2px;
-	font-size: 10.5px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0;
+	padding: 4px 2px 3px;
+	line-height: 1.2;
+}
+
+.vk-segment-detail {
+	font-size: 10px;
+	color: var(--text-faint);
+}
+
+.vk-segment.is-active .vk-segment-detail {
+	color: var(--text-accent);
 }
 
 .vk-lab-model-id {
