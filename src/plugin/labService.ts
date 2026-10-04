@@ -268,7 +268,7 @@ export class LabService {
 				userEvent: VIKALP_EVENT.trim,
 			}),
 		);
-		new Notice(`Ghosted ${proposals.length} ${proposals.length === 1 ? "cut" : "cuts"}. Revive any of them from the right-click menu.`);
+		new Notice(`Ghosted ${proposals.length} ${proposals.length === 1 ? "cut" : "cuts"}.`);
 		this.closeTrim();
 	}
 

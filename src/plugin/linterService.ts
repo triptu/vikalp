@@ -161,12 +161,15 @@ export class LinterService {
 			notice: !this.client.hasKey && tasks.length > 0 ? "Local rules only. Add an OpenRouter key in settings to run judgment rules too." : null,
 			ruleErrors: this.ruleErrors,
 			notePath: path,
+			cost: 0,
 		});
 		if (!canJudge) return;
+		const costsBefore = this.store.getState().costs.length;
 		try {
 			await this.runJudgments(view, path, tasks, token);
 		} finally {
-			if (token === this.runToken) this.patchRun({ running: false });
+			const runCost = this.store.getState().costs.slice(costsBefore).reduce((sum, entry) => sum + entry.cost, 0);
+			if (token === this.runToken) this.patchRun({ running: false, cost: runCost });
 		}
 	}
 
@@ -240,7 +243,7 @@ export class LinterService {
 					]),
 				);
 				try {
-					const { answers, model } = await this.client.classify(`Lint · ${first.rule.scope}`, state, questions);
+					const { answers, model } = await this.client.classify("Lint judgments (Jev)", state, questions);
 					group.forEach((task, index) => flag(task, answers[`q${index}`] ?? 0, model));
 					done(group.length);
 				} catch (error) {

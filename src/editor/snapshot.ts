@@ -41,6 +41,7 @@ export function snapshotNote(state: EditorState, path: string): NoteView {
 		severity: meta.severity,
 		scope: meta.scope,
 		source: meta.source,
+		byAi: meta.source === "lab" || Boolean(meta.judgment),
 		excerpt: meta.scope === "document" ? "" : doc.slice(range.from, range.to),
 		from: range.from,
 		...(meta.suggestion !== undefined ? { suggestion: meta.suggestion } : {}),

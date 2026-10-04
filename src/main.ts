@@ -81,7 +81,7 @@ export default class VikalpPlugin extends Plugin {
 		registerReadingModeGhosts(this);
 
 		this.addRibbonIcon("layers", "Toggle Overflow", () => void this.panels.toggle(OVERFLOW_VIEW, "right"));
-		this.addRibbonIcon("git-fork", "Toggle Alternatives", () => void this.panels.toggle(ALTERNATIVES_VIEW, "left"));
+		this.addRibbonIcon("split", "Toggle Alternatives", () => void this.panels.toggle(ALTERNATIVES_VIEW, "left"));
 		registerCommands(this);
 		this.addSettingTab(new VikalpSettingTab(this.app, this));
 
@@ -116,11 +116,6 @@ export default class VikalpPlugin extends Plugin {
 					if (note && note.lintHits.length === 0 && !this.store.getState().lint.running) void this.linter.run();
 				},
 				toggleLab: (anchor) => this.labPopover.toggle(anchor),
-				showCostLog: () => this.showCostLog(),
-				toggleReadThrough: () => {
-					const view = this.controller.editor;
-					if (view) this.readThrough.toggle(view);
-				},
 			});
 			this.trimBar = new TrimBarHost(this.app, this.store, viewContext);
 			this.controller.refreshActiveView();

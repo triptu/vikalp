@@ -38,7 +38,6 @@ export function OverflowContainer() {
 	const now = useNow();
 	const slice = useStoreSlice(store, (state) => ({
 		hasNote: state.note !== null,
-		noteTitle: state.note?.title ?? "",
 		blocks: state.note?.overflow ?? [],
 		hasPanelSpan: state.panelSpanId !== null,
 	}));

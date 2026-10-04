@@ -74,7 +74,7 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 						aria-selected={model.activeUnit === unit}
 						className={`vk-unit-tab${model.activeUnit === unit ? " is-active" : ""}`}
 						onClick={() => actions.createForUnit(unit)}
-						title={`Alternatives for the ${unit} at the cursor`}
+						title={`Make the ${unit} at the cursor a span`}
 					>
 						{label}
 					</button>
@@ -97,7 +97,7 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 
 			{unplaced.length > 0 && <UnplacedList spans={unplaced} model={model} />}
 
-			<div className="vk-panel-footer">return adds · ?? asks AI · esc closes</div>
+			<div className="vk-panel-footer">return adds · ?? asks AI · esc returns</div>
 		</div>
 	);
 }
@@ -136,15 +136,11 @@ function SpanEditor({
 							aria-selected={isActive}
 							className={`vk-version${isActive ? " is-active" : ""}${version.source === "ai" ? " is-ai" : ""}`}
 							onClick={() => actions.selectVersion(span.id, version.id)}
-							onContextMenu={(event) => {
-								event.preventDefault();
-								actions.deleteVersion(span.id, version.id);
-							}}
 							title={provenance}
 						>
 							<span className="vk-version-marker">{version.source === "ai" ? <Icon name="bot" className="vk-bot" /> : <span className="vk-bullet" />}</span>
 							<span className={`vk-version-text${span.unit === "paragraph" ? " is-paragraph" : ""}`}>{shownText}</span>
-							{index === 0 && span.versions.length > 1 && <span className="vk-version-tag">original</span>}
+							{index === 0 && <span className="vk-version-tag">original</span>}
 							<button
 								className="vk-version-delete clickable-icon"
 								aria-label="Delete this version"
@@ -211,7 +207,7 @@ function NoteField({ span, onChange }: { span: SpanView; onChange: (note: string
 	useEffect(() => setValue(span.note), [span.id, span.note]);
 	return (
 		<label className="vk-note-field">
-			<span className={`vk-note-dot-indicator${value.trim() ? " is-set" : ""}`} />
+			<Icon name="sticky-note" className={`vk-note-icon${value.trim() ? " is-set" : ""}`} />
 			<input
 				type="text"
 				value={value}
@@ -234,8 +230,8 @@ function EmptyState({ hasNote }: { hasNote: boolean }) {
 		<div className="vk-empty">
 			{hasNote ? (
 				<>
-					<p>Select a word, sentence or paragraph, then press ⌘⇧A or right-click → Alternatives for selection.</p>
-					<p className="vk-empty-hint">Or click a tab above to use the word, sentence or paragraph at the cursor.</p>
+					<p>Select text and press ⌘⇧A.</p>
+					<p className="vk-empty-hint">Or pick a unit above to use the one at the cursor.</p>
 				</>
 			) : (
 				<p>Open a note to play with alternatives.</p>

@@ -1,4 +1,4 @@
-import type { EditorView, ViewUpdate } from "@codemirror/view";
+import { closeHoverTooltips, type EditorView, type ViewUpdate } from "@codemirror/view";
 import { Notice } from "obsidian";
 import { noteModeField, setNoteMode } from "../editor/noteFields";
 import type { Panels } from "./panels";
@@ -22,14 +22,14 @@ export class ReadThrough {
 	}
 
 	private enter(view: EditorView) {
-		view.dispatch({ effects: setNoteMode.of({ readThrough: true, focusedSpan: null }) });
+		view.dispatch({ effects: [setNoteMode.of({ readThrough: true, focusedSpan: null }), closeHoverTooltips] });
 		this.savedSidebars = this.panels.collapseSidebars();
 		const sourceView = view.dom.closest<HTMLElement>(".markdown-source-view");
 		if (sourceView && !sourceView.hasClass(READABLE_CLASS)) {
 			sourceView.addClass(READABLE_CLASS);
 			this.addedReadableWidth = sourceView;
 		}
-		new Notice("Read-through mode. Press Esc or ⌘⇧R to return.", 2500);
+		new Notice("Read-through. Esc to exit.", 2000);
 	}
 
 	/** Restores the layout when read-through ends, however it was ended (Esc, command, status bar). */

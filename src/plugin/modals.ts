@@ -73,21 +73,48 @@ export class CostLogModal extends Modal {
 		const head = table.createEl("thead").createEl("tr");
 		for (const label of ["Time", "Purpose", "Model", "Tokens in / out", "Cost"]) head.createEl("th", { text: label });
 		const body = table.createEl("tbody");
-		for (const entry of [...this.entries].reverse()) {
+		for (const group of groupCalls(this.entries).reverse()) {
 			const row = body.createEl("tr");
-			row.createEl("td", { text: new Date(entry.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
-			const purpose = row.createEl("td", { text: entry.purpose });
-			if (entry.fallback) purpose.createSpan({ cls: "vk-cost-flag", text: "fallback" });
-			if (entry.error) purpose.createSpan({ cls: "vk-cost-flag is-error", text: "failed", attr: { title: entry.error } });
-			row.createEl("td", { cls: "vk-cost-model", text: entry.model });
-			row.createEl("td", { text: `${entry.inputTokens.toLocaleString()} / ${entry.outputTokens.toLocaleString()}` });
-			row.createEl("td", { text: formatCost(entry.cost) });
+			row.createEl("td", { text: new Date(group.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+			const purpose = row.createEl("td", { text: group.calls > 1 ? `${group.purpose} · ${group.calls} calls` : group.purpose });
+			if (group.fallback) purpose.createSpan({ cls: "vk-cost-flag", text: "fallback" });
+			if (group.error) purpose.createSpan({ cls: "vk-cost-flag is-error", text: "failed", attr: { title: group.error } });
+			row.createEl("td", { cls: "vk-cost-model", text: group.model });
+			row.createEl("td", { text: `${group.inputTokens.toLocaleString()} / ${group.outputTokens.toLocaleString()}` });
+			row.createEl("td", { text: preciseCost(group.cost) });
 		}
 	}
 
 	override onClose() {
 		this.contentEl.empty();
 	}
+}
+
+interface CallGroup extends CostEntry {
+	calls: number;
+}
+
+/** Folds bursts of identical calls (one lint run makes many Jev calls) into one row. */
+function groupCalls(entries: CostEntry[]): CallGroup[] {
+	const groups: CallGroup[] = [];
+	for (const entry of entries) {
+		const last = groups[groups.length - 1];
+		if (last && last.purpose === entry.purpose && last.model === entry.model && entry.at - last.at < 60_000) {
+			last.calls++;
+			last.inputTokens += entry.inputTokens;
+			last.outputTokens += entry.outputTokens;
+			last.cost += entry.cost;
+			last.fallback = last.fallback || entry.fallback;
+			last.error = last.error ?? entry.error;
+		} else {
+			groups.push({ ...entry, calls: 1 });
+		}
+	}
+	return groups;
+}
+
+function preciseCost(dollars: number): string {
+	return dollars >= 0.01 ? formatCost(dollars) : `$${dollars.toFixed(5)}`;
 }
 
 /** A small text prompt, used by "New rule from selection". */

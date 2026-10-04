@@ -29,7 +29,7 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 		<div className="vk-lab" role="dialog" aria-label="The Lab">
 			<div className="vk-lab-header">
 				<span className="vk-lab-title">The Lab</span>
-				<span className="vk-lab-subtitle">AI marks and trims. It never writes.</span>
+				<span className="vk-lab-subtitle">AI marks and trims. It never writes for you.</span>
 			</div>
 
 			<section className="vk-lab-section">
@@ -73,7 +73,7 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 								title={pass.description}
 							>
 								<span className="vk-lab-pass-label">{pass.label}</span>
-								{running ? <span className="vk-spinner" /> : <span className="vk-lab-pass-description">{pass.description}</span>}
+								{running && <span className="vk-spinner" />}
 							</button>
 						);
 					})}
@@ -107,7 +107,7 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 				</button>
 				<span className="vk-lab-footer-right">
 					<button className="vk-link-button" onClick={actions.showCostLog} title="Show the cost log">
-						{formatCost(sessionCost)} this session
+						{formatCost(sessionCost)} so far
 					</button>
 					<button className="clickable-icon" aria-label="Vikalp settings" onClick={actions.openSettings}>
 						<Icon name="settings" />

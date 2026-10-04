@@ -7,14 +7,13 @@ import { Icon } from "./Icon";
 
 export interface OverflowPanelProps {
 	hasNote: boolean;
-	noteTitle: string;
 	blocks: OverflowBlock[];
 	hasPanelSpan: boolean;
 	actions: OverflowActions;
 	now: number;
 }
 
-export function OverflowPanel({ hasNote, noteTitle, blocks, hasPanelSpan, actions, now }: OverflowPanelProps) {
+export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now }: OverflowPanelProps) {
 	const [draft, setDraft] = useState("");
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -36,11 +35,10 @@ export function OverflowPanel({ hasNote, noteTitle, blocks, hasPanelSpan, action
 
 	return (
 		<div className="vk-panel vk-overflow">
-			<div className="vk-panel-subtitle">Spare writing for {noteTitle}</div>
 			<div className="vk-overflow-new">
 				<AutoTextarea
 					value={draft}
-					placeholder="Keep something nearby…"
+					placeholder="Jot something to keep nearby…"
 					onInput={setDraft}
 					onKeyDown={(event) => {
 						if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -81,7 +79,7 @@ export function OverflowPanel({ hasNote, noteTitle, blocks, hasPanelSpan, action
 					))}
 				</ul>
 			)}
-			<div className="vk-panel-footer">⌘J inserts · drag into the note · alt keeps a copy</div>
+			<div className="vk-panel-footer">⌘J insert · drag to use · ⌥ keeps a copy</div>
 		</div>
 	);
 }
@@ -158,11 +156,14 @@ function OverflowBlockRow({
 						<button className="clickable-icon" aria-label="Copy" onClick={() => actions.copyBlock(block.id)}>
 							<Icon name="copy" />
 						</button>
-						{hasPanelSpan && (
-							<button className="clickable-icon" aria-label="Add as alternative to the selected span" onClick={() => actions.promoteToAlternative(block.id)}>
-								<Icon name="git-branch-plus" />
-							</button>
-						)}
+						<button
+							className="clickable-icon"
+							aria-label={hasPanelSpan ? "Make it a version of the span in the Alternatives panel" : "Open a span in the Alternatives panel to add this as a version"}
+							disabled={!hasPanelSpan}
+							onClick={() => actions.promoteToAlternative(block.id)}
+						>
+							<Icon name="split" />
+						</button>
 						<button className="clickable-icon" aria-label="Delete" onClick={() => actions.deleteBlock(block.id)}>
 							<Icon name="trash-2" />
 						</button>

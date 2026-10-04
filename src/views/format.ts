@@ -12,7 +12,7 @@ export function relativeTime(timestamp: number, now: number): string {
 
 export function formatCost(dollars: number): string {
 	if (dollars === 0) return "$0.00";
-	if (dollars < 0.01) return `$${dollars.toFixed(4)}`;
+	if (dollars < 0.01) return "<$0.01";
 	return `$${dollars.toFixed(2)}`;
 }
 

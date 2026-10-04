@@ -19,7 +19,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("AI").setHeading();
 		new Setting(containerEl)
 			.setName("OpenRouter API key")
-			.setDesc("Stored in this vault's plugin data, never in your notes. Nothing is sent anywhere until you click an AI action.")
+			.setDesc("Kept in plugin data, not in your notes. Used only when you click an AI action.")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				text.inputEl.addClass("vk-settings-key");
@@ -42,15 +42,17 @@ export class VikalpSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName(`${MODEL_MODE_LABELS[mode]} model`)
 				.setDesc(`OpenRouter model id. Default: ${DEFAULT_SETTINGS.models[mode]}`)
-				.addText((text) =>
+				.addText((text) => {
+					text.inputEl.addClass("vk-settings-key");
 					text.setValue(settings.models[mode]).onChange(async (value) => {
 						settings.models[mode] = value.trim() || DEFAULT_SETTINGS.models[mode];
 						await this.plugin.saveSettings();
-					}),
-				);
+					});
+				});
 		}
 		new Setting(containerEl)
 			.setName("AI alternatives per request")
+			.setDesc(`${settings.alternativesCount} at a time.`)
 			.addSlider((slider) =>
 				slider
 					.setLimits(3, 8, 1)
@@ -59,6 +61,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						settings.alternativesCount = value;
 						await this.plugin.saveSettings();
+						slider.sliderEl.closest(".setting-item")?.querySelector(".setting-item-description")?.setText(`${value} at a time.`);
 					}),
 			);
 		new Setting(containerEl)
@@ -92,7 +95,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			);
 		new Setting(containerEl)
 			.setName("Cycle with arrow keys while hovering")
-			.setDesc("Hover a marked span and press the arrow keys. Typing disarms it until the mouse moves again. Alt+↑/↓ always works with the cursor inside a span.")
+			.setDesc("Hover a span and press the arrow keys. Alt+↑/↓ works from the cursor.")
 			.addToggle((toggle) =>
 				toggle.setValue(settings.hoverCycling).onChange(async (value) => {
 					settings.hoverCycling = value;
@@ -103,7 +106,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Linter").setHeading();
 		new Setting(containerEl)
 			.setName("Judgment rules use")
-			.setDesc("Rules like awkward, hedging in spirit or LinkedIn voice need judgment. Jev is fast and cheap and only answers yes or no. If Jev is unavailable, Vikalp falls back to the Lite model and tells you.")
+			.setDesc("Jev is fast, cheap and only answers yes or no. If it's down, Vikalp uses the Lite model and tells you.")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("jev", "Jev (TypeSafe)")
@@ -125,7 +128,13 @@ export class VikalpSettingTab extends PluginSettingTab {
 			);
 		new Setting(containerEl)
 			.setName("Rules folder")
-			.setDesc("YAML rule files inside the plugin folder. Built-in rules are copied here so you can edit them.")
+			.setDesc("Folder inside the plugin folder for YAML rule files. Built-in rules are copied here so you can edit them.")
+			.addText((text) =>
+				text.setValue(settings.rulesFolder).onChange(async (value) => {
+					settings.rulesFolder = value.trim().replace(/^\/+|\/+$/g, "") || DEFAULT_SETTINGS.rulesFolder;
+					await this.plugin.saveSettings();
+				}),
+			)
 			.addButton((button) => button.setButtonText("Open folder").onClick(() => this.plugin.linter.openRulesFolder()))
 			.addButton((button) =>
 				button.setButtonText("Reload rules").onClick(async () => {
@@ -139,7 +148,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			const disabled = settings.disabledRules.includes(rule.id);
 			new Setting(rulesContainer)
 				.setName(rule.label)
-				.setDesc(`${rule.description ?? ""} (${rule.id} · ${rule.scope} · ${rule.engine}${rule.judgment ? " + judgment" : ""})`)
+				.setDesc(`${rule.description ?? ""}${rule.engine === "classifier" || rule.engine === "llm" || rule.judgment ? " Uses AI judgment." : ""}`)
 				.addToggle((toggle) =>
 					toggle.setValue(!disabled).onChange(async (enabled) => {
 						settings.disabledRules = enabled ? settings.disabledRules.filter((id) => id !== rule.id) : [...settings.disabledRules, rule.id];

@@ -1,6 +1,6 @@
 import type { LintHitView, LintRunState } from "../../store/uiStore";
 import type { LintActions } from "../context";
-import { relativeTime } from "../format";
+import { formatCost, relativeTime } from "../format";
 import { Icon } from "./Icon";
 
 export interface LintPanelProps {
@@ -16,6 +16,7 @@ export interface LintPanelProps {
 interface HitGroup {
 	label: string;
 	source: "rule" | "lab";
+	byAi: boolean;
 	severity: LintHitView["severity"];
 	hits: LintHitView[];
 }
@@ -26,8 +27,9 @@ function groupHits(hits: LintHitView[]): HitGroup[] {
 	const groups = new Map<string, HitGroup>();
 	for (const hit of hits) {
 		const key = `${hit.source}:${hit.label}`;
-		const group = groups.get(key) ?? { label: hit.label, source: hit.source, severity: hit.severity, hits: [] };
+		const group = groups.get(key) ?? { label: hit.label, source: hit.source, byAi: false, severity: hit.severity, hits: [] };
 		group.hits.push(hit);
+		if (hit.byAi) group.byAi = true;
 		if (SEVERITY_ORDER[hit.severity] < SEVERITY_ORDER[group.severity]) group.severity = hit.severity;
 		groups.set(key, group);
 	}
@@ -54,7 +56,7 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 	return (
 		<div className="vk-panel vk-lint">
 			<div className="vk-lint-toolbar">
-				<button className="mod-cta vk-run-button" onClick={actions.run} disabled={running}>
+				<button className="vk-run-button" onClick={actions.run} disabled={running}>
 					{running ? <span className="vk-spinner" /> : <Icon name="scan-text" />}
 					{running ? "Linting…" : "Run linter"}
 				</button>
@@ -67,6 +69,7 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 			<div className="vk-lint-summary">
 				{hits.length === 0 ? (ranAt ? "No marks. Reads clean." : "Nothing run yet.") : `${hits.length} ${hits.length === 1 ? "mark" : "marks"}`}
 				{ranAt && <span className="vk-faint"> · ran {relativeTime(ranAt, now)}</span>}
+				{ranAt && run.cost > 0 && <span className="vk-faint"> · {formatCost(run.cost)}</span>}
 			</div>
 
 			{running && run.judgmentTotal > 0 && (
@@ -92,7 +95,7 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 						<div key={hit.id} className={`vk-document-hit vk-severity-${hit.severity}`}>
 							<div className="vk-hit-label">
 								{hit.label}
-								{hit.source === "lab" && <span className="vk-ai-badge">AI</span>}
+								{hit.byAi && <span className="vk-ai-badge">AI</span>}
 							</div>
 							<div className="vk-hit-message">{hit.message}</div>
 							<button className="clickable-icon vk-hit-ignore" aria-label="Ignore" onClick={() => actions.ignore(hit.id)}>
@@ -117,14 +120,17 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 						<summary>
 							<span className={`vk-severity-chip vk-severity-${group.severity}`} />
 							<span className="vk-hit-group-label">{group.label}</span>
-							{group.source === "lab" && <span className="vk-ai-badge">AI</span>}
+							{group.byAi && <span className="vk-ai-badge" title="Some of these marks were made by a model">AI</span>}
 							<span className="vk-hit-count">{group.hits.length}</span>
 						</summary>
 						<ul>
 							{group.hits.map((hit) => (
 								<li key={hit.id} className="vk-hit" onClick={() => actions.jumpTo(hit.id)}>
 									<div className="vk-hit-excerpt">{truncate(hit.excerpt, 140)}</div>
-									<div className="vk-hit-message">{hit.message}</div>
+									<div className="vk-hit-message">
+										{hit.message}
+										{hit.byAi && hit.source === "rule" && <span className="vk-hit-by"> · {hit.model ? shortModel(hit.model) : "AI"}</span>}
+									</div>
 									{hit.suggestion !== undefined && (
 										<div className="vk-hit-fix">
 											<span className="vk-faint">Fix:</span> {hit.suggestion || "(delete)"}
@@ -181,6 +187,10 @@ export function LintPanel({ hasNote, hits, run, isCurrentNote, labRunning, actio
 			</div>
 		</div>
 	);
+}
+
+function shortModel(model: string): string {
+	return model.replace(/^[^/]+\//, "");
 }
 
 function truncate(text: string, length: number): string {

@@ -227,7 +227,7 @@ const vikalpTooltips = hoverTooltip(
 					const heading = document.createElement("div");
 					heading.className = "vk-tooltip-hit-heading";
 					appendText(heading, "span", "vk-tooltip-rule", hit.label);
-					if (hit.source === "lab") appendText(heading, "span", "vk-ai-badge", "AI");
+					if (hit.source === "lab" || hit.judgment) appendText(heading, "span", "vk-ai-badge", "AI");
 					row.appendChild(heading);
 					appendText(row, "div", "vk-tooltip-message", hit.message);
 					if (hit.suggestion !== undefined) {
