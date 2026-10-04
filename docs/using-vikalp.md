@@ -17,7 +17,7 @@ The word count in the status bar is also the switch. Click it to show or hide Vi
 1. Select a word, phrase, sentence or paragraph. Press **⌘⇧A** (or right-click → *Alternatives for selection*). A partial word grows to the whole word.
 2. The Alternatives panel opens on the left with the cursor in its input. Type a version and press **Return**. It shows in the note straight away.
 3. Add as many as you like. **↑/↓** in the panel swaps the version in the note as you go.
-4. **Esc** goes back to the note.
+4. **Esc** goes back to the note. A span you never gave a second version quietly disappears.
 
 To cycle in the note:
 
@@ -40,7 +40,7 @@ A paragraph span can contain word spans. If you switch to a paragraph version th
 - Select text and press **⌘⇧G**, or type **??** in the panel input and press Return, or click **Ask AI**.
 - Options stream in marked with a small robot. Your showing version never changes; you pick.
 - Each AI version remembers which model wrote it (hover it in the panel).
-- *Remove AI versions* clears them from a span.
+- *Remove AI versions* clears them from a span. AI versions aren't part of undo, so ⌘Z never steps through them.
 
 ## Ghosting
 
@@ -61,7 +61,7 @@ A side panel for writing you cut but want nearby. Each note has its own.
 
 Click the lint icon in the status bar, the **Run linter** button in the Lint panel, or run *Vikalp: Run linter*. Free local rules finish at once. Judgment rules (awkward, LinkedIn voice, AI-sounding paragraphs, and so on) fill in as Jev answers.
 
-Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the panel to jump to it.
+Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the panel to jump to it. Marks made by a model (Jev or an LLM) carry an **AI** label and a faint dashed underline.
 
 Rules are YAML files you can edit and add to. Select a phrase you hate and run *New rule from selection* to flag it everywhere from now on. See [rules.md](rules.md).
 
@@ -69,7 +69,7 @@ Rules are YAML files you can edit and add to. Select a phrase you hate and run *
 
 Click **Lab** in the status bar.
 
-- **Model**: Lite, Medium or Heavy. Applies to every AI action. The status bar shows the current mode.
+- **Model**: Lite, Medium or Heavy. Applies to every AI action. The status bar shows the current mode next to **Lab**.
 - **Mark** passes add marks you can review in the Lint panel: typos and punctuation (with Apply / Ignore and *Apply all*), weakest sentences, sentences that run long, convoluted sentences, words that don't fit the tone, and hedges and filler.
 - **Trim** levels fade the words the model would cut, from ~10% to ~50%. Click a faded passage to keep it. Then **Ghost the cuts** (nothing is deleted), **Make the cuts**, or **Walk through** them one at a time with **K**eep, **C**ut, **S**kip. **Done** discards what's left. Switching levels keeps the passages you chose to keep.
 
@@ -81,7 +81,7 @@ The model may only quote your own text. Anything it can't quote exactly is dropp
 
 ## Cost
 
-The status bar shows this session's AI spend. Click it for a log of every call: what it was for, the model, tokens and cost.
+The status bar shows this session's AI spend next to the model mode. The Lab popover links to a log of every call: what it was for, the model, tokens and cost. Each linter run also shows its own cost in the Lint panel.
 
 ## Hotkeys
 

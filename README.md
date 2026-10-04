@@ -38,3 +38,8 @@ Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/pl
 - [Lint rules](docs/rules.md)
 - [Adding a Lab pass](docs/adding-a-lab-pass.md)
 - [Testing](docs/testing.md)
+
+## Notes for your vault
+
+- Vikalp shows its own word count (without ghosted words) in the status bar. If Obsidian's core *Word count* plugin is on, you'll see two counts; turn the core one off in Settings → Core plugins if that bothers you.
+- Sidecars live in `.obsidian/plugins/vikalp/notes/`. See [docs/storage.md](docs/storage.md) for what that means for sync.

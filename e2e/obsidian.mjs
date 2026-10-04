@@ -21,7 +21,7 @@ export function prepareScratchVault({ keepVault = false } = {}) {
 	rmSync(target, { recursive: true, force: true });
 	cpSync(source, target, {
 		recursive: true,
-		filter: (path) => !/workspace(-mobile)?\.json$|\/notes(\/|$)|\/trash(\/|$)/.test(path.slice(source.length)),
+		filter: (path) => !/workspace(-mobile)?\.json$|\/notes(\/|$)|\/trash(\/|$)|\/plugins\/vikalp\/rules(\/|$)/.test(path.slice(source.length)),
 	});
 	return target;
 }
