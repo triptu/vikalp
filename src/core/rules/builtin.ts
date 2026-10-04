@@ -254,7 +254,7 @@ const SHIPPED_RULES: Rule[] = [
 		id: "linkedin-voice.one-liners",
 		label: "LinkedIn voice",
 		description: "More than three one-sentence paragraphs in a row.",
-		scope: "paragraph",
+		scope: "document",
 		engine: "metric",
 		severity: "suggestion",
 		metric: "one-sentence-paragraph-run",

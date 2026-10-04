@@ -198,15 +198,16 @@ describe("LinkedIn voice", () => {
 		expect(flaggedText("LinkedIn voice", doc)).toContain(expected);
 	});
 
-	it("flags a run of four one-sentence paragraphs", () => {
+	it("flags a run of four one-sentence paragraphs once, for the whole note", () => {
 		const doc = ["I got fired.", "It hurt.", "Then I started over.", "Best thing that ever happened."].join("\n\n");
-		expect(hitsWithLabel("LinkedIn voice", doc).filter((hit) => hit.ruleId === "linkedin-voice.one-liners")).toHaveLength(4);
+		const runHits = hitsWithLabel("LinkedIn voice", doc).filter((hit) => hit.ruleId === "linkedin-voice.one-liners");
+		expect(runHits).toEqual([expect.objectContaining({ scope: "document" })]);
 	});
 
 	it("flags a note where most paragraphs are one sentence, once, for the whole note", () => {
 		const line = "This line is one sentence and it goes on for a while to make the note long enough.";
 		const doc = Array.from({ length: 8 }, () => line).join("\n\n");
-		const noteHits = hitsWithLabel("LinkedIn voice", doc).filter((hit) => hit.scope === "document");
+		const noteHits = hitsWithLabel("LinkedIn voice", doc).filter((hit) => hit.ruleId === "linkedin-voice.short-paragraphs");
 		expect(noteHits).toEqual([expect.objectContaining({ from: 0, to: doc.length, ruleId: "linkedin-voice.short-paragraphs" })]);
 	});
 
