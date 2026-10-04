@@ -1,0 +1,209 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import type { OverflowBlock } from "../../core/model/types";
+import type { OverflowActions } from "../context";
+import { OVERFLOW_DRAG_TYPE as OVERFLOW_DRAG_MIME } from "../../core/constants";
+import { relativeTime } from "../format";
+import { Icon } from "./Icon";
+
+export interface OverflowPanelProps {
+	hasNote: boolean;
+	noteTitle: string;
+	blocks: OverflowBlock[];
+	hasPanelSpan: boolean;
+	actions: OverflowActions;
+	now: number;
+}
+
+export function OverflowPanel({ hasNote, noteTitle, blocks, hasPanelSpan, actions, now }: OverflowPanelProps) {
+	const [draft, setDraft] = useState("");
+	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+	if (!hasNote) {
+		return (
+			<div className="vk-panel vk-overflow">
+				<div className="vk-empty">
+					<p>Open a note to see its Overflow.</p>
+				</div>
+			</div>
+		);
+	}
+
+	const addDraft = () => {
+		if (!draft.trim()) return;
+		actions.addBlock(draft);
+		setDraft("");
+	};
+
+	return (
+		<div className="vk-panel vk-overflow">
+			<div className="vk-panel-subtitle">Spare writing for {noteTitle}</div>
+			<div className="vk-overflow-new">
+				<AutoTextarea
+					value={draft}
+					placeholder="Keep something nearby…"
+					onInput={setDraft}
+					onKeyDown={(event) => {
+						if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+							event.preventDefault();
+							addDraft();
+						}
+					}}
+				/>
+				{draft.trim() && (
+					<button className="vk-small-button" onClick={addDraft}>
+						Add <kbd>⌘↵</kbd>
+					</button>
+				)}
+			</div>
+
+			{blocks.length === 0 ? (
+				<div className="vk-empty">
+					<p>Nothing stashed yet.</p>
+					<p className="vk-empty-hint">Select text in the note and press ⌘⇧X, or right-click → Stash in Overflow.</p>
+				</div>
+			) : (
+				<ul className="vk-overflow-list" onDragLeave={() => setDragOverIndex(null)}>
+					{blocks.map((block, index) => (
+						<OverflowBlockRow
+							key={block.id}
+							block={block}
+							index={index}
+							now={now}
+							hasPanelSpan={hasPanelSpan}
+							actions={actions}
+							isDropTarget={dragOverIndex === index}
+							onDragOverRow={() => setDragOverIndex(index)}
+							onDropRow={(blockId) => {
+								setDragOverIndex(null);
+								actions.moveBlock(blockId, index);
+							}}
+						/>
+					))}
+				</ul>
+			)}
+			<div className="vk-panel-footer">⌘J inserts · drag into the note · alt keeps a copy</div>
+		</div>
+	);
+}
+
+function OverflowBlockRow({
+	block,
+	index,
+	now,
+	hasPanelSpan,
+	actions,
+	isDropTarget,
+	onDragOverRow,
+	onDropRow,
+}: {
+	block: OverflowBlock;
+	index: number;
+	now: number;
+	hasPanelSpan: boolean;
+	actions: OverflowActions;
+	isDropTarget: boolean;
+	onDragOverRow: () => void;
+	onDropRow: (blockId: string) => void;
+}) {
+	const [text, setText] = useState(block.text);
+	useEffect(() => setText(block.text), [block.text]);
+
+	return (
+		<li
+			className={`vk-overflow-block${isDropTarget ? " is-drop-target" : ""}`}
+			draggable
+			onDragStart={(event) => {
+				if (!event.dataTransfer) return;
+				event.dataTransfer.setData(OVERFLOW_DRAG_MIME, block.id);
+				event.dataTransfer.setData("text/plain", block.text);
+				event.dataTransfer.effectAllowed = "copyMove";
+			}}
+			onDragOver={(event) => {
+				if (event.dataTransfer?.types.includes(OVERFLOW_DRAG_MIME)) {
+					event.preventDefault();
+					onDragOverRow();
+				}
+			}}
+			onDrop={(event) => {
+				const draggedId = event.dataTransfer?.getData(OVERFLOW_DRAG_MIME);
+				if (draggedId && draggedId !== block.id) {
+					event.preventDefault();
+					onDropRow(draggedId);
+				}
+			}}
+			data-index={index}
+		>
+			<div className="vk-overflow-grip" title="Drag into the note, or to reorder">
+				<Icon name="grip-vertical" />
+			</div>
+			<div className="vk-overflow-body">
+				<AutoTextarea
+					value={text}
+					onInput={setText}
+					onBlur={() => text !== block.text && actions.updateBlock(block.id, text)}
+					onKeyDown={(event) => {
+						if (event.key.toLowerCase() === "j" && (event.metaKey || event.ctrlKey)) {
+							event.preventDefault();
+							if (text !== block.text) actions.updateBlock(block.id, text);
+							actions.insertAtCursor(block.id, event.altKey);
+						}
+					}}
+				/>
+				<div className="vk-overflow-meta">
+					<span className="vk-overflow-age">{relativeTime(block.createdAt, now)}</span>
+					<span className="vk-overflow-actions">
+						<button className="clickable-icon" aria-label="Insert at cursor (⌘J)" onClick={() => actions.insertAtCursor(block.id, false)}>
+							<Icon name="corner-down-left" />
+						</button>
+						<button className="clickable-icon" aria-label="Copy" onClick={() => actions.copyBlock(block.id)}>
+							<Icon name="copy" />
+						</button>
+						{hasPanelSpan && (
+							<button className="clickable-icon" aria-label="Add as alternative to the selected span" onClick={() => actions.promoteToAlternative(block.id)}>
+								<Icon name="git-branch-plus" />
+							</button>
+						)}
+						<button className="clickable-icon" aria-label="Delete" onClick={() => actions.deleteBlock(block.id)}>
+							<Icon name="trash-2" />
+						</button>
+					</span>
+				</div>
+			</div>
+		</li>
+	);
+}
+
+function AutoTextarea({
+	value,
+	placeholder,
+	onInput,
+	onBlur,
+	onKeyDown,
+}: {
+	value: string;
+	placeholder?: string;
+	onInput: (text: string) => void;
+	onBlur?: () => void;
+	onKeyDown?: (event: KeyboardEvent) => void;
+}) {
+	const ref = useRef<HTMLTextAreaElement>(null);
+	useLayoutEffect(() => {
+		const element = ref.current;
+		if (!element) return;
+		element.style.height = "auto";
+		element.style.height = `${element.scrollHeight}px`;
+	}, [value]);
+	return (
+		<textarea
+			ref={ref}
+			className="vk-autotextarea"
+			rows={1}
+			value={value}
+			placeholder={placeholder}
+			spellcheck
+			onInput={(event) => onInput((event.target as HTMLTextAreaElement).value)}
+			onBlur={onBlur}
+			onKeyDown={onKeyDown}
+		/>
+	);
+}

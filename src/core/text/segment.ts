@@ -13,7 +13,9 @@ const wordSegmenter = new Intl.Segmenter("en", { granularity: "word" });
 /** Sentence ranges within `text`, offset by `base`. Trailing whitespace is excluded. */
 export function findSentences(text: string, base = 0): TextRange[] {
 	const raw: TextRange[] = [];
-	for (const segment of sentenceSegmenter.segment(text)) {
+	// A single newline inside a paragraph is a soft wrap, not a sentence end. Same length keeps offsets.
+	const unwrapped = text.replace(/(?<!\n)\n(?!\n)/g, " ");
+	for (const segment of sentenceSegmenter.segment(unwrapped)) {
 		raw.push({ from: segment.index, to: segment.index + segment.segment.length });
 	}
 	const merged: TextRange[] = [];

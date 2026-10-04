@@ -1,7 +1,7 @@
 // Launches an isolated Obsidian instance on the dev vault and connects to it over CDP.
 // Uses its own user-data dir so Tushar's running Obsidian and real vault are never touched.
 import { spawn } from "node:child_process";
-import { mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "playwright-core";
 
@@ -10,7 +10,24 @@ const REPO_ROOT = resolve(new URL("..", import.meta.url).pathname);
 const PROFILE_DIR = resolve(REPO_ROOT, "e2e/.profile");
 const DEBUG_PORT = 9333;
 
-export async function launchObsidian({ vaultPath = resolve(REPO_ROOT, "dev-vault"), freshProfile = false } = {}) {
+/**
+ * Copies the dev vault to a scratch folder so runs never change the checked-in
+ * notes. `keepVault` reuses the previous copy, to test state across restarts.
+ */
+export function prepareScratchVault({ keepVault = false } = {}) {
+	const source = resolve(REPO_ROOT, "dev-vault");
+	const target = resolve(REPO_ROOT, "e2e/.artifacts/vault");
+	if (keepVault && existsSync(target)) return target;
+	rmSync(target, { recursive: true, force: true });
+	cpSync(source, target, {
+		recursive: true,
+		filter: (path) => !/workspace(-mobile)?\.json$|\/notes(\/|$)|\/trash(\/|$)/.test(path.slice(source.length)),
+	});
+	return target;
+}
+
+export async function launchObsidian({ vaultPath, keepVault = false, freshProfile = false } = {}) {
+	vaultPath = vaultPath ?? prepareScratchVault({ keepVault });
 	if (freshProfile) rmSync(PROFILE_DIR, { recursive: true, force: true });
 	mkdirSync(PROFILE_DIR, { recursive: true });
 	writeFileSync(
@@ -34,9 +51,10 @@ export async function launchObsidian({ vaultPath = resolve(REPO_ROOT, "dev-vault
 		page,
 		logs,
 		async close() {
-			await browser.close().catch(() => {});
+			await Promise.race([browser.close().catch(() => {}), new Promise((done) => setTimeout(done, 1500))]);
 			child.kill("SIGTERM");
-			await new Promise((done) => setTimeout(done, 800));
+			await new Promise((done) => setTimeout(done, 1000));
+			if (child.exitCode === null) child.kill("SIGKILL");
 		},
 	};
 }
