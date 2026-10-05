@@ -14,7 +14,7 @@ const MODES: Array<{ mode: ModelMode; label: string }> = [
 export interface LabPopoverProps {
 	modelMode: ModelMode;
 	modelId: string;
-	hasApiKey: boolean;
+	aiSetupHint: string | null;
 	hasNote: boolean;
 	lab: LabPassState;
 	trim: TrimState;
@@ -24,8 +24,8 @@ export interface LabPopoverProps {
 	actions: LabActions;
 }
 
-export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, sessionCost, markCount, keyHints, actions }: LabPopoverProps) {
-	const disabled = !hasApiKey || !hasNote;
+export function LabPopover({ modelMode, modelId, aiSetupHint, hasNote, lab, trim, sessionCost, markCount, keyHints, actions }: LabPopoverProps) {
+	const disabled = aiSetupHint !== null || !hasNote;
 	const busy = lab.runningPass !== null;
 	return (
 		<div className="vk-lab" role="dialog" aria-label="The Lab">
@@ -46,9 +46,9 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 				</div>
 			</header>
 
-			{!hasApiKey && (
+			{aiSetupHint && (
 				<div className="vk-lab-warning">
-					Add an OpenRouter key to use the Lab.{" "}
+					{aiSetupHint} to use the Lab.{" "}
 					<button className="vk-inline-action" onClick={actions.openSettings}>
 						Open settings
 					</button>
