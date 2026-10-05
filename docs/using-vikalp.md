@@ -47,6 +47,7 @@ A paragraph span can contain word spans. If you switch to a paragraph version th
 - Options stream in marked with a small robot. Your showing version never changes; you pick.
 - Each AI version remembers which model wrote it (hover it in the panel).
 - *Remove AI versions* clears them from a span. AI versions aren't part of undo, so ⌘Z never steps through them.
+- **Find words worth playing with** (in the Lab, or right-click a selection) does this for the whole note in one go. The model picks up to 8 words or short phrases where the wording matters most and adds versions to each. Nothing in the note changes; hover a marked word and use the arrow keys. *Remove all AI versions in note* clears them again.
 
 ![AI versions, marked with a robot, below the ones you wrote](screenshots/guide/ai-alternatives.png)
 

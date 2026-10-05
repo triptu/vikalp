@@ -277,6 +277,23 @@ await flow("settings: rules are grouped, and a new rule added in the editor flag
 	});
 });
 
+await flow("find words worth playing with: one click adds AI versions at several spots", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote(ESSAY);
+		const before = await driver.docText();
+		await driver.command("vikalp:find-spots");
+		await driver.page.waitForFunction(() => window.app.plugins.plugins.vikalp.store.getState().lab.runningPass === null, null, { timeout: 90000 });
+		const note = await noteState(driver);
+		const spotted = note.spans.filter((span) => span.versions.some((version) => version.source === "ai"));
+		assert(spotted.length >= 3, `at least three spots got AI versions (${spotted.length}: ${spotted.map((span) => span.text).join(", ")})`);
+		assert((await driver.docText()) === before, "the note text did not change");
+		const underlines = await driver.evaluate(() => document.querySelectorAll(".vk-span").length);
+		assert(underlines >= 3, "the spots are marked in the note");
+		await driver.command("vikalp:remove-all-ai-alternatives");
+		assert((await noteState(driver)).spans.length === 0, "removing AI versions clears the spots");
+	});
+});
+
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} passed, ${failed.length} failed`);
 process.exit(failed.length ? 1 : 0);

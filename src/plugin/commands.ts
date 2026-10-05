@@ -48,6 +48,8 @@ export function registerCommands(plugin: VikalpPlugin) {
 		hotkeys: mod("G", true),
 		run: (view) => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }),
 	});
+	editorCommand({ id: "find-spots", name: "Find words worth playing with (AI)", icon: "sparkles", run: () => plugin.findSpots() });
+	editorCommand({ id: "remove-all-ai-alternatives", name: "Remove all AI versions in note", run: () => plugin.removeAllAiVersions() });
 	editorCommand({
 		id: "next-version",
 		name: "Next version of span at cursor",
