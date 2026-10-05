@@ -12,12 +12,18 @@ The word count in the status bar is also the switch. Click it to show or hide Vi
 - A paragraph with versions has a thin bar in the left margin with a column of dots.
 - A yellow dot means the span has a note. Hover it to read the note.
 
+![Word spans with their dot rows, and a span note on hover](screenshots/guide/markers.png)
+
+![A paragraph span: the bar and dots in the left margin](screenshots/guide/paragraph-span.png)
+
 ## Alternatives
 
 1. Select a word, phrase, sentence or paragraph. Press **⌘⇧A** (or right-click → *Alternatives for selection*). A partial word grows to the whole word.
 2. The Alternatives panel opens on the left with the cursor in its input. Type a version and press **Return**. It shows in the note straight away.
 3. Add as many as you like. **↑/↓** in the panel swaps the version in the note as you go.
 4. **Esc** goes back to the note. A span you never gave a second version quietly disappears.
+
+![The Alternatives panel with three versions of "tension"](screenshots/guide/alternatives-panel.png)
 
 To cycle in the note:
 
@@ -42,11 +48,15 @@ A paragraph span can contain word spans. If you switch to a paragraph version th
 - Each AI version remembers which model wrote it (hover it in the panel).
 - *Remove AI versions* clears them from a span. AI versions aren't part of undo, so ⌘Z never steps through them.
 
+![AI versions, marked with a robot, below the ones you wrote](screenshots/guide/ai-alternatives.png)
+
 ## Ghosting
 
 Select text and press **⌘⇧/** (or right-click → *Ghost it*). It fades to about 10% and stays in the note. Hover to read it. Right-click → *Revive* brings it back.
 
 Ghosted words aren't counted in the status bar; the count shows them as "(+12 ghosted)". *Copy clean text* copies the note without them. *Delete all ghosted text in note* removes them for good, after asking.
+
+![A ghosted sentence, still in the note at about 10%](screenshots/guide/ghost.png)
 
 ## Overflow
 
@@ -55,7 +65,9 @@ A side panel for writing you cut but want nearby. Each note has its own.
 - Select text and press **⌘⇧X** to move it to Overflow.
 - Drag a block back into the note, or focus it and press **⌘J** to insert it at the cursor. Hold **⌥** to keep a copy.
 - Blocks are editable. Drag them to reorder.
-- With a span open in the Alternatives panel, the branch icon on a block makes it a version of that span.
+- With a span open in the Alternatives panel, the split icon on a block makes it a version of that span.
+
+![The Overflow panel with one stashed block](screenshots/guide/overflow.png)
 
 ## Linter
 
@@ -63,21 +75,31 @@ Click the lint icon in the status bar, the **Run linter** button in the Lint pan
 
 Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the panel to jump to it. Marks made by a model (Jev or an LLM) carry an **AI** label and a faint dashed underline.
 
+![Lint marks in the note, a hover card, and the Lint panel grouped by rule](screenshots/guide/linter.png)
+
 Rules are YAML files you can edit and add to. Select a phrase you hate and run *New rule from selection* to flag it everywhere from now on. See [rules.md](rules.md).
 
 ## The Lab
 
 Click **Lab** in the status bar.
 
+![The Lab popover](screenshots/guide/lab.png)
+
 - **Model**: Lite, Medium or Heavy. Applies to every AI action. The status bar shows the current mode next to **Lab**.
 - **Mark** passes add marks you can review in the Lint panel: typos and punctuation (with Apply / Ignore and *Apply all*), weakest sentences, sentences that run long, convoluted sentences, words that don't fit the tone, and hedges and filler.
 - **Trim** levels fade the words the model would cut, from ~10% to ~50%. Click a faded passage to keep it. Then **Ghost the cuts** (nothing is deleted), **Make the cuts**, or **Walk through** them one at a time with **K**eep, **C**ut, **S**kip. **Done** discards what's left. Switching levels keeps the passages you chose to keep.
+
+![The typo pass: each fix shows on hover with Apply and Ignore](screenshots/guide/typo-pass.png)
+
+![A slight trim: faded words would go, and the trim bar shows the word count change](screenshots/guide/trim.png)
 
 The model may only quote your own text. Anything it can't quote exactly is dropped and counted.
 
 ## Read-through
 
 **⌘⇧R** hides every marker, collapses the sidebars and narrows the text so you read like a reader. Ghosted text stays dimmed. **Esc** returns.
+
+![Read-through mode](screenshots/guide/read-through.png)
 
 ## Cost
 
@@ -97,4 +119,4 @@ The status bar shows this session's AI spend next to the model mode. The Lab pop
 | Insert an Overflow block | ⌘J (block focused) |
 | Read-through mode | ⌘⇧R |
 
-All of them can be changed in Settings → Hotkeys. Every other action is a command (search "Vikalp" in the command palette).
+The ⌘ shortcuts can be changed in Settings → Hotkeys. The arrow, ⌥↑/↓ and ⌥⌫ keys are built into the editor; the commands *Next version* and *Previous version* can be bound to other keys if you prefer. Every other action is a command (search "Vikalp" in the command palette).
