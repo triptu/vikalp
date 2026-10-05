@@ -8,5 +8,6 @@ description: Take and review screenshots of Vikalp in the dev vault (light and d
 - Full gallery: `npm run build && npm run shots` writes `docs/screenshots/<theme>-NN-name.png`. Add `-- dark` for one theme or `--no-ai` to skip paid AI steps.
 - Ad hoc: write a small script with `startSession()` and the driver in `e2e/driver.mjs` (`openNote`, `select`, `command`, `type`, `press`, `hover`, `click`, `screenshot`). Save to `/tmp` while iterating.
 - Read the PNGs and check against the spec's visual rules: Obsidian variables only, thin markers (1px underline, 3px dots, 2px paragraph bar), quiet by default, nothing animated except the swap fade, looks right in both themes.
+- For a PR, attach the reviewed shots as proof (see CLAUDE.md): resize to ~900px wide (`sips -Z 900`), write a light/dark table in the body that points at the local files, and run `gh pr edit <n> --body-file body.md --attach ./a.png --attach ./b.png` from the folder holding them.
 - Crop and upscale small details (dots, bars) with PIL before judging them.
 - Obsidian's own status bar items sit next to Vikalp's; the right sidebar's bottom is covered by the status bar, so panels keep 36px bottom padding.
