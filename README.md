@@ -32,7 +32,7 @@ npm install
 npm run build
 ```
 
-Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and add an OpenRouter API key in Vikalp's settings for the AI features. Desktop only.
+Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and add an OpenRouter API key in Vikalp's settings for the AI features. Turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys. Desktop only.
 
 ## Develop
 
