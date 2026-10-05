@@ -11,9 +11,11 @@ export interface OverflowPanelProps {
 	hasPanelSpan: boolean;
 	actions: OverflowActions;
 	now: number;
+	/** The Actions menu hotkey, or null when it has none. */
+	actionsKey: string | null;
 }
 
-export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now }: OverflowPanelProps) {
+export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now, actionsKey }: OverflowPanelProps) {
 	const [draft, setDraft] = useState("");
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -57,7 +59,9 @@ export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now }: O
 			{blocks.length === 0 ? (
 				<div className="vk-empty">
 					<p>Nothing stashed yet.</p>
-					<p className="vk-empty-hint">Select text in the note, press ⌘. then S, or right-click → Stash in Overflow.</p>
+					<p className="vk-empty-hint">
+						{actionsKey ? `Select text in the note, press ${actionsKey} then S, or right-click → Stash in Overflow.` : "Select text in the note and right-click → Stash in Overflow."}
+					</p>
 				</div>
 			) : (
 				<ul className="vk-overflow-list" onDragLeave={() => setDragOverIndex(null)}>

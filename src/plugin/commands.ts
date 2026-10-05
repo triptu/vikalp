@@ -17,38 +17,53 @@ export function targetSpan(plugin: VikalpPlugin, view: EditorView): string | nul
 	return spanAt(view.state, view.state.selection.main.head) ?? plugin.store.getState().panelSpanId;
 }
 
+type EditorCommand = Omit<Command, "callback" | "editorCallback" | "checkCallback"> & { run: (view: EditorView) => void };
+
+function addEditorCommand(plugin: VikalpPlugin, command: EditorCommand) {
+	const { run, ...rest } = command;
+	plugin.addCommand({
+		...rest,
+		checkCallback: (checking) => {
+			const view = plugin.controller.editor;
+			if (!view) return false;
+			if (!checking) run(view);
+			return true;
+		},
+	});
+}
+
+/** The commands that get Vikalp's suggested hotkeys when the writer turns them on. */
+export const HOTKEY_COMMANDS = { actions: "actions", alternatives: "alternatives-for-selection", askAi: "ai-alternatives-for-selection" } as const;
+
+/**
+ * Registers the hotkey commands, with the suggested hotkeys as their defaults
+ * or with none. Hotkeys the writer set in Settings → Hotkeys win either way.
+ */
+export function registerHotkeyCommands(plugin: VikalpPlugin, withHotkeys: boolean) {
+	const keys = (key: string, shift = false) => (withHotkeys ? mod(key, shift) : undefined);
+	addEditorCommand(plugin, { id: HOTKEY_COMMANDS.actions, name: "Actions menu", icon: "zap", hotkeys: keys("."), run: (view) => plugin.actionMenu.open(view) });
+	addEditorCommand(plugin, {
+		id: HOTKEY_COMMANDS.alternatives,
+		name: "Alternatives for selection",
+		icon: "split",
+		hotkeys: keys("J"),
+		run: (view) => startAlternatives(plugin.alternativesDeps, view),
+	});
+	addEditorCommand(plugin, {
+		id: HOTKEY_COMMANDS.askAi,
+		name: "AI alternatives for selection",
+		icon: "sparkles",
+		hotkeys: keys("J", true),
+		run: (view) => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }),
+	});
+}
+
 export function registerCommands(plugin: VikalpPlugin) {
-	const editorCommand = (command: Omit<Command, "callback" | "editorCallback" | "checkCallback"> & { run: (view: EditorView) => void }) => {
-		const { run, ...rest } = command;
-		plugin.addCommand({
-			...rest,
-			checkCallback: (checking) => {
-				const view = plugin.controller.editor;
-				if (!view) return false;
-				if (!checking) run(view);
-				return true;
-			},
-		});
-	};
+	const editorCommand = (command: EditorCommand) => addEditorCommand(plugin, command);
 	const selectionOf = (view: EditorView) => ({ from: view.state.selection.main.from, to: view.state.selection.main.to });
 
 	editorCommand({ id: "toggle-markers", name: "Toggle markers", run: (view) => plugin.toggleMarkers(view) });
-	editorCommand({ id: "actions", name: "Actions menu", icon: "zap", hotkeys: mod("."), run: (view) => plugin.actionMenu.open(view) });
-
-	editorCommand({
-		id: "alternatives-for-selection",
-		name: "Alternatives for selection",
-		icon: "split",
-		hotkeys: mod("J"),
-		run: (view) => startAlternatives(plugin.alternativesDeps, view),
-	});
-	editorCommand({
-		id: "ai-alternatives-for-selection",
-		name: "AI alternatives for selection",
-		icon: "sparkles",
-		hotkeys: mod("J", true),
-		run: (view) => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }),
-	});
+	registerHotkeyCommands(plugin, plugin.settings.suggestedHotkeys);
 	editorCommand({ id: "find-spots", name: "Find words worth playing with (AI)", icon: "sparkles", run: () => plugin.findSpots() });
 	editorCommand({ id: "remove-all-ai-alternatives", name: "Remove all AI versions in note", run: () => plugin.removeAllAiVersions() });
 	editorCommand({

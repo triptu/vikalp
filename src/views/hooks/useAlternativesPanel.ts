@@ -1,5 +1,5 @@
 import type { SpanUnit } from "../../core/model/types";
-import type { SpanView } from "../../store/uiStore";
+import type { KeyHints, SpanView } from "../../store/uiStore";
 import { useViewContext, type AlternativesActions } from "../context";
 import { useStoreSlice } from "./useStore";
 
@@ -14,6 +14,7 @@ export interface AlternativesPanelModel {
 	modelLabel: string;
 	/** True while the writer is adding a note from the ⋯ menu. */
 	editingNote: boolean;
+	keyHints: KeyHints;
 }
 
 /** Everything the Alternatives panel shows, plus the actions it can take. */
@@ -26,6 +27,7 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		hasApiKey: state.hasApiKey,
 		modelMode: state.modelMode,
 		noteEditor: state.noteEditorSpanId,
+		keyHints: state.keyHints,
 	}));
 	const span = slice.note?.spans.find((candidate) => candidate.id === slice.panelSpanId && !candidate.orphaned) ?? null;
 	return {
@@ -38,5 +40,6 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		actions: alternatives,
 		modelLabel: modelLabel(slice.modelMode),
 		editingNote: span !== null && slice.noteEditor === span.id,
+		keyHints: slice.keyHints,
 	};
 }

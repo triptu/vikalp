@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { SpanUnit } from "../../core/model/types";
-import type { SpanView } from "../../store/uiStore";
+import type { KeyHints, SpanView } from "../../store/uiStore";
 import type { AlternativesPanelModel } from "../hooks/useAlternativesPanel";
 import { Icon } from "./Icon";
 
@@ -85,7 +85,7 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 					model={model}
 				/>
 			) : (
-				<EmptyState hasNote={model.hasNote} />
+				<EmptyState hasNote={model.hasNote} keyHints={model.keyHints} />
 			)}
 
 			{unplaced.length > 0 && <UnplacedList spans={unplaced} model={model} />}
@@ -225,7 +225,7 @@ function NoteField({ span, autoFocus, onChange }: { span: SpanView; autoFocus: b
 	);
 }
 
-function EmptyState({ hasNote }: { hasNote: boolean }) {
+function EmptyState({ hasNote, keyHints }: { hasNote: boolean; keyHints: KeyHints }) {
 	if (!hasNote) {
 		return (
 			<div className="vk-empty">
@@ -236,21 +236,34 @@ function EmptyState({ hasNote }: { hasNote: boolean }) {
 	return (
 		<div className="vk-empty vk-alt-empty">
 			<p>
-				Put the cursor on a word and press <kbd>⌘J</kbd>.
+				{keyHints.alternatives ? (
+					<>
+						Put the cursor on a word and press <kbd>{keyHints.alternatives}</kbd>.
+					</>
+				) : (
+					<>
+						Put the cursor on a word and run <b>Alternatives for selection</b>, or right-click it.
+					</>
+				)}
 			</p>
 			<ul className="vk-empty-keys">
 				<li>
-					<kbd>⌘J</kbd> again widens to the sentence, then the paragraph
+					{keyHints.alternatives ? <kbd>{keyHints.alternatives}</kbd> : "Running it"} again widens to the sentence, then the paragraph
 				</li>
-				<li>
-					<kbd>⌘⇧J</kbd> asks AI for versions
-				</li>
+				{keyHints.askAi && (
+					<li>
+						<kbd>{keyHints.askAi}</kbd> asks AI for versions
+					</li>
+				)}
 				<li>
 					<kbd>⌥↑</kbd> <kbd>⌥↓</kbd> try versions from the note
 				</li>
-				<li>
-					<kbd>⌘.</kbd> shows every action
-				</li>
+				{keyHints.actions && (
+					<li>
+						<kbd>{keyHints.actions}</kbd> shows every action
+					</li>
+				)}
+				{!keyHints.alternatives && <li>Turn on suggested hotkeys in Vikalp's settings, or set your own in Settings → Hotkeys</li>}
 			</ul>
 		</div>
 	);

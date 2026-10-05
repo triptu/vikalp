@@ -1,4 +1,4 @@
-import { PluginSettingTab, type App, type ExtraButtonComponent, type Setting, type SettingDefinition, type SettingDefinitionItem } from "obsidian";
+import { Platform, PluginSettingTab, type App, type ExtraButtonComponent, type Setting, type SettingDefinition, type SettingDefinitionItem } from "obsidian";
 import { DEFAULT_SETTINGS, MODEL_MODE_LABELS, type ModelMode, type VikalpSettings } from "../core/settings";
 import { engineChoice } from "../core/rules/draft";
 import { groupRulesByLabel, usesAi, type RuleFamily } from "../core/rules/groups";
@@ -31,6 +31,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		return [
 			{ type: "group", heading: "AI", items: this.aiSettings() },
 			{ type: "group", heading: "Writing", items: this.writingSettings() },
+			{ type: "group", heading: "Hotkeys", items: this.hotkeySettings() },
 			{ type: "group", heading: "Linter", items: [...this.linterSettings(), ...this.ruleSettings()] },
 			{ type: "group", heading: "Lab", items: this.labSettings() },
 		];
@@ -101,6 +102,24 @@ export class VikalpSettingTab extends PluginSettingTab {
 				name: "Cycle with arrow keys while hovering",
 				desc: "Hover a marked word and press the arrow keys. Alt+↑/↓ works from the cursor.",
 				control: { type: "toggle", key: "hoverCycling" },
+			},
+		];
+	}
+
+	private hotkeySettings(): SettingDefinition[] {
+		const keys = Platform.isMacOS ? { alternatives: "⌘J", askAi: "⌘⇧J", actions: "⌘." } : { alternatives: "Ctrl+J", askAi: "Ctrl+Shift+J", actions: "Ctrl+." };
+		return [
+			{
+				name: "Use suggested hotkeys",
+				desc: `${keys.alternatives} for alternatives, ${keys.askAi} to ask AI, and ${keys.actions} for every other action. Off by default so Vikalp never takes keys you or another plugin use.`,
+				aliases: ["shortcuts", "keys", "keyboard"],
+				control: { type: "toggle", key: "suggestedHotkeys" },
+			},
+			{
+				name: "Change hotkeys",
+				desc: "Set or change the key for any Vikalp command in Settings → Hotkeys.",
+				aliases: ["shortcuts", "keyboard"],
+				action: () => this.openHotkeys(),
 			},
 		];
 	}
@@ -235,6 +254,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 
 	private binding(key: string): ControlBinding {
 		const settings = this.plugin.settings;
+		if (key === "suggestedHotkeys") return { get: () => settings.suggestedHotkeys, set: (value) => this.plugin.setSuggestedHotkeys(value === true) };
 		if (key === "modelMode") return { get: () => settings.modelMode, set: (value) => this.plugin.setModelMode(value as ModelMode) };
 		if (key === "voiceReferenceNotes") {
 			return {
@@ -292,6 +312,12 @@ export class VikalpSettingTab extends PluginSettingTab {
 		settings.disabledRules = enabled ? settings.disabledRules.filter((id) => !ids.has(id)) : [...new Set([...settings.disabledRules, ...ids])];
 		await this.plugin.saveSettings();
 		this.update();
+	}
+
+	private openHotkeys() {
+		// Obsidian has no public API for opening another settings tab; this is the one the app uses itself.
+		const setting = (this.app as unknown as { setting?: { openTabById: (id: string) => { setQuery?: (query: string) => void } | undefined } }).setting;
+		setting?.openTabById("hotkeys")?.setQuery?.(this.plugin.manifest.name);
 	}
 
 	private openEditor(rule: Rule | null) {

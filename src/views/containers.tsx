@@ -41,6 +41,7 @@ export function OverflowContainer() {
 		hasNote: state.note !== null,
 		blocks: state.note?.overflow ?? [],
 		hasPanelSpan: state.panelSpanId !== null,
+		actionsKey: state.keyHints.actions,
 	}));
 	return <OverflowPanel {...slice} actions={overflow} now={now} />;
 }
@@ -59,6 +60,7 @@ export function LabContainer({ modelIdFor }: { modelIdFor: (mode: string) => str
 		trim: state.trim,
 		sessionCost: sessionCost(state),
 		markCount: state.note?.lintHits.filter((hit) => hit.source === "lab").length ?? 0,
+		keyHints: state.keyHints,
 	}));
 	return <LabPopover {...slice} modelId={modelIdFor(slice.modelMode)} actions={lab} />;
 }
