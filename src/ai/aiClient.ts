@@ -4,6 +4,8 @@ import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import type { TSchema } from "typebox";
 import type { ModelMode, VikalpSettings } from "../core/settings";
 
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+
 export class AiError extends Error {}
 
 export interface CostRecord {
@@ -71,6 +73,9 @@ export class AiClient {
 	private chatModel(mode: ModelMode): Model<never> {
 		const id = this.modelId(mode);
 		const known = this.models.getModel("openrouter", id);
+		// pi-ai sends Anthropic models through the Anthropic SDK, which can't connect from Obsidian's
+		// renderer. OpenRouter's OpenAI-style endpoint serves every model, so all calls use it.
+		if (known && known.api !== "openai-completions") return { ...known, api: "openai-completions", baseUrl: OPENROUTER_BASE_URL } as unknown as Model<never>;
 		if (known) return known as Model<never>;
 		const template = this.models.getModel("openrouter", "openai/gpt-6-luna");
 		if (!template) throw new AiError(`Unknown model "${id}".`);
