@@ -251,6 +251,32 @@ await flow("editing while judgment rules run never breaks the editor", async () 
 	});
 });
 
+await flow("settings: rules are grouped, and a new rule added in the editor flags text", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote("Essays/LinkedIn draft.md");
+		await driver.evaluate(() => {
+			window.app.setting.open();
+			window.app.setting.openTabById("vikalp");
+		});
+		await driver.wait(600);
+		const familyNames = await driver.evaluate(() => [...document.querySelectorAll(".vk-rule-family .setting-item-name")].map((element) => element.firstChild?.textContent));
+		assert(familyNames.filter((name) => name === "Hedging").length === 1, "Hedging shows once, as a family");
+		await driver.click(".setting-item button", "Add rule");
+		await driver.page.locator(".vk-rule-editor input[type=text]").first().fill("Corporate speak");
+		await driver.page.locator(".vk-rule-editor textarea").first().fill("synergies\nmove the needle");
+		await driver.wait(500);
+		const preview = await driver.evaluate(() => document.querySelector(".vk-rule-preview")?.textContent ?? "");
+		assert(preview.includes("2 marks"), `the editor previews hits on the open note (${preview})`);
+		await driver.click(".vk-rule-editor button", "Add rule");
+		await driver.wait(600);
+		await driver.press("Escape");
+		await driver.command("vikalp:run-linter");
+		await driver.page.waitForFunction(() => !window.app.plugins.plugins.vikalp.store.getState().lint.running, null, { timeout: 60000 });
+		const labels = (await noteState(driver)).lintHits.map((hit) => hit.label);
+		assert(labels.filter((label) => label === "Corporate speak").length === 2, "the new rule marks both phrases");
+	});
+});
+
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} passed, ${failed.length} failed`);
 process.exit(failed.length ? 1 : 0);

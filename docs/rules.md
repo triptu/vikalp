@@ -23,6 +23,23 @@ The linter never looks inside code blocks, inline code, frontmatter, math, comme
 
 Several rules can share a label. The built-in "AI-sounding" check, for example, is five rules with the label `AI-sounding`, and the Lint panel groups them together.
 
+## Editing rules in settings
+
+Settings → Vikalp → Rules lists every rule, grouped by name. A family like **Hedging** is several small rules: a phrase list, a pattern and an AI question. Switch a whole family off with its toggle, or open it to switch single checks on and off.
+
+The pencil opens a rule in a form. **Add rule** starts a new one. Pick a kind:
+
+| In the form | Engine in the file | What it does |
+|---|---|---|
+| Phrases | `wordlist` | Flags exact words or phrases. Whole words only. |
+| Phrases with fixes | `substitution` | Flags a phrase and suggests a plainer one you can apply. |
+| Pattern | `regex` | A regular expression, for shapes a phrase list can't catch. |
+| Measurement | `metric` | Flags text when a number goes over a limit, like words in a sentence. |
+| AI yes/no question | `classifier` | Jev answers a yes/no question about each sentence or paragraph. |
+| AI finds quotes | `llm` | The selected model reads the note and quotes what matches your instructions. |
+
+While you edit, the form shows how many marks the rule makes on the open note, and any problems with it. Saving writes the rule's YAML file. An edited built-in rule can be put back with **Reset to built-in**; rules you added can be deleted.
+
 ## The rule file
 
 Rules are YAML files in `.obsidian/plugins/vikalp/rules/`, one rule per file. These fields work for every engine:

@@ -32,6 +32,9 @@ const BUILTIN_RECORD = ".builtin-rules.json";
  */
 export class LinterService {
 	private rules: Rule[] = BUILTIN_RULES;
+	/** Where each rule was read from, so edits go back to the same file. */
+	private readonly ruleFiles = new Map<string, string>();
+	private readonly editedBuiltins = new Set<string>();
 	private ruleErrors: string[] = [];
 	private readonly ignored = new Map<string, Set<string>>();
 	private liveTimer: number | null = null;
@@ -73,12 +76,17 @@ export class LinterService {
 			await this.syncBuiltinFiles(dir);
 			const { files } = await adapter.list(dir);
 			const fromDisk = new Map<string, Rule>();
+			this.ruleFiles.clear();
+			this.editedBuiltins.clear();
 			for (const file of files.filter((name) => /\.ya?ml$/i.test(name))) {
-				const result = parseRule(await adapter.read(file));
+				const text = await adapter.read(file);
+				const result = parseRule(text);
 				const fileName = file.replace(/^.*\//, "");
 				if (result.ok) {
-					const builtin = BUILTIN_RULES.some((rule) => rule.id === result.rule.id);
-					fromDisk.set(result.rule.id, { ...result.rule, origin: builtin ? "builtin" : "user" });
+					const shipped = BUILTIN_RULE_FILES.find((builtinFile) => builtinFile.fileName === `${result.rule.id}.yaml`);
+					fromDisk.set(result.rule.id, { ...result.rule, origin: shipped ? "builtin" : "user" });
+					this.ruleFiles.set(result.rule.id, file);
+					if (shipped && shipped.yaml !== text) this.editedBuiltins.add(result.rule.id);
 				} else errors.push(...result.errors.map((error) => `${fileName}: ${error}`));
 			}
 			const merged = BUILTIN_RULES.map((rule) => fromDisk.get(rule.id) ?? rule);
@@ -100,13 +108,67 @@ export class LinterService {
 		for (const file of BUILTIN_RULE_FILES) {
 			const path = `${dir}/${file.fileName}`;
 			const exists = await adapter.exists(path);
-			const untouched = exists && written[file.fileName] !== undefined && (await adapter.read(path)) === written[file.fileName];
-			if ((!exists && written[file.fileName] === undefined) || (untouched && written[file.fileName] !== file.yaml)) {
+			const onDisk = exists ? await adapter.read(path) : null;
+			if (onDisk === file.yaml) {
+				written[file.fileName] = file.yaml;
+				continue;
+			}
+			const untouched = onDisk !== null && onDisk === written[file.fileName];
+			if ((onDisk === null && written[file.fileName] === undefined) || untouched) {
 				await adapter.write(path, file.yaml);
 				written[file.fileName] = file.yaml;
 			}
 		}
 		await adapter.write(recordPath, JSON.stringify(written, null, "\t"));
+	}
+
+	/** True for a built-in rule whose file the user has changed. */
+	isEdited(ruleId: string): boolean {
+		return this.editedBuiltins.has(ruleId);
+	}
+
+	/** Writes a rule to its file (a new one for new rules) and reloads every rule. */
+	async saveRule(rule: Rule) {
+		const adapter = this.app.vault.adapter;
+		if (!(await adapter.exists(this.rulesDir))) await adapter.mkdir(this.rulesDir);
+		const path = this.ruleFiles.get(rule.id) ?? `${this.rulesDir}/${rule.id}.yaml`;
+		await adapter.write(path, serializeRule(rule));
+		await this.loadRules();
+		this.relintIfMarked();
+	}
+
+	/** Puts a built-in rule back the way Vikalp ships it. */
+	async resetRule(ruleId: string) {
+		const shipped = BUILTIN_RULE_FILES.find((file) => file.fileName === `${ruleId}.yaml`);
+		if (!shipped) return;
+		const adapter = this.app.vault.adapter;
+		await adapter.write(this.ruleFiles.get(ruleId) ?? `${this.rulesDir}/${shipped.fileName}`, shipped.yaml);
+		await this.loadRules();
+		this.relintIfMarked();
+	}
+
+	/** Deletes a rule you added. Built-in rules can only be switched off. */
+	async deleteRule(ruleId: string) {
+		const path = this.ruleFiles.get(ruleId);
+		const rule = this.rules.find((candidate) => candidate.id === ruleId);
+		if (!path || rule?.origin !== "user") return;
+		await this.app.vault.adapter.remove(path);
+		await this.loadRules();
+		this.relintIfMarked();
+	}
+
+	/** How many marks a rule makes on the open note, for the editor's preview. Local rules only. */
+	previewHits(rule: Rule): { count: number; examples: string[] } | null {
+		const view = this.controller.editor;
+		if (!view || rule.engine === "classifier" || rule.engine === "llm") return null;
+		const doc = view.state.doc.toString();
+		const hits = runLocalRules([rule], doc);
+		return { count: hits.length, examples: hits.slice(0, 3).map((hit) => doc.slice(hit.from, hit.to).replace(/\s+/g, " ").slice(0, 80)) };
+	}
+
+	private relintIfMarked() {
+		const view = this.controller.editor;
+		if (view && lintMarks.list(view.state).some((entry) => entry.meta.source === "rule")) this.runLocal(view);
 	}
 
 	async reloadRules() {
