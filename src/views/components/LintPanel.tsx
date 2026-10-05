@@ -17,20 +17,33 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 	return (
 		<div className="vk-panel vk-lint-panel">
 			<div className="vk-lint-toolbar">
-				<button className="vk-run-button" onClick={actions.run} disabled={running}>
+				<button className="vk-toolbar-button" onClick={actions.run} disabled={running}>
 					{running ? <span className="vk-spinner" /> : <Icon name="scan-text" />}
 					{running ? "Linting…" : "Run linter"}
 				</button>
 				{total > 0 && (
-					<button className="vk-small-button" onClick={actions.clear}>
+					<button className="vk-toolbar-button" onClick={actions.clear}>
 						Clear
 					</button>
 				)}
 			</div>
 			<div className="vk-lint-summary">
-				{total === 0 ? (ranAt ? "No marks. Reads clean." : "Nothing run yet.") : `${total} ${total === 1 ? "mark" : "marks"}`}
-				{ranAt && <span className="vk-faint"> · ran {relativeTime(ranAt, now)}</span>}
-				{ranAt && run.cost > 0 && <span className="vk-faint"> · {formatCost(run.cost)}</span>}
+				{running ? (
+					`${total} ${total === 1 ? "mark" : "marks"} so far`
+				) : total === 0 ? (
+					ranAt ? (
+						"No marks. Reads clean."
+					) : (
+						<>
+							Not run on this note yet.
+							<div className="vk-lint-hint">Local rules are free. Judgment rules ask AI and cost a little.</div>
+						</>
+					)
+				) : (
+					`${total} ${total === 1 ? "mark" : "marks"}`
+				)}
+				{!running && ranAt && <span className="vk-quiet"> · ran {relativeTime(ranAt, now)}</span>}
+				{!running && ranAt && run.cost > 0 && <span className="vk-quiet"> · {formatCost(run.cost)}</span>}
 			</div>
 
 			{running && run.judgmentTotal > 0 && (
@@ -52,7 +65,7 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 
 			{documentHits.length > 0 && (
 				<div className="vk-document-hits">
-					<div className="vk-hit-scope-title">Whole note</div>
+					<div className="vk-section-heading">Whole note</div>
 					{documentHits.map((hit) => (
 						<div key={hit.id} className="vk-document-hit">
 							<div className="vk-document-hit-heading">
@@ -71,7 +84,7 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 
 			{fixableCount > 1 && (
 				<div className="vk-fix-all">
-					<button className="vk-small-button" onClick={actions.applyAllFixes}>
+					<button className="vk-compact-button" onClick={actions.applyAllFixes}>
 						Apply all {fixableCount} fixes…
 					</button>
 				</div>
@@ -81,6 +94,7 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 				{groups.map((group) => (
 					<details key={group.key} className={`vk-hit-group vk-severity-${group.severity}`} open>
 						<summary>
+							<Icon name="chevron-right" className="vk-disclosure" />
 							<span className={`vk-severity-chip vk-severity-${group.severity}`} />
 							<span className="vk-hit-group-label">{group.label}</span>
 							{group.byAi && <span className="vk-ai-badge" title="Some of these marks were made by a model">AI</span>}
@@ -88,31 +102,40 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 						</summary>
 						<ul>
 							{group.hits.map((hit) => (
-								<li key={hit.id} className="vk-hit" onClick={() => actions.jumpTo(hit.id)}>
+								<li
+									key={hit.id}
+									className="vk-hit"
+									tabIndex={0}
+									onClick={() => actions.jumpTo(hit.id)}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" && event.target === event.currentTarget) actions.jumpTo(hit.id);
+									}}
+								>
 									<div className="vk-hit-excerpt">{truncate(hit.excerpt, 140)}</div>
-									<div className="vk-hit-message">
-										{hit.message}
-										{hit.byAi && hit.source === "rule" && <span className="vk-hit-by"> · {hit.model ? shortModel(hit.model) : "AI"}</span>}
-									</div>
 									{hit.suggestion !== undefined && (
 										<div className="vk-hit-fix">
-											<span className="vk-faint">Fix:</span> {hit.suggestion || "(delete)"}
+											<span className="vk-quiet">Fix:</span> {hit.suggestion || "delete it"}
 										</div>
 									)}
-									<div className="vk-hit-actions">
+									<div className="vk-hit-message">
+										{hit.message}
 										{hit.suggestion !== undefined && (
-											<button
-												className="vk-small-button"
-												onClick={(event) => {
-													event.stopPropagation();
-													actions.applyFix(hit.id);
-												}}
-											>
-												Apply
-											</button>
+											<>
+												<span className="vk-quiet"> · </span>
+												<button
+													className="vk-inline-action"
+													onClick={(event) => {
+														event.stopPropagation();
+														actions.applyFix(hit.id);
+													}}
+												>
+													Apply
+												</button>
+											</>
 										)}
+										<span className="vk-quiet"> · </span>
 										<button
-											className="vk-small-button"
+											className="vk-inline-action"
 											onClick={(event) => {
 												event.stopPropagation();
 												actions.ignore(hit.id);
@@ -150,10 +173,6 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 			</div>
 		</div>
 	);
-}
-
-function shortModel(model: string): string {
-	return model.replace(/^[^/]+\//, "");
 }
 
 function truncate(text: string, length: number): string {

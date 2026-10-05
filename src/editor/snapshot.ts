@@ -64,5 +64,7 @@ export function snapshotNote(state: EditorState, path: string): NoteView {
 		lintHits,
 		proposalCount: proposals.length,
 		proposalWords: proposals.reduce((sum, entry) => sum + countWords(doc.slice(entry.range.from, entry.range.to)), 0),
+		walkReason: proposals.find((entry) => entry.meta.id === mode.walkProposal)?.meta.why || null,
+		riskyCount: proposals.filter((entry) => entry.meta.risky).length,
 	};
 }

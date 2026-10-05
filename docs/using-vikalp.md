@@ -88,7 +88,7 @@ Click **Lab** in the status bar.
 
 - **Model**: Lite, Medium or Heavy. Applies to every AI action. The status bar shows the current mode next to **Lab**.
 - **Mark** passes add marks you can review in the Lint panel: typos and punctuation (with Apply / Ignore and *Apply all*), weakest sentences, sentences that run long, convoluted sentences, words that don't fit the tone, and hedges and filler.
-- **Trim** levels fade the words the model would cut, from ~10% to ~50%. Click a faded passage to keep it. Then **Ghost the cuts** (nothing is deleted), **Make the cuts**, or **Walk through** them one at a time with **K**eep, **C**ut, **S**kip. **Done** discards what's left. Switching levels keeps the passages you chose to keep.
+- **Trim** levels strike through the words the model would cut, from ~10% to ~50%. Click a struck passage to keep it. Then **Ghost the cuts** (nothing is deleted), **Make the cuts**, or **Walk through** them one at a time with **K**eep, **C**ut, **S**kip. **Done** discards what's left. Switching levels keeps the passages you chose to keep.
 
 ![The typo pass: each fix shows on hover with Apply and Ignore](screenshots/guide/typo-pass.png)
 

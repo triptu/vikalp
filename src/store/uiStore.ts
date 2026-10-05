@@ -48,6 +48,10 @@ export interface NoteView {
 	lintHits: LintHitView[];
 	proposalCount: number;
 	proposalWords: number;
+	/** Why the model proposed the cut the walk-through is on. */
+	walkReason: string | null;
+	/** Proposed cuts a grammar check flagged as possibly breaking a sentence. */
+	riskyCount: number;
 }
 
 export type { TrimLevelId as TrimLevel } from "../core/ai/passes";

@@ -1,4 +1,5 @@
 import type { Severity } from "../../core/model/types";
+import { runningLabel } from "../../core/ai/passes";
 import type { LintHitView } from "../../store/uiStore";
 import { useViewContext } from "../context";
 import { useStoreSlice } from "./useStore";
@@ -47,7 +48,7 @@ export function useLintPanel() {
 		ranAt: slice.isCurrentNote ? slice.run.ranAt : null,
 		run: slice.run,
 		isCurrentNote: slice.isCurrentNote,
-		labRunning: slice.labRunning,
+		labRunning: slice.labRunning ? runningLabel(slice.labRunning) : null,
 		actions: lint,
 	};
 }

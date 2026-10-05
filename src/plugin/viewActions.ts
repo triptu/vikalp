@@ -103,7 +103,7 @@ export function createAlternativesActions(deps: AlternativesDeps): AlternativesA
 		placeOrphan: withEditor(controller, (view, spanId: string) => {
 			const selection = view.state.selection.main;
 			if (selection.empty) {
-				new Notice("Select the text this span should sit on, then click Place on selection.");
+				new Notice("Select the text these versions belong to, then click Place on selection.");
 				return;
 			}
 			if (runAction(view, placeSpanOnSelection(view.state, spanId, { from: selection.from, to: selection.to }))) controller.setPanelSpan(spanId);
@@ -155,7 +155,7 @@ export function createOverflowActions(deps: AlternativesDeps): OverflowActions {
 			const spanId = deps.panelSpanId();
 			const text = blockText(view, blockId);
 			if (!spanId || !text) {
-				new Notice("Select a span in the note first.");
+				new Notice("Open alternatives for some text first.");
 				return;
 			}
 			const result = addVersionToSpan(view.state, spanId, text, "human", { articleFix: deps.articleFix(), activate: true });

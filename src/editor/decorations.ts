@@ -85,7 +85,7 @@ function proposalDecorations(state: EditorState): Range<Decoration>[] {
 	if (mode.readThrough) return [];
 	return trimProposals.list(state).map(({ meta, range }) =>
 		Decoration.mark({
-			class: `vk-ghost vk-proposal${meta.id === mode.walkProposal ? " is-current" : ""}${meta.risky ? " is-risky" : ""}`,
+			class: `vk-proposal${meta.id === mode.walkProposal ? " is-current" : ""}${meta.risky ? " is-risky" : ""}`,
 			attributes: {
 				"data-vk-proposal": meta.id,
 				title: `${meta.why ? `Would cut: ${meta.why}.` : "Would cut."}${meta.risky ? " This cut may leave a broken sentence." : ""} Click to keep.`,
@@ -111,9 +111,10 @@ function buildDecorations(state: EditorState): DecorationSet {
 export const vikalpDecorations = [
 	hoverField,
 	EditorView.decorations.compute([spansField, ghosts.field, lintMarks.field, trimProposals.field, noteModeField, flashField, hoverField], buildDecorations),
-	EditorView.editorAttributes.compute([noteModeField], (state) => {
+	EditorView.editorAttributes.compute([noteModeField, trimProposals.field], (state) => {
 		const mode = state.field(noteModeField);
 		const classes = ["vk-editor"];
+		if (trimProposals.list(state).length > 0 && !mode.readThrough) classes.push("vk-trimming");
 		if (mode.focusedSpan && !mode.readThrough) classes.push("vk-dim-others");
 		if (mode.readThrough) classes.push("vk-read-through");
 		if (mode.markersOn) classes.push("vk-markers-on");

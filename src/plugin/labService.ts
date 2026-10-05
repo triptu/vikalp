@@ -30,6 +30,8 @@ export class LabService {
 	/** Text the writer kept during trim, per note, so new levels don't propose it again. */
 	private readonly vetoes = new Map<string, string[]>();
 	private walkKeyHandler: ((event: KeyboardEvent) => void) | null = null;
+	/** What the writer decided during the current walk-through. */
+	private walkTally = { cut: 0, kept: 0 };
 	private trimAbort: AbortController | null = null;
 
 	constructor(
@@ -77,7 +79,7 @@ export class LabService {
 			this.setLab(null, `No sentence runs past ${LONG_SENTENCE_WORDS} words.`);
 			return;
 		}
-		this.setLab(pass.label, null);
+		this.setLab(pass.id, null);
 		this.openLintPanel();
 		const path = notePathOf(view);
 		try {
@@ -291,6 +293,8 @@ export class LabService {
 		});
 		if (!confirmed || this.controller.editor !== view) return;
 		const current = trimProposals.list(view.state);
+		const path = this.controller.activePath ?? "";
+		const before = snapshotNote(view.state, path).words;
 		view.dispatch(
 			isolated({
 				changes: deletionChanges(view.state.doc.toString(), current.map((proposal) => proposal.range)),
@@ -298,13 +302,16 @@ export class LabService {
 				userEvent: VIKALP_EVENT.trim,
 			}),
 		);
+		const after = snapshotNote(view.state, path).words;
+		new Notice(`Cut ${before - after} words. ${before} → ${after}.`);
 		this.closeTrim();
 	}
 
 	walkThrough() {
 		const view = this.controller.editor;
 		if (!view || trimProposals.list(view.state).length === 0) return;
-		this.setTrim({ ...this.store.getState().trim, walking: true });
+		this.walkTally = { cut: 0, kept: 0 };
+		this.setTrim({ ...this.store.getState().trim, walking: true, message: null });
 		this.walkTo(view, null);
 		view.contentDOM.blur();
 		this.walkKeyHandler = (event: KeyboardEvent) => {
@@ -327,7 +334,7 @@ export class LabService {
 	private walkTo(view: EditorView, afterPosition: number | null) {
 		const proposals = trimProposals.list(view.state);
 		if (proposals.length === 0) {
-			this.stopWalking();
+			this.finishWalk();
 			return;
 		}
 		const next = proposals.find((proposal) => afterPosition === null || proposal.range.from >= afterPosition) ?? proposals[0]!;
@@ -347,9 +354,11 @@ export class LabService {
 			return;
 		}
 		if (decision === "keep") {
+			this.walkTally.kept++;
 			this.veto(view, current.meta.id);
 			this.walkTo(view, current.range.from);
 		} else if (decision === "cut") {
+			this.walkTally.cut++;
 			const changes = deletionChanges(view.state.doc.toString(), [current.range]);
 			view.dispatch(isolated({ changes, effects: trimProposals.effects.remove.of([current.meta.id]), userEvent: VIKALP_EVENT.trim }));
 			this.walkTo(view, current.range.from);
@@ -359,6 +368,17 @@ export class LabService {
 			const next = remaining[index + 1];
 			if (next) this.walkTo(view, next.range.from);
 			else this.stopWalking();
+		}
+	}
+
+	/** Every proposal has been decided: the bar stays up with a tally instead of vanishing. */
+	private finishWalk() {
+		const { cut, kept } = this.walkTally;
+		this.stopWalking();
+		const decided = cut + kept;
+		if (decided > 0) {
+			const message = `Walked through ${decided}. Cut ${cut}, kept ${kept}.`;
+			this.setTrim({ ...this.store.getState().trim, message });
 		}
 	}
 

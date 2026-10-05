@@ -71,9 +71,6 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 						<span className="vk-lab-pass-label">Find words worth playing with</span>
 						{lab.runningPass === SPOTS_PASS && <span className="vk-spinner" />}
 					</button>
-					<button className="vk-lab-pass" disabled={!hasNote} onClick={actions.removeAllAiVersions} title="Removes every AI version in this note. Your own versions stay.">
-						<span className="vk-lab-pass-label vk-faint-label">Remove all AI versions</span>
-					</button>
 				</div>
 			</section>
 
@@ -116,21 +113,26 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 						</button>
 					))}
 				</div>
-				<div className="vk-lab-hint">Proposed cuts fade in place. Click one to keep it.</div>
+				<div className="vk-lab-hint">{trim.status === "idle" ? "Pick a level and the model proposes cuts. Nothing is deleted yet." : "Struck words would go. Click one to keep it."}</div>
 			</section>
 
 			<div className="vk-lab-footer">
-				<button className="vk-link-button" onClick={actions.clearMarks} disabled={markCount === 0}>
-					Clear marks{markCount > 0 ? ` (${markCount})` : ""}
-				</button>
-				<span className="vk-lab-footer-right">
+				<div className="vk-lab-footer-row">
+					<button className="vk-link-button" onClick={actions.clearMarks} disabled={markCount === 0}>
+						Clear Lab marks{markCount > 0 ? ` (${markCount})` : ""}
+					</button>
+					<button className="vk-link-button" onClick={actions.removeAllAiVersions} disabled={!hasNote} title="Removes every AI version in this note. Your own versions stay.">
+						Remove AI versions
+					</button>
+				</div>
+				<div className="vk-lab-footer-row">
 					<button className="vk-link-button" onClick={actions.showCostLog} title="Show the cost log">
-						{formatCost(sessionCost)} so far
+						{formatCost(sessionCost)} spent this session
 					</button>
 					<button className="clickable-icon" aria-label="Vikalp settings" onClick={actions.openSettings}>
 						<Icon name="settings" />
 					</button>
-				</span>
+				</div>
 			</div>
 		</div>
 	);

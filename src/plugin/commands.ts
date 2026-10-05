@@ -52,7 +52,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 	editorCommand({ id: "remove-all-ai-alternatives", name: "Remove all AI versions in note", run: () => plugin.removeAllAiVersions() });
 	editorCommand({
 		id: "next-version",
-		name: "Next version of span at cursor",
+		name: "Next version (at cursor)",
 		run: (view) => {
 			const spanId = targetSpan(plugin, view);
 			if (spanId) runAction(view, cycleSpan(view.state, spanId, 1, plugin.switchOptions()));
@@ -60,7 +60,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 	});
 	editorCommand({
 		id: "previous-version",
-		name: "Previous version of span at cursor",
+		name: "Previous version (at cursor)",
 		run: (view) => {
 			const spanId = targetSpan(plugin, view);
 			if (spanId) runAction(view, cycleSpan(view.state, spanId, -1, plugin.switchOptions()));
@@ -68,24 +68,24 @@ export function registerCommands(plugin: VikalpPlugin) {
 	});
 	editorCommand({
 		id: "settle-span",
-		name: "Settle span",
+		name: "Settle: keep the showing version",
 		run: (view) => {
 			const spanId = targetSpan(plugin, view);
-			if (!spanId) new Notice("Put the cursor in a span first.");
+			if (!spanId) new Notice("Put the cursor on text that has versions first.");
 			else runAction(view, settleSpans(view.state, [spanId]));
 		},
 	});
 	editorCommand({ id: "settle-all", name: "Settle all alternatives in note", run: (view) => void settleAll(plugin, view) });
 	editorCommand({
 		id: "remove-ai-alternatives",
-		name: "Remove AI alternatives from span",
+		name: "Remove AI versions here",
 		run: (view) => {
 			const spanId = targetSpan(plugin, view);
-			if (!spanId) new Notice("Put the cursor in a span first.");
+			if (!spanId) new Notice("Put the cursor on text that has versions first.");
 			else runAction(view, removeAiVersions(view.state, spanId, plugin.switchOptions()));
 		},
 	});
-	editorCommand({ id: "edit-span-note", name: "Edit span note", run: (view) => editSpanNote(plugin, view) });
+	editorCommand({ id: "edit-span-note", name: "Edit note on alternatives", run: (view) => editSpanNote(plugin, view) });
 
 	editorCommand({ id: "ghost-selection", name: "Ghost it", icon: "ghost", hotkeys: mod("/", true), run: (view) => runAction(view, ghostRange(view.state, selectionOf(view))) });
 	editorCommand({ id: "revive", name: "Revive at cursor", run: (view) => runAction(view, reviveRange(view.state, selectionOf(view))) });
@@ -115,7 +115,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 export function editSpanNote(plugin: VikalpPlugin, view: EditorView) {
 	const spanId = targetSpan(plugin, view);
 	if (!spanId) {
-		new Notice("Put the cursor in a span first.");
+		new Notice("Put the cursor on text that has versions first.");
 		return;
 	}
 	plugin.controller.setPanelSpan(spanId);
@@ -139,11 +139,13 @@ export async function settleAll(plugin: VikalpPlugin, view: EditorView) {
 	const withNotes = spans.filter((span) => span.meta.note?.trim()).length;
 	const noteWarning = withNotes > 0 ? ` ${withNotes} ${withNotes === 1 ? "has a note" : "have notes"}, which will go too.` : "";
 	const confirmed = await confirmAction(plugin.app, {
-		title: "Settle all alternatives?",
-		body: `Keeps the showing text of ${spans.length} ${spans.length === 1 ? "span" : "spans"} and drops every other version.${noteWarning} Undo brings them back.`,
+		title: "Settle all?",
+		body: `Keeps the showing version in ${spans.length} ${spans.length === 1 ? "place" : "places"} and drops the rest.${noteWarning} Undo brings them back.`,
 		confirmLabel: "Settle all",
 	});
-	if (confirmed) runAction(view, settleSpans(view.state, spans.map((span) => span.meta.id)));
+	if (confirmed && runAction(view, settleSpans(view.state, spans.map((span) => span.meta.id)))) {
+		new Notice(`Settled ${spans.length} ${spans.length === 1 ? "place" : "places"}. No alternatives left in this note.`);
+	}
 }
 
 export async function deleteGhosted(plugin: VikalpPlugin, view: EditorView) {

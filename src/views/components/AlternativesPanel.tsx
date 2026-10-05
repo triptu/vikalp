@@ -60,15 +60,14 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 				if (!next || !(event.currentTarget as HTMLElement).contains(next)) actions.setPanelFocused(false);
 			}}
 		>
-			<div className="vk-unit-tabs" role="tablist">
+			<div className="vk-unit-tabs" role="group" aria-label="Make alternatives for">
 				{UNITS.map(({ unit, label }) => (
 					<button
 						key={unit}
-						role="tab"
-						aria-selected={model.activeUnit === unit}
+						aria-pressed={model.activeUnit === unit}
 						className={`vk-unit-tab${model.activeUnit === unit ? " is-active" : ""}`}
 						onClick={() => actions.createForUnit(unit)}
-						title={`Make the ${unit} at the cursor a span`}
+						title={`Alternatives for the ${unit} at the cursor`}
 					>
 						{label}
 					</button>
@@ -91,7 +90,7 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 
 			{unplaced.length > 0 && <UnplacedList spans={unplaced} model={model} />}
 
-			<div className="vk-panel-footer">return adds · ?? asks AI · esc returns</div>
+			{span && <div className="vk-panel-footer">↵ add · ?? ask AI · esc back to note</div>}
 		</div>
 	);
 }
@@ -154,7 +153,7 @@ function SpanEditor({
 							<Icon name="bot" className="vk-bot" />
 						</span>
 						<span className="vk-version-text vk-asking">
-							<span className="vk-asking-marks">??</span> asking {model.modelLabel}…
+							<span className="vk-spinner" /> Asking {model.modelLabel}…
 						</span>
 					</li>
 				)}
@@ -175,8 +174,6 @@ function SpanEditor({
 			</div>
 			{asksAi && !model.hasApiKey && <div className="vk-inline-warning">Add an OpenRouter key in Vikalp settings to ask AI.</div>}
 
-			<NoteField span={span} onChange={(note) => actions.setNote(span.id, note)} />
-
 			<div className="vk-span-actions">
 				<button className="vk-link-button" onClick={() => actions.askAi(span.id)} disabled={model.aiPending}>
 					<Icon name="sparkles" /> Ask AI
@@ -192,6 +189,8 @@ function SpanEditor({
 					</button>
 				)}
 			</div>
+
+			<NoteField span={span} onChange={(note) => actions.setNote(span.id, note)} />
 		</div>
 	);
 }

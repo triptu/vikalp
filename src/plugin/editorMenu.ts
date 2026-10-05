@@ -22,7 +22,7 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 	if (hasSelection || span) {
 		menu.addItem((item) =>
 			item
-				.setTitle(span && !hasSelection ? "Alternatives for this span" : "Alternatives for selection")
+				.setTitle(span && !hasSelection ? "Alternatives for this" : "Alternatives for selection")
 				.setIcon("split")
 				.setSection("vikalp")
 				.onClick(() => startAlternatives(plugin.alternativesDeps, view)),
@@ -73,7 +73,7 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 	if (span) {
 		menu.addItem((item) =>
 			item
-				.setTitle(span.note ? "Edit span note" : "Add span note")
+				.setTitle(span.note ? "Edit note" : "Add a note")
 				.setIcon("sticky-note")
 				.setSection("vikalp")
 				.onClick(() => editSpanNote(plugin, view)),
@@ -81,7 +81,7 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 		if (span.versions.length > 1) {
 			menu.addItem((item) =>
 				item
-					.setTitle("Settle span")
+					.setTitle("Settle: keep the showing version")
 					.setIcon("check")
 					.setSection("vikalp")
 					.onClick(() => runAction(view, settleSpans(view.state, [span.id]))),
