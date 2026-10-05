@@ -97,6 +97,7 @@ export interface CostEntry {
 	cost: number;
 	fallback?: boolean;
 	error?: string;
+	onPlan?: boolean;
 }
 
 export interface VikalpUiState {
@@ -111,7 +112,8 @@ export interface VikalpUiState {
 	lab: LabPassState;
 	costs: CostEntry[];
 	modelMode: ModelMode;
-	hasApiKey: boolean;
+	/** An OpenRouter key or a ChatGPT sign-in is set up. */
+	aiReady: boolean;
 	/** The lint mark the writer last clicked in the text; the Lint panel scrolls to it. */
 	lintFocus: { hitId: string; at: number } | null;
 	lintLayout: LintLayout;
@@ -132,7 +134,7 @@ export const initialUiState: VikalpUiState = {
 	lab: { runningPass: null, message: null },
 	costs: [],
 	modelMode: "lite",
-	hasApiKey: false,
+	aiReady: false,
 	lintFocus: null,
 	lintLayout: "by-rule",
 	noteEditorSpanId: null,
@@ -143,6 +145,11 @@ export function createUiStore() {
 }
 
 export type UiStore = ReturnType<typeof createUiStore>;
+
+/** True when every AI call so far was paid from a ChatGPT plan, so a dollar total would mean nothing. */
+export function sessionOnPlan(state: VikalpUiState): boolean {
+	return state.costs.length > 0 && state.costs.every((entry) => entry.onPlan);
+}
 
 export function sessionCost(state: VikalpUiState): number {
 	return state.costs.reduce((sum, entry) => sum + entry.cost, 0);

@@ -14,7 +14,7 @@ src/
     ai/          prompts, output schemas, placing model quotes in the note
   editor/        CodeMirror state fields, decorations, keymaps, tooltips, actions
   persistence/   one JSON sidecar per note
-  ai/            the OpenRouter client (pi-ai)
+  ai/            the AI client (pi-ai): OpenRouter or a ChatGPT sign-in
   store/         the zustand UI store
   views/         Preact components, hooks and the Obsidian panel shells
   plugin/        Obsidian wiring: commands, menus, status bar, settings, services
@@ -53,7 +53,14 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 ## AI
 
-`ai/aiClient.ts` wraps pi-ai's OpenRouter provider. Every call:
+`ai/aiClient.ts` wraps pi-ai's OpenRouter and OpenAI providers. The writer picks one in settings:
+
+- **OpenRouter** uses an API key from settings, and per-call prices are recorded.
+- **ChatGPT** uses "Sign in with ChatGPT" (Plus or Pro). pi-ai runs the browser flow, catches the reply on `127.0.0.1:1455` and refreshes the tokens. `ai/credentialStore.ts` keeps them in the plugin's settings. Calls are paid from the plan, so the cost log shows "plan". Defaults are Luna (Lite), Sol 6.1 (Medium) and Astra (Heavy).
+
+pi-ai loads its sign-in flows through imports a bundler can't follow, so `aiClient.ts` calls `registerBunOAuthFlows()` to embed them in `main.js`.
+
+Every call:
 
 - runs only from a click or command,
 - asks for structured output through a single tool call (with a JSON fallback),
@@ -61,7 +68,7 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 Models never get character offsets. Prompts number the sentences (`[s4] …`) and models answer with a sentence id plus an exact quote. `core/ai/placement.ts` finds each quote with the anchoring code and rejects anything that isn't there verbatim. See [adding-a-lab-pass.md](adding-a-lab-pass.md).
 
-Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so.
+Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so. Jev is only on OpenRouter. With a ChatGPT sign-in, judgment rules use the Lite model (Luna) and the post-trim grammar check is skipped.
 
 ## Views
 

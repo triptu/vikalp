@@ -381,6 +381,55 @@ await flow("lint: clicking a mark in the note scrolls to it; the in-order list f
 	});
 });
 
+await flow("chatgpt: sign-in opens the right page, hears the browser's reply, and a bad reply leaves you signed out", async () => {
+	await withObsidian({}, async (driver) => {
+		const outcome = await driver.evaluate(async () => {
+			const vikalp = window.app.plugins.plugins.vikalp;
+			let openedUrl = null;
+			const realOpen = window.open;
+			window.open = (url) => {
+				openedUrl = String(url);
+				return null;
+			};
+			vikalp.settings.aiProvider = "chatgpt";
+			const finished = vikalp.signInToChatGpt();
+			while (!openedUrl) await new Promise((done) => setTimeout(done, 50));
+			window.open = realOpen;
+			const signInModalOpen = () => [...document.querySelectorAll(".modal .modal-title")].some((title) => title.textContent === "Sign in with ChatGPT");
+			const modalOpened = signInModalOpen();
+			const url = new URL(openedUrl);
+			await fetch(`http://127.0.0.1:1455/auth/callback?code=not-a-real-code&state=${url.searchParams.get("state")}&client_id=e2e`, { mode: "no-cors" });
+			const signedIn = await finished;
+			return {
+				modalOpened,
+				host: url.host,
+				redirect: url.searchParams.get("redirect_uri"),
+				scope: url.searchParams.get("scope"),
+				signedIn,
+				stored: vikalp.settings.chatgptCredential,
+				modalStillOpen: signInModalOpen(),
+			};
+		});
+		assert(outcome.modalOpened, "the sign-in modal opens");
+		assert(outcome.host === "auth.openai.com", `the browser goes to OpenAI (${outcome.host})`);
+		assert(outcome.redirect === "http://127.0.0.1:1455/auth/callback", "the reply is caught on this computer");
+		assert(outcome.scope.includes("chatgpt.tokens.use.direct"), "it asks to use the plan directly");
+		assert(outcome.signedIn === false && outcome.stored === null, "a bad reply does not sign you in");
+		assert(!outcome.modalStillOpen, "the modal closes when sign-in ends");
+
+		const afterSignOut = await driver.evaluate(async () => {
+			const vikalp = window.app.plugins.plugins.vikalp;
+			vikalp.settings.chatgptCredential = { type: "oauth", access: "a", refresh: "r", expires: Date.now() + 3600_000, clientId: "c", scopes: [] };
+			await vikalp.saveSettings();
+			const readyWhileSignedIn = vikalp.store.getState().aiReady;
+			await vikalp.signOutOfChatGpt();
+			return { readyWhileSignedIn, readyAfter: vikalp.store.getState().aiReady, stored: vikalp.settings.chatgptCredential };
+		});
+		assert(afterSignOut.readyWhileSignedIn, "AI is ready while a ChatGPT sign-in is stored");
+		assert(!afterSignOut.readyAfter && afterSignOut.stored === null, "signing out forgets it");
+	});
+});
+
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} passed, ${failed.length} failed`);
 process.exit(failed.length ? 1 : 0);

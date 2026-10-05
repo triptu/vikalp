@@ -1,5 +1,5 @@
 import { PluginSettingTab, Setting, type App } from "obsidian";
-import { DEFAULT_SETTINGS, MODEL_MODE_LABELS, type ModelMode } from "../core/settings";
+import { AI_PROVIDER_LABELS, DEFAULT_SETTINGS, MODEL_MODE_LABELS, type AiProvider, type ModelMode } from "../core/settings";
 import { engineChoice } from "../core/rules/draft";
 import { groupRulesByLabel, usesAi } from "../core/rules/groups";
 import type { Rule } from "../core/rules/types";
@@ -27,19 +27,18 @@ export class VikalpSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName("AI").setHeading();
 		new Setting(containerEl)
-			.setName("OpenRouter API key")
-			.setDesc("Kept in plugin data, not in your notes. Used only when you click an AI action.")
-			.addText((text) => {
-				text.inputEl.type = "password";
-				text.inputEl.addClass("vk-settings-key");
-				text
-					.setPlaceholder("sk-or-…")
-					.setValue(settings.openRouterApiKey)
-					.onChange(async (value) => {
-						settings.openRouterApiKey = value.trim();
-						await this.plugin.saveSettings();
-					});
+			.setName("AI provider")
+			.setDesc("Sign in with a ChatGPT plan, or use an OpenRouter key. Either way nothing runs until you click an AI action.")
+			.addDropdown((dropdown) => {
+				for (const provider of ["chatgpt", "openrouter"] as AiProvider[]) dropdown.addOption(provider, AI_PROVIDER_LABELS[provider]);
+				dropdown.setValue(settings.aiProvider).onChange(async (value) => {
+					settings.aiProvider = value as AiProvider;
+					await this.plugin.saveSettings();
+					this.display();
+				});
 			});
+		if (settings.aiProvider === "chatgpt") this.renderChatGptSignIn(containerEl);
+		else this.renderOpenRouterKey(containerEl);
 		new Setting(containerEl)
 			.setName("Model mode")
 			.setDesc("Applies to every AI action. Lite is fast and cheap for drafting; Heavy is for the final pass.")
@@ -47,14 +46,17 @@ export class VikalpSettingTab extends PluginSettingTab {
 				for (const mode of ["lite", "medium", "heavy"] as ModelMode[]) dropdown.addOption(mode, MODEL_MODE_LABELS[mode]);
 				dropdown.setValue(settings.modelMode).onChange(async (value) => this.plugin.setModelMode(value as ModelMode));
 			});
+		const onChatGpt = settings.aiProvider === "chatgpt";
+		const modelIds = onChatGpt ? settings.chatgptModels : settings.models;
+		const defaultIds = onChatGpt ? DEFAULT_SETTINGS.chatgptModels : DEFAULT_SETTINGS.models;
 		for (const mode of ["lite", "medium", "heavy"] as ModelMode[]) {
 			new Setting(containerEl)
 				.setName(`${MODEL_MODE_LABELS[mode]} model`)
-				.setDesc(`OpenRouter model id. Default: ${DEFAULT_SETTINGS.models[mode]}`)
+				.setDesc(`${AI_PROVIDER_LABELS[settings.aiProvider]} model id. Default: ${defaultIds[mode]}`)
 				.addText((text) => {
 					text.inputEl.addClass("vk-settings-key");
-					text.setValue(settings.models[mode]).onChange(async (value) => {
-						settings.models[mode] = value.trim() || DEFAULT_SETTINGS.models[mode];
+					text.setValue(modelIds[mode]).onChange(async (value) => {
+						modelIds[mode] = value.trim() || defaultIds[mode];
 						await this.plugin.saveSettings();
 					});
 				});
@@ -105,7 +107,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Linter").setHeading();
 		new Setting(containerEl)
 			.setName("Judgment rules use")
-			.setDesc("Jev is fast, cheap and only answers yes or no. If it's down, Vikalp uses the Lite model and tells you.")
+			.setDesc("Jev is fast, cheap and only answers yes or no, but it needs an OpenRouter key. If it's down or you use ChatGPT, Vikalp uses the Lite model.")
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("jev", "Jev (TypeSafe)")
@@ -178,6 +180,52 @@ export class VikalpSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+	}
+
+	private renderOpenRouterKey(containerEl: HTMLElement) {
+		const settings = this.plugin.settings;
+		new Setting(containerEl)
+			.setName("OpenRouter API key")
+			.setDesc("Kept in plugin data, not in your notes. Used only when you click an AI action.")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.inputEl.addClass("vk-settings-key");
+				text
+					.setPlaceholder("sk-or-…")
+					.setValue(settings.openRouterApiKey)
+					.onChange(async (value) => {
+						settings.openRouterApiKey = value.trim();
+						await this.plugin.saveSettings();
+					});
+			});
+	}
+
+	private renderChatGptSignIn(containerEl: HTMLElement) {
+		const signedIn = this.plugin.settings.chatgptCredential !== null;
+		const row = new Setting(containerEl)
+			.setName("ChatGPT")
+			.setDesc(
+				signedIn
+					? "Signed in. AI actions use your ChatGPT plan, not an API bill. Tokens are kept in plugin data, not in your notes."
+					: "Needs a ChatGPT Plus or Pro plan. Opens your browser; Vikalp keeps the sign-in on this computer.",
+			);
+		if (signedIn) {
+			row.addButton((button) =>
+				button.setButtonText("Sign out").onClick(async () => {
+					await this.plugin.signOutOfChatGpt();
+					this.display();
+				}),
+			);
+		} else {
+			row.addButton((button) =>
+				button
+					.setButtonText("Sign in with ChatGPT")
+					.setCta()
+					.onClick(async () => {
+						if (await this.plugin.signInToChatGpt()) this.display();
+					}),
+			);
+		}
 	}
 
 	private renderRules(containerEl: HTMLElement) {

@@ -1,6 +1,8 @@
 import type { EditorView } from "@codemirror/view";
 import { MarkdownView, Menu, Notice, Plugin, TFile } from "obsidian";
+import type { Credential } from "@earendil-works/pi-ai";
 import { AiClient, type CostRecord } from "./ai/aiClient";
+import { SlotCredentialStore } from "./ai/credentialStore";
 import { newId } from "./core/model/ids";
 import { MODEL_MODE_LABELS, mergeSettings, type ModelMode, type VikalpSettings } from "./core/settings";
 import { vikalpEditorExtension } from "./editor";
@@ -12,7 +14,7 @@ import { registerCommands } from "./plugin/commands";
 import { fillEditorMenu } from "./plugin/editorMenu";
 import { LabService } from "./plugin/labService";
 import { LinterService } from "./plugin/linterService";
-import { CostLogModal } from "./plugin/modals";
+import { ChatGptSignInModal, CostLogModal } from "./plugin/modals";
 import { NoteController, editorViewOf } from "./plugin/noteController";
 import { LabPopoverHost, TrimBarHost } from "./plugin/overlays";
 import { Panels } from "./plugin/panels";
@@ -44,7 +46,7 @@ export default class VikalpPlugin extends Plugin {
 	override async onload() {
 		this.settings = mergeSettings((await this.loadData()) as Partial<VikalpSettings> | null);
 		this.store = createUiStore();
-		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
+		this.store.setState({ modelMode: this.settings.modelMode, lintLayout: this.settings.lintLayout });
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
 		const repository = new SidecarRepository(this.app.vault.adapter, pluginDir, (notePath, backup) => {
@@ -52,7 +54,15 @@ export default class VikalpPlugin extends Plugin {
 		});
 		this.controller = new NoteController(this.app, repository, this.store, () => this.settings);
 		this.panels = new Panels(this.app);
-		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
+		const chatgptSlot = {
+			get: () => (this.settings.chatgptCredential as Credential | null) ?? undefined,
+			set: async (credential: Credential | undefined) => {
+				this.settings.chatgptCredential = credential ? { ...credential } : null;
+				await this.saveSettings();
+			},
+		};
+		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record), new SlotCredentialStore({ openai: chatgptSlot }));
+		this.store.setState({ aiReady: this.ai.isReady });
 		this.aiAlternatives = new AiAlternatives(this.ai, this.store, () => this.settings);
 		this.linter = new LinterService(this.app, this.ai, this.controller, this.store, () => this.settings, pluginDir, () => void this.panels.openLint());
 		this.lab = new LabService(this.app, this.ai, this.controller, this.store, () => this.settings, () => void this.panels.openLint());
@@ -145,8 +155,48 @@ export default class VikalpPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
+		this.store.setState({ modelMode: this.settings.modelMode, aiReady: this.ai.isReady, lintLayout: this.settings.lintLayout });
 		this.statusBar?.render();
+	}
+
+	/** Signs in to a ChatGPT plan in the browser. Resolves true when signed in. */
+	async signInToChatGpt(): Promise<boolean> {
+		if (!this.settings.chatgptDeviceId) {
+			this.settings.chatgptDeviceId = crypto.randomUUID();
+			await this.saveData(this.settings);
+		}
+		const attempt = new AbortController();
+		const modal = new ChatGptSignInModal(this.app, () => attempt.abort());
+		modal.open();
+		try {
+			await this.ai.signInToChatGpt(
+				{
+					signal: attempt.signal,
+					notify: (event) => {
+						if (event.type === "auth_url") {
+							modal.setSignInUrl(event.url);
+							window.open(event.url);
+						} else if (event.type === "progress") {
+							modal.setStatus(event.message);
+						}
+					},
+					prompt: (prompt) => modal.waitForPastedAddress(prompt.signal ?? attempt.signal),
+				},
+				() => this.settings.chatgptDeviceId,
+			);
+			new Notice("Signed in with ChatGPT.");
+			return true;
+		} catch (error) {
+			if (!attempt.signal.aborted) new Notice(error instanceof Error ? error.message : "Couldn't sign in with ChatGPT.", 8000);
+			return false;
+		} finally {
+			modal.close();
+		}
+	}
+
+	async signOutOfChatGpt() {
+		await this.ai.signOutOfChatGpt();
+		new Notice("Signed out of ChatGPT.");
 	}
 
 	async setModelMode(mode: ModelMode) {

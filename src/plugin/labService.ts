@@ -50,8 +50,8 @@ export class LabService {
 			new Notice("Open a note first.");
 			return null;
 		}
-		if (!this.client.hasKey) {
-			new Notice("Add an OpenRouter API key in Vikalp settings to use the Lab.");
+		if (!this.client.isReady) {
+			new Notice("Connect an AI provider in Vikalp settings to use the Lab.");
 			return null;
 		}
 		return { view, path };
@@ -236,6 +236,7 @@ export class LabService {
 			};
 		}
 		try {
+			if (!this.client.hasJev) return;
 			const { answers } = await this.client.classify("Trim grammar check", state, questions);
 			if (this.controller.editor !== view) return;
 			const risky = new Set(Object.entries(answers).filter(([, probability]) => probability < 0.5).map(([id]) => id));

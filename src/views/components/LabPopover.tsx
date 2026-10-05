@@ -14,17 +14,18 @@ const MODES: Array<{ mode: ModelMode; label: string }> = [
 export interface LabPopoverProps {
 	modelMode: ModelMode;
 	modelId: string;
-	hasApiKey: boolean;
+	aiReady: boolean;
 	hasNote: boolean;
 	lab: LabPassState;
 	trim: TrimState;
 	sessionCost: number;
+	onPlan: boolean;
 	markCount: number;
 	actions: LabActions;
 }
 
-export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, sessionCost, markCount, actions }: LabPopoverProps) {
-	const disabled = !hasApiKey || !hasNote;
+export function LabPopover({ modelMode, modelId, aiReady, hasNote, lab, trim, sessionCost, onPlan, markCount, actions }: LabPopoverProps) {
+	const disabled = !aiReady || !hasNote;
 	const busy = lab.runningPass !== null;
 	return (
 		<div className="vk-lab" role="dialog" aria-label="The Lab">
@@ -45,9 +46,9 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 				</div>
 			</header>
 
-			{!hasApiKey && (
+			{!aiReady && (
 				<div className="vk-lab-warning">
-					Add an OpenRouter key to use the Lab.{" "}
+					Connect an AI provider to use the Lab.{" "}
 					<button className="vk-inline-action" onClick={actions.openSettings}>
 						Open settings
 					</button>
@@ -113,7 +114,7 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 				</span>
 				<span className="vk-lab-footer-end">
 					<button className="vk-inline-action" onClick={actions.showCostLog} title="Show the cost log">
-						{formatCost(sessionCost)}
+						{onPlan ? "On plan" : formatCost(sessionCost)}
 					</button>
 					<button
 						className="clickable-icon"

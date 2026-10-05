@@ -21,6 +21,8 @@ The flows follow the spec: alternatives surviving a restart, ghosting and copy c
 
 Run one flow by name: `npm run e2e -- ghost`.
 
+The ChatGPT flow does not need an account. It starts a sign-in, checks the page it opens and the local reply listener, then sends a bad reply and checks nothing is stored. Signing in for real is a manual check.
+
 The linter flow calls Jev for real, so it needs `openRouterApiKey` in `dev-vault/.obsidian/plugins/vikalp/data.json` (that folder is gitignored). Without a key the judgment rules are skipped and that flow may fail.
 
 ## Screenshots

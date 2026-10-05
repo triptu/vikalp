@@ -24,7 +24,7 @@ npm install
 npm run build
 ```
 
-Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and add an OpenRouter API key in Vikalp's settings for the AI features. Desktop only.
+Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and, for the AI features, either sign in with a ChatGPT plan or add an OpenRouter API key in Vikalp's settings. Desktop only.
 
 ## Develop
 

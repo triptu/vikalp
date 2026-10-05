@@ -237,13 +237,13 @@ export class LinterService {
 
 		const doc = view.state.doc.toString();
 		const tasks = judgmentTasks(this.enabledRules(), doc).filter((task) => task.unit.text.trim().split(/\s+/).length >= 4 || task.rule.scope !== "sentence");
-		const canJudge = this.client.hasKey && tasks.length > 0;
+		const canJudge = this.client.isReady && tasks.length > 0;
 		this.patchRun({
 			running: canJudge,
 			ranAt: Date.now(),
 			judgmentTotal: canJudge ? tasks.length : 0,
 			judgmentDone: 0,
-			notice: !this.client.hasKey && tasks.length > 0 ? "Local rules only. Add an OpenRouter key in settings to run judgment rules too." : null,
+			notice: !this.client.isReady && tasks.length > 0 ? "Local rules only. Connect an AI provider in settings to run judgment rules too." : null,
 			ruleErrors: this.ruleErrors,
 			notePath: path,
 			cost: 0,
@@ -276,14 +276,16 @@ export class LinterService {
 
 		let fallbackCount = 0;
 		const judge = async (batch: JudgmentTask[]) => {
-			if (settings.judgmentEngine === "jev") {
+			if (settings.judgmentEngine === "jev" && this.client.hasJev) {
 				const failed = await this.judgeWithJev(batch, flag, done, stillCurrent);
 				if (failed.length && stillCurrent()) {
 					fallbackCount += failed.length;
 					await this.judgeWithLlm(failed, "lite", flag, done, stillCurrent, true);
 				}
 			} else {
-				await this.judgeWithLlm(batch, settings.modelMode, flag, done, stillCurrent, false);
+				// Without Jev (a ChatGPT sign-in), the "Jev" setting means the cheap Lite model.
+				const mode = settings.judgmentEngine === "jev" ? "lite" : settings.modelMode;
+				await this.judgeWithLlm(batch, mode, flag, done, stillCurrent, false);
 			}
 		};
 		await judge(classifierTasks);

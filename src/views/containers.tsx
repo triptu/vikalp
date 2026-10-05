@@ -1,6 +1,6 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { sessionCost } from "../store/uiStore";
+import { sessionCost, sessionOnPlan } from "../store/uiStore";
 import { AlternativesPanel } from "./components/AlternativesPanel";
 import { IconContext, type IconRenderer } from "./components/Icon";
 import { LabPopover } from "./components/LabPopover";
@@ -53,11 +53,12 @@ export function LabContainer({ modelIdFor }: { modelIdFor: (mode: string) => str
 	const { store, lab } = useViewContext();
 	const slice = useStoreSlice(store, (state) => ({
 		modelMode: state.modelMode,
-		hasApiKey: state.hasApiKey,
+		aiReady: state.aiReady,
 		hasNote: state.note !== null,
 		lab: state.lab,
 		trim: state.trim,
 		sessionCost: sessionCost(state),
+		onPlan: sessionOnPlan(state),
 		markCount: state.note?.lintHits.filter((hit) => hit.source === "lab").length ?? 0,
 	}));
 	return <LabPopover {...slice} modelId={modelIdFor(slice.modelMode)} actions={lab} />;

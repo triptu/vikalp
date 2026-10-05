@@ -62,9 +62,10 @@ export class CostLogModal extends Modal {
 		this.modalEl.addClass("vk-cost-modal");
 		const total = this.entries.reduce((sum, entry) => sum + entry.cost, 0);
 		const runs = groupCalls(this.entries).length;
+		const allOnPlan = this.entries.length > 0 && this.entries.every((entry) => entry.onPlan);
 		this.contentEl.createEl("p", {
 			cls: "vk-cost-total",
-			text: `${preciseCost(total)} across ${this.entries.length} ${this.entries.length === 1 ? "call" : "calls"} in ${runs} ${runs === 1 ? "run" : "runs"}.`,
+			text: `${allOnPlan ? "From your ChatGPT plan" : preciseCost(total)} across ${this.entries.length} ${this.entries.length === 1 ? "call" : "calls"} in ${runs} ${runs === 1 ? "run" : "runs"}.`,
 		});
 		if (this.entries.length === 0) {
 			this.contentEl.createEl("p", { cls: "vk-faint", text: "Nothing yet. AI only runs when you click something." });
@@ -82,7 +83,7 @@ export class CostLogModal extends Modal {
 			if (group.error) purpose.createSpan({ cls: "vk-cost-flag is-error", text: "failed", attr: { title: group.error } });
 			row.createEl("td", { cls: "vk-cost-model", text: group.model });
 			row.createEl("td", { text: `${group.inputTokens.toLocaleString()} / ${group.outputTokens.toLocaleString()}` });
-			row.createEl("td", { text: preciseCost(group.cost) });
+			row.createEl("td", { text: group.onPlan ? "plan" : preciseCost(group.cost) });
 		}
 	}
 
@@ -105,6 +106,7 @@ function groupCalls(entries: CostEntry[]): CallGroup[] {
 			last.inputTokens += entry.inputTokens;
 			last.outputTokens += entry.outputTokens;
 			last.cost += entry.cost;
+			last.onPlan = last.onPlan && entry.onPlan;
 			last.fallback = last.fallback || entry.fallback;
 			last.error = last.error ?? entry.error;
 		} else {
@@ -156,4 +158,59 @@ export function promptText(app: App, options: { title: string; label: string; va
 		})(app);
 		modal.open();
 	});
+}
+
+/**
+ * Shown while a ChatGPT sign-in waits on the browser. If the browser can't
+ * reach the local callback, the writer can paste the address it ended on.
+ */
+export class ChatGptSignInModal extends Modal {
+	private pasted: ((address: string) => void) | null = null;
+	private statusEl: HTMLElement | null = null;
+	private signInUrl = "";
+
+	constructor(
+		app: App,
+		private readonly onCancel: () => void,
+	) {
+		super(app);
+	}
+
+	setSignInUrl(url: string) {
+		this.signInUrl = url;
+	}
+
+	setStatus(message: string) {
+		this.statusEl?.setText(message);
+	}
+
+	/** Resolves with the pasted address; rejects if the modal closes first or `signal` aborts. */
+	waitForPastedAddress(signal: AbortSignal): Promise<string> {
+		return new Promise((resolve, reject) => {
+			this.pasted = resolve;
+			signal.addEventListener("abort", () => reject(new Error("Sign-in finished another way.")), { once: true });
+		});
+	}
+
+	override onOpen() {
+		this.titleEl.setText("Sign in with ChatGPT");
+		this.contentEl.addClass("vk-confirm");
+		this.contentEl.createEl("p", { text: "Finish signing in in your browser. This closes by itself when you're done." });
+		this.statusEl = this.contentEl.createEl("p", { cls: "vk-faint", text: "Waiting for the browser…" });
+		new Setting(this.contentEl)
+			.setName("Browser didn't open?")
+			.addButton((button) => button.setButtonText("Open sign-in page").onClick(() => window.open(this.signInUrl)));
+		let address = "";
+		new Setting(this.contentEl)
+			.setName("Browser can't reach Obsidian?")
+			.setDesc("Copy the address it ended on (it starts with http://127.0.0.1:1455) and paste it here.")
+			.addText((text) => text.setPlaceholder("http://127.0.0.1:1455/…").onChange((value) => (address = value)))
+			.addButton((button) => button.setButtonText("Continue").onClick(() => this.pasted?.(address)));
+		new Setting(this.contentEl).addButton((button) => button.setButtonText("Cancel").onClick(() => this.close()));
+	}
+
+	override onClose() {
+		this.contentEl.empty();
+		this.onCancel();
+	}
 }
