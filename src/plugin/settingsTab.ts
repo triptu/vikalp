@@ -73,16 +73,6 @@ export class VikalpSettingTab extends PluginSettingTab {
 						slider.sliderEl.closest(".setting-item")?.querySelector(".setting-item-description")?.setText(`${value} at a time.`);
 					}),
 			);
-		new Setting(containerEl)
-			.setName("Show cost in the status bar")
-			.setDesc("The session's AI spend. Click it for a log of every call.")
-			.addToggle((toggle) =>
-				toggle.setValue(settings.showCost).onChange(async (value) => {
-					settings.showCost = value;
-					await this.plugin.saveSettings();
-				}),
-			);
-
 		new Setting(containerEl).setName("Writing").setHeading();
 		new Setting(containerEl)
 			.setName("Show markers in new notes")

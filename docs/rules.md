@@ -40,6 +40,19 @@ The pencil opens a rule in a form. **Add rule** starts a new one. Pick a kind:
 
 While you edit, the form shows how many marks the rule makes on the open note, and any problems with it. Saving writes the rule's YAML file. An edited built-in rule can be put back with **Reset to built-in**; rules you added can be deleted.
 
+## Finding where a note-level verdict comes from
+
+An AI yes/no rule that looks at the whole note can add `paragraphQuestion`. When the note is flagged, that question is asked about each paragraph, and the paragraphs that answer yes are marked too. The built-in LinkedIn voice rule does this, so a "reads like a LinkedIn post" verdict also shows which paragraphs are behind it.
+
+```yaml
+id: linkedin-voice.post
+engine: classifier
+scope: document
+question: "Does this note read like a LinkedIn post?"
+threshold: 0.7
+paragraphQuestion: "Does this paragraph read like part of a LinkedIn post?"
+```
+
 ## The rule file
 
 Rules are YAML files in `.obsidian/plugins/vikalp/rules/`, one rule per file. These fields work for every engine:

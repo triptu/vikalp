@@ -133,7 +133,22 @@ export function switchToVersion(
 	effects.push(...placeNestedSpans(state, meta, range, currentText, version.text, newFrom));
 	effects.push(flashSpan.of({ id: spanId }));
 
-	return { ok: true, spec: { changes, effects, userEvent: VIKALP_EVENT.cycle } };
+	const spec: TransactionSpec = { changes, effects, userEvent: VIKALP_EVENT.cycle };
+	const selection = selectionAfterSwap(state, range, newRange);
+	if (selection) spec.selection = selection;
+	return { ok: true, spec };
+}
+
+/**
+ * Where the selection goes when the text under it is swapped. CodeMirror would
+ * map a selection inside replaced text to a backwards range, so it is set
+ * explicitly: a cursor keeps its offset, a selection covers the new text.
+ */
+function selectionAfterSwap(state: EditorState, oldRange: TextRange, newRange: TextRange): { anchor: number; head?: number } | null {
+	const main = state.selection.main;
+	if (main.from < oldRange.from || main.to > oldRange.to) return null;
+	if (main.empty) return { anchor: Math.min(newRange.from + (main.head - oldRange.from), newRange.to) };
+	return { anchor: newRange.from, head: newRange.to };
 }
 
 /**

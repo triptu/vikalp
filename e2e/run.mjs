@@ -294,6 +294,46 @@ await flow("find words worth playing with: one click adds AI versions at several
 	});
 });
 
+await flow("unit tabs switch the panel between word, sentence and paragraph", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote(ESSAY);
+		await driver.select("tension");
+		await driver.command("vikalp:alternatives-for-selection");
+		await driver.type("pressure");
+		await driver.press("Enter");
+		const activeTab = () => driver.evaluate(() => document.querySelector(".vk-unit-tab.is-active")?.textContent);
+		await driver.click(".vk-unit-tab", "Sentence");
+		await driver.wait(300);
+		assert((await activeTab()) === "Sentence", `Sentence tab is active (saw ${await activeTab()})`);
+		await driver.type("A shorter sentence.");
+		await driver.press("Enter");
+		await driver.click(".vk-unit-tab", "Paragraph");
+		await driver.wait(300);
+		assert((await activeTab()) === "Paragraph", "Paragraph tab is active");
+		await driver.click(".vk-unit-tab", "Sentence");
+		await driver.wait(300);
+		assert((await activeTab()) === "Sentence", "back to Sentence, reusing the existing sentence");
+		const versions = await driver.evaluate(() => [...document.querySelectorAll(".vk-version-text")].map((element) => element.textContent));
+		assert(versions.includes("A shorter sentence."), "the sentence keeps its versions");
+		await driver.click(".vk-unit-tab", "Word");
+		await driver.wait(300);
+		assert((await activeTab()) === "Word", "back to Word");
+	});
+});
+
+await flow("linter: a note that reads like LinkedIn also marks which paragraphs", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote("Essays/LinkedIn draft.md");
+		await driver.command("vikalp:run-linter");
+		await driver.page.waitForFunction(() => !window.app.plugins.plugins.vikalp.store.getState().lint.running, null, { timeout: 90000 });
+		const hits = (await noteState(driver)).lintHits.filter((hit) => hit.ruleId === "linkedin-voice.post");
+		const noteLevel = hits.filter((hit) => hit.scope === "document").length;
+		const paragraphs = hits.filter((hit) => hit.scope === "paragraph").length;
+		assert(noteLevel === 1, "the whole note is flagged once");
+		assert(paragraphs >= 2, `and the paragraphs behind it are marked (${paragraphs})`);
+	});
+});
+
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length} passed, ${failed.length} failed`);
 process.exit(failed.length ? 1 : 0);

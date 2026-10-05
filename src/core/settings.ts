@@ -17,7 +17,6 @@ export interface VikalpSettings {
 	trimPrimaryAction: TrimPrimaryAction;
 	voiceReferenceNotes: string[];
 	markersOnByDefault: boolean;
-	showCost: boolean;
 	alternativesCount: number;
 }
 
@@ -39,7 +38,6 @@ export const DEFAULT_SETTINGS: VikalpSettings = {
 	trimPrimaryAction: "ghost",
 	voiceReferenceNotes: [],
 	markersOnByDefault: false,
-	showCost: true,
 	alternativesCount: 5,
 };
 

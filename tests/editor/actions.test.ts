@@ -221,6 +221,26 @@ describe("alternatives", () => {
 	});
 });
 
+describe("selection during swaps", () => {
+	it("a cursor inside a span stays inside it, and a selection covers the new text", () => {
+		const editor = new Editor(essay);
+		const id = editor.createSpan("tension");
+		editor.addVersion(id, "pressure");
+		const range = spanRange(editor.state, id)!;
+		editor.state = editor.state.update({ selection: { anchor: range.from + 2 } }).state;
+		editor.apply(cycleSpan(editor.state, id, 1, options));
+		const cursor = editor.state.selection.main;
+		expect(cursor.empty && cursor.from === range.from + 2).toBe(true);
+
+		const sentence = editor.createSpan("Much of the tension in product development comes from balance.");
+		editor.state = editor.state.update({ selection: { anchor: editor.select("Much of the tension").from, head: editor.select("balance.").to } }).state;
+		editor.addVersion(sentence, "A shorter sentence.");
+		const selected = editor.state.selection.main;
+		expect(selected.from).toBeLessThan(selected.to);
+		expect(editor.doc.slice(selected.from, selected.to)).toBe("A shorter sentence.");
+	});
+});
+
 describe("nesting", () => {
 	const doc = "First sentence has a tension word. Second sentence ends here.\n\nNext paragraph.";
 

@@ -12,6 +12,7 @@ import { BUILTIN_RULES, BUILTIN_RULE_FILES } from "../core/rules/builtin";
 import { parseRule, serializeRule } from "../core/rules/parse";
 import { judgmentTasks, runLocalRules, type JudgmentTask } from "../core/rules/run";
 import type { Rule, WordlistRule } from "../core/rules/types";
+import { countWords, segmentNote } from "../core/text/segment";
 import { lintMarks, type LintMarkMeta } from "../editor/collections";
 import { notePathOf } from "../editor/noteFields";
 import { VIKALP_EVENT, isolated, noHistory } from "../editor/transactions";
@@ -266,20 +267,32 @@ export class LinterService {
 			if (stillCurrent()) this.patchRun({ judgmentDone: this.store.getState().lint.judgmentDone + count });
 		};
 
+		const flaggedNoteRules: JudgmentTask[] = [];
 		const flag = (task: JudgmentTask, probability: number, model: string) => {
 			if (!stillCurrent() || probability < (task.threshold ?? 1)) return;
 			this.addJudgmentHit(view, path, task, task.unit, task.message, model, runDoc);
+			if (task.rule.scope === "document" && task.rule.engine === "classifier" && task.rule.paragraphQuestion) flaggedNoteRules.push(task);
 		};
 
 		let fallbackCount = 0;
-		if (settings.judgmentEngine === "jev") {
-			const failed = await this.judgeWithJev(classifierTasks, flag, done, stillCurrent);
-			if (failed.length && stillCurrent()) {
-				fallbackCount = failed.length;
-				await this.judgeWithLlm(failed, "lite", flag, done, stillCurrent, true);
+		const judge = async (batch: JudgmentTask[]) => {
+			if (settings.judgmentEngine === "jev") {
+				const failed = await this.judgeWithJev(batch, flag, done, stillCurrent);
+				if (failed.length && stillCurrent()) {
+					fallbackCount += failed.length;
+					await this.judgeWithLlm(failed, "lite", flag, done, stillCurrent, true);
+				}
+			} else {
+				await this.judgeWithLlm(batch, settings.modelMode, flag, done, stillCurrent, false);
 			}
-		} else {
-			await this.judgeWithLlm(classifierTasks, settings.modelMode, flag, done, stillCurrent, false);
+		};
+		await judge(classifierTasks);
+
+		// A note-level verdict says nothing about where. Ask the same kind of question per paragraph.
+		const paragraphTasks = flaggedNoteRules.flatMap((noteTask) => paragraphFollowUps(noteTask, runDoc));
+		if (paragraphTasks.length && stillCurrent()) {
+			this.patchRun({ judgmentTotal: this.store.getState().lint.judgmentTotal + paragraphTasks.length });
+			await judge(paragraphTasks);
 		}
 
 		const llmRules = [...new Set(llmRuleTasks.map((task) => task.rule))];
@@ -557,6 +570,19 @@ export class LinterService {
 			if (this.controller.editor === view) this.runLocal(view);
 		}, LIVE_LINT_DELAY_MS);
 	}
+}
+
+/** Paragraph-level questions for a note-level rule that was flagged, so the panel can show which paragraphs. */
+function paragraphFollowUps(noteTask: JudgmentTask, doc: string): JudgmentTask[] {
+	const rule = noteTask.rule;
+	if (rule.engine !== "classifier" || !rule.paragraphQuestion) return [];
+	const paragraphRule: Rule = { ...rule, scope: "paragraph" };
+	return segmentNote(doc)
+		.filter((paragraph) => paragraph.kind !== "heading" && countWords(doc.slice(paragraph.from, paragraph.to)) >= 4)
+		.map((paragraph) => {
+			const unit = { from: paragraph.from, to: paragraph.to, text: doc.slice(paragraph.from, paragraph.to) };
+			return { rule: paragraphRule, question: rule.paragraphQuestion!, threshold: rule.threshold, message: noteTask.message, unit, paragraph: unit };
+		});
 }
 
 function ignoreKey(ruleId: string, text: string): string {
