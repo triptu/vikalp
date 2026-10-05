@@ -6,7 +6,7 @@ description: Run Vikalp's end-to-end flows in a real, isolated Obsidian. Use aft
 # Run the e2e flows
 
 1. `npm run build` (e2e uses the built `main.js` in the dev vault).
-2. `npm run e2e` for everything, or `npm run e2e -- <name part>` for one flow.
+2. `npm run e2e` for everything, or `npm run e2e -- <name part>` for the group holding that flow. Add `--live` to ask the model again instead of replaying `e2e/ai-recordings.json`.
 
 What to know:
 
@@ -16,5 +16,5 @@ What to know:
 - Since Obsidian 1.13, settings open in their own window. Use `driver.openSettings()`, which returns that window's page, to query or click inside settings.
 - A new scratch vault path triggers Obsidian's "trust author" prompt; `e2e/obsidian.mjs` clicks it.
 - The driver finds the editor through `window.app.plugins.plugins.vikalp.controller.editor`, because `workspace.activeEditor` is null while a Vikalp panel has focus.
-- To test state across restarts, call `prepareScratchVault()` once, then `startSession({ keepVault: true })` for each launch.
-- The linter flow calls Jev live and needs the key in `dev-vault/.obsidian/plugins/vikalp/data.json` (gitignored).
+- Flows in `e2e/run.mjs` are grouped; each group shares one Obsidian, and flows build on each other's edits. To test state across restarts, add a `restart(between)` step to a group.
+- AI answers are replayed from `e2e/ai-recordings.json`; misses go to the model and get recorded. Commit that file when it changes. The key in `dev-vault/.obsidian/plugins/vikalp/data.json` (gitignored) is still needed.
