@@ -2,7 +2,7 @@
   "id": "vikalp",
   "name": "Vikalp",
   "version": "0.1.0",
-  "minAppVersion": "1.10.3",
+  "minAppVersion": "1.13.7",
   "description": "Alternative control for writing: keep versions of words, sentences and paragraphs in place, ghost text instead of deleting it, stash spare writing, lint on demand, and run AI passes that never write for you.",
   "author": "Tushar",
   "isDesktopOnly": true

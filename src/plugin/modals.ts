@@ -31,7 +31,7 @@ class ConfirmModal extends Modal {
 					this.confirmed = true;
 					this.close();
 				});
-				if (this.options.warning) button.setWarning();
+				if (this.options.warning) button.setDestructive().setCta();
 				else button.setCta();
 				window.setTimeout(() => button.buttonEl.focus(), 0);
 			});
