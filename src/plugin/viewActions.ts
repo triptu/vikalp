@@ -49,6 +49,8 @@ export function ensureMarkersOn(view: EditorView) {
 
 /** Opens the panel on a span (creating it from the selection if needed) and focuses its input. */
 export function startAlternatives(deps: AlternativesDeps, view: EditorView, unit?: SpanUnit, options: { askAi?: boolean } = {}) {
+	const widened = !unit && !options.askAi ? widerUnit(deps, view) : null;
+	if (widened) unit = widened;
 	const panelSpanId = deps.panelSpanId();
 	const panelSpan = panelSpanId && spanRange(view.state, panelSpanId) ? panelSpanId : null;
 	const selection = view.state.selection.main;
@@ -87,6 +89,20 @@ export function startAlternatives(deps: AlternativesDeps, view: EditorView, unit
 	} else {
 		void deps.panels.focusAlternativesInput();
 	}
+}
+
+const WIDER: Record<SpanUnit, SpanUnit | null> = { word: "sentence", sentence: "paragraph", paragraph: null };
+
+/**
+ * Pressing the alternatives key again while its panel has focus widens the
+ * unit: word, then sentence, then paragraph.
+ */
+function widerUnit(deps: AlternativesDeps, view: EditorView): SpanUnit | null {
+	const panelHasFocus = Boolean(document.activeElement?.closest(".vk-alternatives"));
+	const panelSpanId = deps.panelSpanId();
+	const meta = panelSpanId ? spanMeta(view.state, panelSpanId) : undefined;
+	if (!panelHasFocus || !meta) return null;
+	return WIDER[meta.unit];
 }
 
 /** An existing span of this unit (word, sentence, paragraph) that covers the range, if any. */

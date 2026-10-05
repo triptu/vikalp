@@ -8,6 +8,21 @@ import { listSpans, spanAt } from "./spansField";
 
 const FRONTMATTER = /^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/;
 
+const CONTEXT_CHARS = 48;
+
+/** The words around a span within its line, trimmed at word boundaries. */
+function surroundings(doc: string, range: { from: number; to: number } | null): { before: string; after: string } {
+	if (!range) return { before: "", after: "" };
+	const lineStart = doc.lastIndexOf("\n", range.from - 1) + 1;
+	const lineEndIndex = doc.indexOf("\n", range.to);
+	const lineEnd = lineEndIndex === -1 ? doc.length : lineEndIndex;
+	let before = doc.slice(Math.max(lineStart, range.from - CONTEXT_CHARS), range.from);
+	let after = doc.slice(range.to, Math.min(lineEnd, range.to + CONTEXT_CHARS));
+	if (range.from - CONTEXT_CHARS > lineStart) before = `…${before.replace(/^\S*\s/, "")}`;
+	if (range.to + CONTEXT_CHARS < lineEnd) after = `${after.replace(/\s\S*$/, "")}…`;
+	return { before, after };
+}
+
 /** A plain-data picture of one note's Vikalp state, for the panels and status bar. */
 export function snapshotNote(state: EditorState, path: string): NoteView {
 	const doc = state.doc.toString();
@@ -31,6 +46,7 @@ export function snapshotNote(state: EditorState, path: string): NoteView {
 		hidden: Boolean(meta.hiddenIn),
 		orphaned: Boolean(meta.orphaned),
 		lastText: meta.lastText ?? null,
+		...surroundings(doc, meta.unit === "paragraph" ? null : range),
 	}));
 
 	const lintHits: LintHitView[] = lintMarks.list(state).map(({ meta, range }) => ({

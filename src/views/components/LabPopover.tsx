@@ -116,6 +116,13 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 				<div className="vk-lab-hint">{trim.status === "idle" ? "Pick a level and the model proposes cuts. Nothing is deleted yet." : "Struck words would go. Click one to keep it."}</div>
 			</section>
 
+			<div className="vk-lab-keys" aria-label="Keys">
+				<span><kbd>⌘J</kbd> alternatives</span>
+				<span><kbd>⌘⇧J</kbd> ask AI</span>
+				<span><kbd>⌥↑↓</kbd> try</span>
+				<span><kbd>⌘.</kbd> all actions</span>
+			</div>
+
 			<div className="vk-lab-footer">
 				<div className="vk-lab-footer-row">
 					<button className="vk-link-button" onClick={actions.clearMarks} disabled={markCount === 0}>

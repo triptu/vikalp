@@ -33,19 +33,20 @@ export function registerCommands(plugin: VikalpPlugin) {
 	const selectionOf = (view: EditorView) => ({ from: view.state.selection.main.from, to: view.state.selection.main.to });
 
 	editorCommand({ id: "toggle-markers", name: "Toggle markers", run: (view) => plugin.toggleMarkers(view) });
+	editorCommand({ id: "actions", name: "Actions menu", icon: "zap", hotkeys: mod("."), run: (view) => plugin.actionMenu.open(view) });
 
 	editorCommand({
 		id: "alternatives-for-selection",
 		name: "Alternatives for selection",
 		icon: "split",
-		hotkeys: mod("A", true),
+		hotkeys: mod("J"),
 		run: (view) => startAlternatives(plugin.alternativesDeps, view),
 	});
 	editorCommand({
 		id: "ai-alternatives-for-selection",
 		name: "AI alternatives for selection",
 		icon: "sparkles",
-		hotkeys: mod("G", true),
+		hotkeys: mod("J", true),
 		run: (view) => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }),
 	});
 	editorCommand({ id: "find-spots", name: "Find words worth playing with (AI)", icon: "sparkles", run: () => plugin.findSpots() });
@@ -87,7 +88,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 	});
 	editorCommand({ id: "edit-span-note", name: "Edit note on alternatives", run: (view) => editSpanNote(plugin, view) });
 
-	editorCommand({ id: "ghost-selection", name: "Ghost it", icon: "ghost", hotkeys: mod("/", true), run: (view) => runAction(view, ghostRange(view.state, selectionOf(view))) });
+	editorCommand({ id: "ghost-selection", name: "Ghost it", icon: "ghost", run: (view) => runAction(view, ghostRange(view.state, selectionOf(view))) });
 	editorCommand({ id: "revive", name: "Revive at cursor", run: (view) => runAction(view, reviveRange(view.state, selectionOf(view))) });
 	editorCommand({
 		id: "delete-all-ghosted",
@@ -95,7 +96,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 		run: (view) => void deleteGhosted(plugin, view),
 	});
 
-	editorCommand({ id: "stash-selection", name: "Stash in Overflow", icon: "layers", hotkeys: mod("X", true), run: (view) => stash(plugin, view) });
+	editorCommand({ id: "stash-selection", name: "Stash in Overflow", icon: "layers", run: (view) => stash(plugin, view) });
 	plugin.addCommand({ id: "toggle-overflow", name: "Toggle Overflow panel", icon: "layers", callback: () => void plugin.panels.toggle(OVERFLOW_VIEW, "right") });
 	plugin.addCommand({ id: "toggle-alternatives", name: "Toggle Alternatives panel", icon: "split", callback: () => void plugin.panels.toggle(ALTERNATIVES_VIEW, "left") });
 	plugin.addCommand({ id: "toggle-lint", name: "Toggle Lint panel", icon: "scan-text", callback: () => void plugin.panels.toggle(LINT_VIEW, "right") });
@@ -109,7 +110,7 @@ export function registerCommands(plugin: VikalpPlugin) {
 
 	editorCommand({ id: "copy-clean-text", name: "Copy clean text", run: (view) => copyClean(view, false) });
 	editorCommand({ id: "copy-clean-selection", name: "Copy clean selection", run: (view) => copyClean(view, true) });
-	editorCommand({ id: "read-through", name: "Read-through mode", icon: "glasses", hotkeys: mod("R", true), run: (view) => plugin.readThrough.toggle(view) });
+	editorCommand({ id: "read-through", name: "Read-through mode", icon: "glasses", run: (view) => plugin.readThrough.toggle(view) });
 }
 
 export function editSpanNote(plugin: VikalpPlugin, view: EditorView) {

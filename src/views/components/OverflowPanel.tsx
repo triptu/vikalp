@@ -57,7 +57,7 @@ export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now }: O
 			{blocks.length === 0 ? (
 				<div className="vk-empty">
 					<p>Nothing stashed yet.</p>
-					<p className="vk-empty-hint">Select text in the note and press ⌘⇧X, or right-click → Stash in Overflow.</p>
+					<p className="vk-empty-hint">Select text in the note, press ⌘. then S, or right-click → Stash in Overflow.</p>
 				</div>
 			) : (
 				<ul className="vk-overflow-list" onDragLeave={() => setDragOverIndex(null)}>
@@ -79,7 +79,7 @@ export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now }: O
 					))}
 				</ul>
 			)}
-			<div className="vk-panel-footer">⌘J insert · drag to use · ⌥ keeps a copy</div>
+			<div className="vk-panel-footer">⌘↵ inserts at the cursor · drag into the note · ⌥ keeps a copy</div>
 		</div>
 	);
 }
@@ -137,7 +137,7 @@ function OverflowBlockRow({
 					onInput={setText}
 					onBlur={() => text !== block.text && actions.updateBlock(block.id, text)}
 					onKeyDown={(event) => {
-						if (event.key.toLowerCase() === "j" && (event.metaKey || event.ctrlKey)) {
+						if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
 							event.preventDefault();
 							if (text !== block.text) actions.updateBlock(block.id, text);
 							actions.insertAtCursor(block.id, event.altKey);
@@ -152,7 +152,7 @@ function OverflowBlockRow({
 						{relativeTime(block.createdAt, now)}
 					</span>
 					<span className="vk-overflow-actions">
-						<button className="clickable-icon" aria-label="Insert at cursor (⌘J)" onClick={() => actions.insertAtCursor(block.id, false)}>
+						<button className="clickable-icon" aria-label="Insert at cursor (⌘↵)" onClick={() => actions.insertAtCursor(block.id, false)}>
 							<Icon name="corner-down-left" />
 						</button>
 						<button className="clickable-icon" aria-label="Copy" onClick={() => actions.copyBlock(block.id)}>

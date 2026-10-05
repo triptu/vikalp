@@ -18,7 +18,7 @@ The word count in the status bar is also the switch. Click it to show or hide Vi
 
 ## Alternatives
 
-1. Select a word, phrase, sentence or paragraph. Press **⌘⇧A** (or right-click → *Alternatives for selection*). A partial word grows to the whole word.
+1. Put the cursor on a word, or select a phrase, and press **⌘J** (or right-click → *Alternatives for selection*). A partial word grows to the whole word. Press **⌘J** again to widen to the sentence, and again for the paragraph.
 2. The Alternatives panel opens on the left with the cursor in its input. Type a version and press **Return**. It shows in the note straight away.
 3. Add as many as you like. **↑/↓** in the panel swaps the version in the note as you go.
 4. **Esc** goes back to the note. A span you never gave a second version quietly disappears.
@@ -43,7 +43,7 @@ A paragraph span can contain word spans. If you switch to a paragraph version th
 
 ### AI alternatives
 
-- Select text and press **⌘⇧G**, or type **??** in the panel input and press Return, or click **Ask AI**.
+- Press **⌘⇧J**, or type **??** in the panel input and press Return, or click **Ask AI**.
 - Options stream in marked with a small robot. Your showing version never changes; you pick.
 - Each AI version remembers which model wrote it (hover it in the panel).
 - *Remove AI versions* clears them from a span. AI versions aren't part of undo, so ⌘Z never steps through them.
@@ -53,7 +53,7 @@ A paragraph span can contain word spans. If you switch to a paragraph version th
 
 ## Ghosting
 
-Select text and press **⌘⇧/** (or right-click → *Ghost it*). It fades to about a third and stays in the note. Hover to read it. Right-click → *Revive* brings it back.
+Select text and press **⌘.** then **G** (or right-click → *Ghost it*). It fades to about a third and stays in the note. Hover to read it. Right-click → *Revive* brings it back.
 
 Ghosted words aren't counted in the status bar; the count shows them as "(+12 ghosted)". *Copy clean text* copies the note without them. *Delete all ghosted text in note* removes them for good, after asking.
 
@@ -63,8 +63,8 @@ Ghosted words aren't counted in the status bar; the count shows them as "(+12 gh
 
 A side panel for writing you cut but want nearby. Each note has its own.
 
-- Select text and press **⌘⇧X** to move it to Overflow.
-- Drag a block back into the note, or focus it and press **⌘J** to insert it at the cursor. Hold **⌥** to keep a copy.
+- Select text and press **⌘.** then **S** to move it to Overflow.
+- Drag a block back into the note, or focus it and press **⌘↵** to insert it at the cursor. Hold **⌥** to keep a copy.
 - Blocks are editable. Drag them to reorder.
 - With a span open in the Alternatives panel, the split icon on a block makes it a version of that span.
 
@@ -98,7 +98,7 @@ The model may only quote your own text. Anything it can't quote exactly is dropp
 
 ## Read-through
 
-**⌘⇧R** hides every marker, collapses the sidebars and narrows the text so you read like a reader. Ghosted text stays dimmed. **Esc** returns.
+**⌘.** then **R** hides every marker, collapses the sidebars and narrows the text so you read like a reader. Ghosted text stays dimmed. **Esc** returns.
 
 ![Read-through mode](screenshots/guide/read-through.png)
 
@@ -106,18 +106,31 @@ The model may only quote your own text. Anything it can't quote exactly is dropp
 
 The Lab popover shows this session's AI spend and links to a log of every call: what it was for, the model, tokens and cost. Each linter run also shows its own cost in the Lint panel.
 
-## Hotkeys
+## Keys
 
-| Action | Default |
+Four keys cover almost everything. The Alternatives panel and the Lab popover show them too.
+
+| Key | What it does |
 |---|---|
-| Alternatives for selection | ⌘⇧A |
-| AI alternatives for selection | ⌘⇧G |
-| Cycle the hovered span | arrow keys |
-| Cycle the span at the cursor | ⌥↑ / ⌥↓ |
-| Delete the hovered version | ⌥⌫ |
-| Ghost it | ⌘⇧/ |
-| Stash in Overflow | ⌘⇧X |
-| Insert an Overflow block | ⌘J (block focused) |
-| Read-through mode | ⌘⇧R |
+| **⌘J** | Alternatives for the word at the cursor or the selection. Again: the sentence. Again: the paragraph. |
+| **⌘⇧J** | Ask AI for versions |
+| **⌥↑ / ⌥↓** | Try versions from the note (or hover a marked word and use the arrow keys) |
+| **⌘.** | Every other action, one letter away |
 
-The ⌘ shortcuts can be changed in Settings → Hotkeys. The arrow, ⌥↑/↓ and ⌥⌫ keys are built into the editor; the commands *Next version* and *Previous version* can be bound to other keys if you prefer. Every other action is a command (search "Vikalp" in the command palette).
+The **⌘.** menu:
+
+| Letter | Action |
+|---|---|
+| A | Alternatives |
+| I | Ask AI for versions |
+| F | Find words worth playing with |
+| G | Ghost it (or Revive on ghosted text) |
+| S | Stash in Overflow |
+| L | Run linter |
+| T | Open the Lab |
+| R | Read-through |
+| C | Copy clean text (or the selection) |
+
+In the Alternatives panel: **↵** adds a version, **↑/↓** tries them in the note, **??** asks AI, **esc** goes back to the note. In Overflow, **⌘↵** inserts the focused block at the cursor. While hovering a marked word, **⌥⌫** deletes the showing version.
+
+Every action is also a command (search "Vikalp" in the command palette), and any key can be changed in Settings → Hotkeys.
