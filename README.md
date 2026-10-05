@@ -21,7 +21,12 @@ Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys
 
 Alternatives, ghosting, Overflow, the local lint rules and read-through work offline.
 
-The AI features (AI versions, judgment lint rules and the Lab) send text to [OpenRouter](https://openrouter.ai) with your own API key. OpenRouter passes it to the model you picked. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something, and nothing is sent without a key. You pay OpenRouter for what you use; the Lab shows the cost of every call.
+The AI features (AI versions, judgment lint rules and the Lab) send text to one of two places, picked in settings:
+
+- [OpenRouter](https://openrouter.ai), with your own API key. OpenRouter passes it to the model you picked. You pay OpenRouter for what you use; the Lab shows the cost of every call.
+- OpenAI, through Sign in with ChatGPT. Calls count against your ChatGPT plan. Signing in opens OpenAI's page in your browser and briefly listens on `127.0.0.1:1455` for it to come back. The sign-in token is kept in plugin data.
+
+Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something, and nothing is sent before you add a key or sign in.
 
 Vikalp has no telemetry and no account.
 
@@ -32,7 +37,7 @@ npm install
 npm run build
 ```
 
-Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and add an OpenRouter API key in Vikalp's settings for the AI features. Turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys. Desktop only.
+Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and add an OpenRouter API key or sign in with ChatGPT in Vikalp's settings for the AI features. Turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys. Desktop only.
 
 ## Develop
 

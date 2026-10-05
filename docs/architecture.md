@@ -53,7 +53,12 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 ## AI
 
-`ai/aiClient.ts` wraps pi-ai. Where calls go and how they are authorised lives in a backend (`ai/backend.ts`); today the only one is OpenRouter (`ai/openRouter.ts`). Every call:
+`ai/aiClient.ts` wraps pi-ai. Where calls go and how they are authorised lives in a backend (`ai/backend.ts`); there are two, picked in settings:
+
+- `ai/openRouter.ts` sends calls to OpenRouter with the writer's API key.
+- `ai/chatgpt.ts` sends calls to OpenAI with a Sign in with ChatGPT token. pi-ai runs the sign-in and refreshes the token; `ai/settingsCredentialStore.ts` keeps it in plugin settings. pi-ai loads sign-in flows with a dynamic import that the bundle can't follow, so the backend registers them up front. `patches/` renames the agent pi-ai reports to OpenAI from Pi to Vikalp.
+
+Every call:
 
 - runs only from a click or command,
 - asks for structured output through a single tool call (with a JSON fallback),
@@ -61,7 +66,7 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 Models never get character offsets. Prompts number the sentences (`[s4] …`) and models answer with a sentence id plus an exact quote. `core/ai/placement.ts` finds each quote with the anchoring code and rejects anything that isn't there verbatim. See [adding-a-lab-pass.md](adding-a-lab-pass.md).
 
-Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so. A backend without Jev sends judgments to the selected model and skips the grammar check.
+Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so. ChatGPT has no Jev, so there judgments go to the Lite model and the grammar check is skipped.
 
 ## Views
 
