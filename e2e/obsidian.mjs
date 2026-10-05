@@ -1,6 +1,6 @@
 // Launches an isolated Obsidian instance on the dev vault and connects to it over CDP.
 // Uses its own user-data dir so Tushar's running Obsidian and real vault are never touched.
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "playwright-core";
@@ -27,6 +27,9 @@ export function prepareScratchVault({ keepVault = false } = {}) {
 }
 
 export async function launchObsidian({ vaultPath, keepVault = false, freshProfile = false } = {}) {
+	// A test instance left over from a crashed run would answer on the debug port with stale code.
+	spawnSync("pkill", ["-9", "-f", `user-data-dir=${PROFILE_DIR}`]);
+	await new Promise((done) => setTimeout(done, 500));
 	vaultPath = vaultPath ?? prepareScratchVault({ keepVault });
 	if (freshProfile) rmSync(PROFILE_DIR, { recursive: true, force: true });
 	mkdirSync(PROFILE_DIR, { recursive: true });

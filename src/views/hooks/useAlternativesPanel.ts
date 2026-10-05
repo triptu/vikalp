@@ -12,6 +12,8 @@ export interface AlternativesPanelModel {
 	hasApiKey: boolean;
 	actions: AlternativesActions;
 	modelLabel: string;
+	/** True while the writer is adding a note from the ⋯ menu. */
+	editingNote: boolean;
 }
 
 /** Everything the Alternatives panel shows, plus the actions it can take. */
@@ -23,6 +25,7 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		aiPendingSpans: state.aiPendingSpans,
 		hasApiKey: state.hasApiKey,
 		modelMode: state.modelMode,
+		noteEditor: state.noteEditorSpanId,
 	}));
 	const span = slice.note?.spans.find((candidate) => candidate.id === slice.panelSpanId && !candidate.orphaned) ?? null;
 	return {
@@ -34,5 +37,6 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		hasApiKey: slice.hasApiKey,
 		actions: alternatives,
 		modelLabel: modelLabel(slice.modelMode),
+		editingNote: span !== null && slice.noteEditor === span.id,
 	};
 }

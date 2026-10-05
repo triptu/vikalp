@@ -1,5 +1,5 @@
 import type { EditorView } from "@codemirror/view";
-import { MarkdownView, Notice, Plugin, TFile } from "obsidian";
+import { MarkdownView, Menu, Notice, Plugin, TFile } from "obsidian";
 import { AiClient, type CostRecord } from "./ai/aiClient";
 import { newId } from "./core/model/ids";
 import { MODEL_MODE_LABELS, mergeSettings, type ModelMode, type VikalpSettings } from "./core/settings";
@@ -44,7 +44,7 @@ export default class VikalpPlugin extends Plugin {
 	override async onload() {
 		this.settings = mergeSettings(await this.loadData());
 		this.store = createUiStore();
-		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0 });
+		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
 		const repository = new SidecarRepository(this.app.vault.adapter as unknown as FileAdapter, pluginDir, (notePath, backup) => {
@@ -62,6 +62,7 @@ export default class VikalpPlugin extends Plugin {
 			applyLintFix: (view, hitId) => this.linter.applyFix(view, hitId),
 			ignoreLintHit: (view, hitId) => this.linter.ignore(view, hitId),
 			vetoProposal: (view, proposalId) => this.lab.veto(view, proposalId),
+			revealLintHit: (_view, hitId) => this.store.setState({ lintFocus: { hitId, at: Date.now() } }),
 			noteChanged: (view, update) => {
 				this.readThrough.handleUpdate(update);
 				this.linter.handleEdit(view, update);
@@ -74,6 +75,7 @@ export default class VikalpPlugin extends Plugin {
 			ai: this.aiAlternatives,
 			articleFix: () => this.settings.articleFix,
 			panelSpanId: () => this.store.getState().panelSpanId,
+			store: this.store,
 		};
 		const viewContext = this.createViewContext();
 		this.labPopover = new LabPopoverHost(viewContext, () => this.settings);
@@ -143,7 +145,7 @@ export default class VikalpPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0 });
+		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
 		this.statusBar?.render();
 	}
 
@@ -206,6 +208,10 @@ export default class VikalpPlugin extends Plugin {
 				},
 				applyAllFixes: () => void this.linter.applyAllFixes(),
 				openRulesFolder: () => this.linter.openRulesFolder(),
+				setLayout: (layout) => {
+					this.settings.lintLayout = layout;
+					void this.saveSettings();
+				},
 				reloadRules: () => void this.linter.reloadRules(),
 			},
 			lab: {
@@ -231,6 +237,32 @@ export default class VikalpPlugin extends Plugin {
 					setting?.openTabById(this.manifest.id);
 				},
 				showCostLog: () => this.showCostLog(),
+				openMenu: (anchor, markCount) => {
+					const menu = new Menu();
+					menu.addItem((item) =>
+						item
+							.setTitle(markCount > 0 ? `Clear Lab marks (${markCount})` : "Clear Lab marks")
+							.setIcon("eraser")
+							.setDisabled(markCount === 0)
+							.onClick(() => this.lab.clearMarks()),
+					);
+					menu.addItem((item) => item.setTitle("Remove all AI versions in note").setIcon("x").onClick(() => this.removeAllAiVersions()));
+					menu.addSeparator();
+					menu.addItem((item) => item.setTitle("Cost log").setIcon("receipt").onClick(() => this.showCostLog()));
+					menu.addItem((item) =>
+						item
+							.setTitle("Vikalp settings")
+							.setIcon("settings")
+							.onClick(() => {
+								this.labPopover.close();
+								const setting = (this.app as unknown as { setting?: { open(): void; openTabById(id: string): void } }).setting;
+								setting?.open();
+								setting?.openTabById(this.manifest.id);
+							}),
+					);
+					const rect = anchor.getBoundingClientRect();
+					window.setTimeout(() => menu.showAtPosition({ x: rect.left, y: rect.bottom + 4 }), 0);
+				},
 				close: () => this.labPopover.close(),
 			},
 			modelLabel: (mode) => MODEL_MODE_LABELS[mode],

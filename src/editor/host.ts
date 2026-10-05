@@ -18,6 +18,8 @@ export interface VikalpHost {
 	applyLintFix(view: EditorView, hitId: string): void;
 	ignoreLintHit(view: EditorView, hitId: string): void;
 	vetoProposal(view: EditorView, proposalId: string): void;
+	/** The writer clicked a lint mark in the text; the Lint panel should show it. */
+	revealLintHit(view: EditorView, hitId: string): void;
 	dropOverflowBlock(view: EditorView, blockId: string, position: number, keepCopy: boolean): void;
 	notify(message: string): void;
 }

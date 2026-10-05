@@ -19,6 +19,8 @@ export interface AlternativesActions {
 	jumpToSpan(spanId: string): void;
 	removeAiVersions(spanId: string): void;
 	focusEditor(): void;
+	/** Opens the ⋯ menu for these alternatives next to `anchor`. */
+	openMenu(spanId: string, anchor: HTMLElement): void;
 	setPanelFocused(focused: boolean): void;
 }
 
@@ -40,6 +42,7 @@ export interface LintActions {
 	applyFix(hitId: string): void;
 	applyAllFixes(): void;
 	openRulesFolder(): void;
+	setLayout(layout: "by-rule" | "in-order"): void;
 	reloadRules(): void;
 }
 
@@ -59,6 +62,8 @@ export interface LabActions {
 	clearMarks(): void;
 	openSettings(): void;
 	showCostLog(): void;
+	/** The Lab's ⋯ menu: clearing marks, removing AI versions, settings. */
+	openMenu(anchor: HTMLElement, markCount: number): void;
 	close(): void;
 }
 

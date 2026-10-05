@@ -112,7 +112,15 @@ export interface VikalpUiState {
 	costs: CostEntry[];
 	modelMode: ModelMode;
 	hasApiKey: boolean;
+	/** The lint mark the writer last clicked in the text; the Lint panel scrolls to it. */
+	lintFocus: { hitId: string; at: number } | null;
+	lintLayout: LintLayout;
+	/** Alternatives whose note field the writer just asked to open. */
+	noteEditorSpanId: string | null;
 }
+
+/** How the Lint panel lists marks: grouped by rule, or in the order they appear. */
+export type LintLayout = "by-rule" | "in-order";
 
 export const initialUiState: VikalpUiState = {
 	note: null,
@@ -125,6 +133,9 @@ export const initialUiState: VikalpUiState = {
 	costs: [],
 	modelMode: "lite",
 	hasApiKey: false,
+	lintFocus: null,
+	lintLayout: "by-rule",
+	noteEditorSpanId: null,
 };
 
 export function createUiStore() {

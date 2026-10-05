@@ -39,7 +39,7 @@ The **Word · Sentence · Paragraph** tabs grow the current span or selection to
 
 A paragraph span can contain word spans. If you switch to a paragraph version that doesn't contain one of them, it hides until a version that does comes back.
 
-**Settle** keeps the showing version and drops the rest. *Settle all alternatives in note* does it for every span, after asking.
+The **⋯** under the list has **Settle** (keep the showing version and drop the rest), **Remove AI versions** and **Add a note**. *Settle all alternatives in note* does it for every span, after asking.
 
 ### AI alternatives
 
@@ -74,7 +74,7 @@ A side panel for writing you cut but want nearby. Each note has its own.
 
 Click the lint icon in the status bar, the **Run linter** button in the Lint panel, or run *Vikalp: Run linter*. Free local rules finish at once. Judgment rules (awkward, LinkedIn voice, AI-sounding paragraphs, and so on) fill in as Jev answers.
 
-Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the panel to jump to it. Marks made by a model (Jev or an LLM) carry an **AI** label and a faint dashed underline.
+Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the panel to jump to it, or click a mark in the note to find it in the panel. The toggle at the top of the Lint panel switches between grouping by rule and one flat list in the order marks appear, for working down the note. Marks made by a model (Jev or an LLM) carry an **AI** label and a faint dashed underline.
 
 ![Lint marks in the note, a hover card, and the Lint panel grouped by rule](screenshots/guide/linter.png)
 

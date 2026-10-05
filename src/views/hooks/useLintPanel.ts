@@ -37,12 +37,19 @@ export function useLintPanel() {
 		run: state.lint,
 		isCurrentNote: state.lint.notePath !== null && state.lint.notePath === state.note?.path,
 		labRunning: state.lab.runningPass,
+		layout: state.lintLayout,
+		focus: state.lintFocus,
 	}));
+	const inline = slice.hits.filter((hit) => hit.scope !== "document");
 	return {
 		hasNote: slice.hasNote,
 		total: slice.hits.length,
 		documentHits: slice.hits.filter((hit) => hit.scope === "document"),
-		groups: groupHits(slice.hits.filter((hit) => hit.scope !== "document")),
+		groups: groupHits(inline),
+		/** Every inline mark in the order it appears in the note. */
+		ordered: [...inline].sort((a, b) => a.from - b.from),
+		layout: slice.layout,
+		focus: slice.focus,
 		fixableCount: slice.hits.filter((hit) => hit.suggestion !== undefined && hit.source === "lab").length,
 		running: slice.isCurrentNote && slice.run.running,
 		ranAt: slice.isCurrentNote ? slice.run.ranAt : null,

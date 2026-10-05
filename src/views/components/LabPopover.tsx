@@ -25,16 +25,12 @@ export interface LabPopoverProps {
 
 export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, sessionCost, markCount, actions }: LabPopoverProps) {
 	const disabled = !hasApiKey || !hasNote;
+	const busy = lab.runningPass !== null;
 	return (
 		<div className="vk-lab" role="dialog" aria-label="The Lab">
-			<div className="vk-lab-header">
+			<header className="vk-lab-header">
 				<span className="vk-lab-title">The Lab</span>
-				<span className="vk-lab-subtitle">AI marks and trims. It never writes for you.</span>
-			</div>
-
-			<section className="vk-lab-section">
-				<div className="vk-lab-section-title">Model</div>
-				<div className="vk-segmented" role="radiogroup" aria-label="Model mode">
+				<div className="vk-segmented vk-lab-mode" role="radiogroup" aria-label="Model" title={modelId}>
 					{MODES.map(({ mode, label }) => (
 						<button
 							key={mode}
@@ -47,32 +43,27 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 						</button>
 					))}
 				</div>
-				<div className="vk-lab-model-id">{modelId}</div>
-			</section>
+			</header>
 
 			{!hasApiKey && (
 				<div className="vk-lab-warning">
-					Add an OpenRouter API key to use the Lab.{" "}
-					<button className="vk-link-button" onClick={actions.openSettings}>
+					Add an OpenRouter key to use the Lab.{" "}
+					<button className="vk-inline-action" onClick={actions.openSettings}>
 						Open settings
 					</button>
 				</div>
 			)}
 
-			<section className="vk-lab-section">
-				<div className="vk-lab-section-title">Alternatives</div>
-				<div className="vk-lab-passes">
-					<button
-						className={`vk-lab-pass${lab.runningPass === SPOTS_PASS ? " is-running" : ""}`}
-						disabled={disabled || (lab.runningPass !== null && lab.runningPass !== SPOTS_PASS)}
-						onClick={actions.findSpots}
-						title="Picks up to 8 words or lines in the note (or the selection) and adds AI versions to each. The note doesn't change until you pick one."
-					>
-						<span className="vk-lab-pass-label">Find words worth playing with</span>
-						{lab.runningPass === SPOTS_PASS && <span className="vk-spinner" />}
-					</button>
-				</div>
-			</section>
+			<button
+				className={`vk-lab-pass vk-lab-spots${lab.runningPass === SPOTS_PASS ? " is-running" : ""}`}
+				disabled={disabled || (busy && lab.runningPass !== SPOTS_PASS)}
+				onClick={actions.findSpots}
+				title="Picks up to 8 words or lines and adds AI versions to each. The note doesn't change until you pick one."
+			>
+				<Icon name="wand-sparkles" />
+				<span className="vk-lab-pass-label">Find words worth playing with</span>
+				{lab.runningPass === SPOTS_PASS && <span className="vk-spinner" />}
+			</button>
 
 			<section className="vk-lab-section">
 				<div className="vk-lab-section-title">Mark</div>
@@ -83,11 +74,11 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 							<button
 								key={pass.id}
 								className={`vk-lab-pass${running ? " is-running" : ""}`}
-								disabled={disabled || (lab.runningPass !== null && !running)}
+								disabled={disabled || (busy && !running)}
 								onClick={() => actions.runPass(pass.id)}
 								title={pass.description}
 							>
-								<span className="vk-lab-pass-label">{pass.label}</span>
+								<span className="vk-lab-pass-label">{pass.short}</span>
 								{running && <span className="vk-spinner" />}
 							</button>
 						);
@@ -107,40 +98,32 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 							className={`vk-segment${trim.level === level.id ? " is-active" : ""}`}
 							disabled={disabled || trim.status === "reading"}
 							onClick={() => actions.setTrimLevel(level.id)}
+							title={level.target > 0 ? `Propose cutting about ${Math.round(level.target * 100)}%. Nothing is deleted yet.` : "No cuts"}
 						>
 							<span className="vk-segment-name">{level.name}</span>
-							{level.target > 0 && <span className="vk-segment-detail">~{Math.round(level.target * 100)}%</span>}
+							{level.target > 0 && <span className="vk-segment-detail">{Math.round(level.target * 100)}%</span>}
 						</button>
 					))}
 				</div>
-				<div className="vk-lab-hint">{trim.status === "idle" ? "Pick a level and the model proposes cuts. Nothing is deleted yet." : "Struck words would go. Click one to keep it."}</div>
 			</section>
 
-			<div className="vk-lab-keys" aria-label="Keys">
-				<span><kbd>⌘J</kbd> alternatives</span>
-				<span><kbd>⌘⇧J</kbd> ask AI</span>
-				<span><kbd>⌥↑↓</kbd> try</span>
-				<span><kbd>⌘.</kbd> all actions</span>
-			</div>
-
-			<div className="vk-lab-footer">
-				<div className="vk-lab-footer-row">
-					<button className="vk-link-button" onClick={actions.clearMarks} disabled={markCount === 0}>
-						Clear Lab marks{markCount > 0 ? ` (${markCount})` : ""}
+			<footer className="vk-lab-footer">
+				<span className="vk-lab-keys">
+					<kbd>⌘J</kbd> alternatives · <kbd>⌘.</kbd> all actions
+				</span>
+				<span className="vk-lab-footer-end">
+					<button className="vk-inline-action" onClick={actions.showCostLog} title="Show the cost log">
+						{formatCost(sessionCost)}
 					</button>
-					<button className="vk-link-button" onClick={actions.removeAllAiVersions} disabled={!hasNote} title="Removes every AI version in this note. Your own versions stay.">
-						Remove AI versions
+					<button
+						className="clickable-icon"
+						aria-label="More: clear marks, remove AI versions, settings"
+						onClick={(event) => actions.openMenu(event.currentTarget as HTMLElement, markCount)}
+					>
+						<Icon name="more-horizontal" />
 					</button>
-				</div>
-				<div className="vk-lab-footer-row">
-					<button className="vk-link-button" onClick={actions.showCostLog} title="Show the cost log">
-						{formatCost(sessionCost)} spent this session
-					</button>
-					<button className="clickable-icon" aria-label="Vikalp settings" onClick={actions.openSettings}>
-						<Icon name="settings" />
-					</button>
-				</div>
-			</div>
+				</span>
+			</footer>
 		</div>
 	);
 }

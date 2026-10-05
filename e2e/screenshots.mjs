@@ -36,7 +36,8 @@ for (const theme of themes) {
 		await driver.command("vikalp:alternatives-for-selection");
 		await driver.type("sorting");
 		await driver.press("Enter");
-		await driver.click(".vk-note-field input");
+		await driver.click(".vk-span-more");
+		await driver.click(".menu-item", "Add a note");
 		await driver.type("too abstract?");
 		await driver.press("Enter");
 		await driver.press("Escape");
