@@ -1,6 +1,16 @@
-/*
-!/site
-!/docs
-/docs/*
-!/docs/screenshots
-!/vercel.json
+# Only site/ and docs/screenshots/ are needed to build the website.
+# This lists what to leave out rather than ignoring everything, because the
+# skip check in vercel.json needs .git. The Vercel CLI leaves .git out by default.
+.env
+.env.*
+reference/
+dev-vault/
+e2e/
+video/
+src/
+tests/
+scripts/
+node_modules/
+.claude/
+.github/
+main.js
