@@ -104,6 +104,22 @@ export function createDriver(page) {
 			await page.waitForTimeout(options.settle ?? 300);
 			await page.screenshot({ path, clip: options.clip });
 		},
+		/** Opens Vikalp's settings tab and returns the page it renders in. Obsidian 1.13 opens settings in their own window. */
+		async openSettings() {
+			await page.evaluate(() => {
+				window.app.setting.open();
+				window.app.setting.openTabById("vikalp");
+			});
+			const deadline = Date.now() + 5000;
+			while (Date.now() < deadline) {
+				for (const candidate of page.context().browser().contexts().flatMap((context) => context.pages())) {
+					const hasSettings = await candidate.evaluate(() => document.querySelector(".vk-settings") !== null).catch(() => false);
+					if (hasSettings) return candidate;
+				}
+				await page.waitForTimeout(200);
+			}
+			throw new Error("Vikalp settings did not open");
+		},
 		async evaluate(fn, arg) {
 			return page.evaluate(fn, arg);
 		},
