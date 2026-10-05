@@ -1,0 +1,253 @@
+{
+	"0ac6bd17d318fdf5": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.8,
+				"q1": 0.23,
+				"q2": 0.91,
+				"q3": 0.4
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"0ba13263cfdd38d2": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.66,
+				"q1": 0.1,
+				"q2": 0.95,
+				"q3": 0.49
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"188b27e735dffe0a": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.16,
+				"q1": 0.31,
+				"q2": 0.83,
+				"q3": 0.09
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"348894d8a7a10375": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.74
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"42caf49bb9270d6b": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.58
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"4f8b5679893b009c": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.27,
+				"q1": 0.16,
+				"q2": 0.76,
+				"q3": 0.5
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"68cbbc3b7394f8ad": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.88
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"70ebe1af6dd94dcf": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.18
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"856234a45b631fdf": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.84
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"9c709bf8a1005e29": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.29,
+				"q1": 0.58
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"ae4c6e4d1586b581": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.86
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"b8760cc5f1871ce2": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.21,
+				"q1": 0.21,
+				"q2": 0.85,
+				"q3": 0.07
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"bbba600aab88bbb7": {
+		"purpose": "Find words worth playing with in this note",
+		"result": {
+			"value": {
+				"spots": [
+					{
+						"unit_id": "s2",
+						"quote": "what deserves to be obvious",
+						"why": "The central idea is compelling, but “deserves” gives it a particular moral weight.",
+						"alternatives": [
+							"what needs to be obvious",
+							"what should be obvious",
+							"what earns a place up front",
+							"what deserves to stand out",
+							"what matters enough to be obvious"
+						]
+					},
+					{
+						"unit_id": "s3",
+						"quote": "without trying",
+						"why": "This is a key description of attention; a more concrete phrasing could sharpen it.",
+						"alternatives": [
+							"at a glance",
+							"without effort",
+							"without looking for it",
+							"automatically",
+							"with little effort"
+						]
+					},
+					{
+						"unit_id": "s7",
+						"quote": "thumbtack board",
+						"why": "The image is vivid, though its exact texture and tone are worth testing.",
+						"alternatives": [
+							"corkboard",
+							"noticeboard",
+							"wall of notes",
+							"crowded bulletin board",
+							"pinboard"
+						]
+					},
+					{
+						"unit_id": "s8",
+						"quote": "the real work is ranking",
+						"why": "This short thesis carries the pivot; alternatives can shift its emphasis from process to judgment.",
+						"alternatives": [
+							"the real work is choosing",
+							"the hard part is ranking",
+							"the work is deciding what comes first",
+							"the real work is setting an order",
+							"the job is deciding what gets seen"
+						]
+					},
+					{
+						"unit_id": "s9",
+						"quote": "how often someone needs a thing",
+						"why": "“A thing” is broad in a sentence that lays out the piece’s practical test.",
+						"alternatives": [
+							"how often someone needs it",
+							"how often people need each feature",
+							"how frequently it matters",
+							"how often someone reaches for it",
+							"how often it is needed"
+						]
+					},
+					{
+						"unit_id": "s12",
+						"quote": "can live behind a door",
+						"why": "The metaphor is clear, but a different image could make the balance of access and concealment feel more precise.",
+						"alternatives": [
+							"can sit behind a door",
+							"can stay out of sight",
+							"can be tucked away",
+							"can live one step further in",
+							"can be kept in the background"
+						]
+					},
+					{
+						"unit_id": "s16",
+						"quote": "go looking for it anyway",
+						"why": "This phrase is conversational, but its claim about user effort could be more exact.",
+						"alternatives": [
+							"seek it out when they need it",
+							"know where to find it",
+							"make the effort to find it",
+							"find it when they need it",
+							"look for it on purpose"
+						]
+					},
+					{
+						"unit_id": "s25",
+						"quote": "obvious-worthy",
+						"why": "The coined term is memorable but may call attention to itself; alternatives keep the idea while shifting the tone.",
+						"alternatives": [
+							"worth putting up front",
+							"important enough to foreground",
+							"right for the foreground",
+							"worth making prominent",
+							"suited to the front"
+						]
+					}
+				]
+			},
+			"model": "openai/gpt-6-luna"
+		}
+	},
+	"dfa6534d8ec012f1": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.65
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	},
+	"e048e53ccd18bcb1": {
+		"purpose": "Lint judgments (Jev)",
+		"result": {
+			"answers": {
+				"q0": 0.55,
+				"q1": 0.09,
+				"q2": 0.83,
+				"q3": 0.13
+			},
+			"model": "typesafe/jev-1.13"
+		}
+	}
+}

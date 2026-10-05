@@ -17,11 +17,11 @@ Tests describe behaviour a writer would recognise. They should survive refactors
 2. launches the installed Obsidian with its own profile in `e2e/.profile/` (a running Obsidian and your real vault are untouched),
 3. connects over the Chrome DevTools protocol with Playwright and runs the flows in `e2e/run.mjs`.
 
-The flows follow the spec: alternatives surviving a restart, ghosting and copy clean, stashing and dragging back, linting the LinkedIn draft, re-anchoring after an outside edit, span notes and read-through.
+Flows are grouped so a whole group shares one Obsidian and one scratch vault. The first group writes (alternatives, ghosts, Overflow, unit tabs, hotkeys, span notes, two panes), edits the file outside Obsidian, restarts once, and checks that everything was saved and re-attached. The second group lints the LinkedIn draft, adds a rule in settings, edits while judgment rules run, and finds spots with AI. Flows in a group run in order and build on each other, so choose new words when adding one.
 
-Run one flow by name: `npm run e2e -- ghost`.
+Run one group by naming any of its flows: `npm run e2e -- ghost`.
 
-The linter flow calls Jev for real, so it needs `openRouterApiKey` in `dev-vault/.obsidian/plugins/vikalp/data.json` (that folder is gitignored). Without a key the judgment rules are skipped and that flow may fail.
+AI answers come from `e2e/ai-recordings.json`, so most runs never wait on the model. A request with no recording (new prompt, changed note) goes to the model once and its answer is saved; commit the file with it. `npm run e2e -- --live` asks the model for everything again and rewrites the recordings. Recording needs `openRouterApiKey` in `dev-vault/.obsidian/plugins/vikalp/data.json` (that folder is gitignored), and replay still needs it, since without a key the judgment rules are skipped.
 
 ## Screenshots
 
