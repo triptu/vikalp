@@ -52,10 +52,12 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 
 			{documentHits.length > 0 && (
 				<div className="vk-document-hits">
+					<div className="vk-hit-scope-title">Whole note</div>
 					{documentHits.map((hit) => (
-						<div key={hit.id} className={`vk-document-hit vk-severity-${hit.severity}`}>
-							<div className="vk-hit-label">
-								{hit.label}
+						<div key={hit.id} className="vk-document-hit">
+							<div className="vk-document-hit-heading">
+								<span className={`vk-severity-chip vk-severity-${hit.severity}`} />
+								<span className="vk-hit-group-label">{hit.label}</span>
 								{hit.byAi && <span className="vk-ai-badge">AI</span>}
 							</div>
 							<div className="vk-hit-message">{hit.message}</div>
