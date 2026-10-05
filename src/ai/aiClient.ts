@@ -1,12 +1,11 @@
-import type { AssistantMessage, ClassifierModel, Context, Model, Tool } from "@earendil-works/pi-ai";
+import type { AssistantMessage, Context, Tool } from "@earendil-works/pi-ai";
 import { createModels } from "@earendil-works/pi-ai/models";
-import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import type { TSchema } from "typebox";
 import type { ModelMode, VikalpSettings } from "../core/settings";
+import { AiError, type AiBackend } from "./backend";
+import { openRouterBackend } from "./openRouter";
 
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-
-export class AiError extends Error {}
+export { AiError };
 
 export interface CostRecord {
 	purpose: string;
@@ -43,49 +42,40 @@ export interface ClassifyResult {
 }
 
 /**
- * Talks to OpenRouter through pi-ai. Every call records its cost. The API key
+ * Talks to the model backend through pi-ai. Every call records its cost. Auth
  * comes from settings on each call, since the renderer has no environment.
  */
 export class AiClient {
 	private readonly models = createModels();
+	private readonly backend: AiBackend = openRouterBackend(this.models);
 
 	constructor(
 		private readonly getSettings: () => VikalpSettings,
 		private readonly recordCost: (record: CostRecord) => void,
-	) {
-		this.models.setProvider(openrouterProvider());
+	) {}
+
+	get isReady(): boolean {
+		return this.backend.isReady(this.getSettings());
 	}
 
-	get hasKey(): boolean {
-		return this.getSettings().openRouterApiKey.trim().length > 0;
+	/** Start of the sentence that tells the writer how to set AI up, e.g. "Add an OpenRouter API key in Vikalp settings". */
+	get setupHint(): string {
+		return this.backend.setupHint;
+	}
+
+	/** Whether yes/no judgments can go to Jev. Without it they go to the chat model. */
+	get hasJev(): boolean {
+		return this.backend.jevModel !== undefined;
 	}
 
 	modelId(mode: ModelMode): string {
 		return this.getSettings().models[mode];
 	}
 
-	private apiKey(): string {
-		const key = this.getSettings().openRouterApiKey.trim();
-		if (!key) throw new AiError("Add an OpenRouter API key in Vikalp settings first.");
-		return key;
-	}
-
-	private chatModel(mode: ModelMode): Model<never> {
-		const id = this.modelId(mode);
-		const known = this.models.getModel("openrouter", id);
-		// pi-ai sends Anthropic models through the Anthropic SDK, which can't connect from Obsidian's
-		// renderer. OpenRouter's OpenAI-style endpoint serves every model, so all calls use it.
-		if (known && known.api !== "openai-completions") return { ...known, api: "openai-completions", baseUrl: OPENROUTER_BASE_URL } as unknown as Model<never>;
-		if (known) return known as Model<never>;
-		const template = this.models.getModel("openrouter", "openai/gpt-6-luna");
-		if (!template) throw new AiError(`Unknown model "${id}".`);
-		return { ...template, id, name: id, api: "openai-completions", cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } } as unknown as Model<never>;
-	}
-
 	/** Asks a chat model for output shaped by `schema`, via a single tool call. */
 	async structured<Output>(request: StructuredRequest<Output>): Promise<{ value: Output; model: string }> {
-		const apiKey = this.apiKey();
-		const model = this.chatModel(request.mode);
+		const auth = this.backend.requestOptions(this.getSettings());
+		const model = this.backend.chatModel(this.modelId(request.mode));
 		const tool: Tool = {
 			name: request.toolName,
 			description: request.toolDescription,
@@ -97,7 +87,7 @@ export class AiClient {
 			messages: [{ role: "user", content: request.user, timestamp: Date.now() }],
 			tools: [tool],
 		};
-		const stream = this.models.streamSimple(model, context, { apiKey, signal: request.signal, reasoning: "low", maxTokens: 8000 });
+		const stream = this.models.streamSimple(model, context, { ...auth, signal: request.signal, reasoning: "low", maxTokens: 8000 });
 		let streamError: string | null = null;
 		for await (const event of stream) {
 			if (event.type === "toolcall_delta" && request.onPartial) {
@@ -109,17 +99,17 @@ export class AiClient {
 		}
 		const message = await stream.result();
 		this.record(request.purpose, model.id, message, streamError ?? undefined);
-		if (streamError) throw new AiError(friendlyError(streamError));
+		if (streamError) throw new AiError(this.backend.friendlyError(streamError));
 		return { value: extractToolArguments<Output>(message, request.toolName), model: model.id };
 	}
 
 	/** Yes/no judgments from Jev, TypeSafe's decision model. Returns a probability per question. */
 	async classify(purpose: string, state: Record<string, unknown>, questions: Record<string, ClassifyQuestion>, signal?: AbortSignal): Promise<ClassifyResult> {
-		const apiKey = this.apiKey();
+		const auth = this.backend.requestOptions(this.getSettings());
 		const modelId = this.getSettings().jevModel;
-		const model = this.models.getModelOfType("classifier", "openrouter", modelId) as ClassifierModel<never> | undefined;
+		const model = this.backend.jevModel?.(modelId);
 		if (!model) throw new AiError(`Jev model "${modelId}" is not available.`);
-		const result = await this.models.classify(model, { state: state as never, questions }, { apiKey, signal });
+		const result = await this.models.classify(model, { state: state as never, questions }, { ...auth, signal });
 		const usage = result.usage;
 		const failed = result.stopReason === "error";
 		this.recordCost({
@@ -166,12 +156,4 @@ function extractToolArguments<Output>(message: AssistantMessage, toolName: strin
 		}
 	}
 	throw new AiError("The model did not return a usable answer. Try again or pick another mode.");
-}
-
-function friendlyError(raw: string): string {
-	if (/401|unauthor|invalid api key|no auth/i.test(raw)) return "OpenRouter rejected the API key. Check it in Vikalp settings.";
-	if (/402|credit|insufficient/i.test(raw)) return "OpenRouter says the account is out of credits.";
-	if (/429|rate/i.test(raw)) return "OpenRouter is rate limiting. Wait a moment and try again.";
-	if (/abort/i.test(raw)) return "Cancelled.";
-	return `The model call failed: ${raw}`;
 }
