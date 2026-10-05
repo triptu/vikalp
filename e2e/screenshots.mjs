@@ -71,7 +71,7 @@ for (const theme of themes) {
 			await driver.openNote("Typos and tone.md");
 			await driver.click(".vk-status-lab");
 			await shot("06-lab");
-			await driver.click(".vk-lab-pass", "Fix punctuation and typos");
+			await driver.click(".vk-lab-pass", "Typos and punctuation");
 			await driver.page.waitForFunction(() => window.app.plugins.plugins.vikalp.store.getState().lab.runningPass === null, null, { timeout: 60000 });
 			await driver.press("Escape");
 			await driver.hover(".vk-lint-lab");

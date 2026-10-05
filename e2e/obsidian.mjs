@@ -53,6 +53,8 @@ export async function launchObsidian({ vaultPath, keepVault = false, freshProfil
 	const page = await findVaultPage(browser);
 	await page.waitForFunction(() => window.app?.workspace?.layoutReady === true, null, { timeout: 30000 });
 	await trustVaultIfAsked(page);
+	// The profile remembers zoom between runs; screenshots and layout checks expect 100%.
+	await page.evaluate(() => window.require("@electron/remote").getCurrentWebContents().setZoomFactor(1));
 	return {
 		browser,
 		page,
