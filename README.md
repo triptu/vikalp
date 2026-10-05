@@ -2,6 +2,8 @@
 
 *Vikalp* is Hindi for "alternative". It's an Obsidian plugin for settling on the right way to say something: keep several versions of a word, sentence or paragraph in place, dim text instead of deleting it, keep spare writing nearby, lint on demand, and ask AI for options, marks and cuts.
 
+Inspired from [this tweet](https://x.com/jasonfried/status/2105403067793584590).
+
 ![Alternatives panel, markers, ghosted text and Overflow](docs/screenshots/dark-02-markers-ghost-overflow.png)
 
 ## What it does

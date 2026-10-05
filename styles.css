@@ -7,10 +7,16 @@ body {
 	--vk-para: color-mix(in srgb, var(--color-orange) 70%, transparent);
 	--vk-note: var(--color-yellow);
 	--vk-ghost-opacity: 0.13;
-	--vk-lint-suggestion: color-mix(in srgb, var(--color-blue) 13%, transparent);
-	--vk-lint-warning: color-mix(in srgb, var(--color-yellow) 22%, transparent);
-	--vk-lint-error: color-mix(in srgb, var(--color-red) 18%, transparent);
-	--vk-lint-lab: color-mix(in srgb, var(--color-purple) 16%, transparent);
+	--vk-lint-tint: 16%;
+	--vk-lint-line: 65%;
+	--vk-lint-para-tint: 6%;
+}
+
+/* Dark backgrounds swallow light tints, so marks get more color there. */
+body.theme-dark {
+	--vk-lint-tint: 30%;
+	--vk-lint-line: 85%;
+	--vk-lint-para-tint: 10%;
 }
 
 /* ——— Spans: underline and dot row ——— */
@@ -199,48 +205,44 @@ body {
 /* ——— Lint marks ——— */
 
 .vk-lint {
+	--vk-severity: var(--color-blue);
 	border-radius: 2px;
 	padding: 1px 0;
 	box-decoration-break: clone;
 	-webkit-box-decoration-break: clone;
+	background-color: color-mix(in srgb, var(--vk-severity) var(--vk-lint-tint), transparent);
+	box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--vk-severity) var(--vk-lint-line), transparent);
 }
 
 .vk-lint-suggestion {
-	background-color: var(--vk-lint-suggestion);
+	--vk-severity: var(--color-blue);
 }
 
 .vk-lint-warning {
-	background-color: var(--vk-lint-warning);
+	--vk-severity: var(--color-yellow);
 }
 
 .vk-lint-error {
-	background-color: var(--vk-lint-error);
+	--vk-severity: var(--color-red);
 }
 
-.vk-lint.vk-lint-lab {
-	background-color: var(--vk-lint-lab);
-	border-bottom: 1px dashed color-mix(in srgb, var(--color-purple) 55%, transparent);
-}
-
-.vk-lint.vk-lint-lab.vk-lint-warning {
-	background-color: var(--vk-lint-warning);
-	border-bottom-color: color-mix(in srgb, var(--color-orange) 60%, transparent);
-}
-
+/* Marks made by a model get a dashed underline instead of a solid one. */
+.vk-lint.vk-lint-lab,
 .vk-lint.vk-lint-ai {
-	border-bottom: 1px dashed color-mix(in srgb, var(--color-purple) 45%, transparent);
+	box-shadow: none;
+	border-bottom: 1.5px dashed color-mix(in srgb, var(--vk-severity) var(--vk-lint-line), transparent);
 }
 
 .cm-line.vk-lint-para-suggestion {
-	background-color: color-mix(in srgb, var(--color-blue) 5%, transparent);
+	background-color: color-mix(in srgb, var(--color-blue) var(--vk-lint-para-tint), transparent);
 }
 
 .cm-line.vk-lint-para-warning {
-	background-color: color-mix(in srgb, var(--color-yellow) 8%, transparent);
+	background-color: color-mix(in srgb, var(--color-yellow) var(--vk-lint-para-tint), transparent);
 }
 
 .cm-line.vk-lint-para-error {
-	background-color: color-mix(in srgb, var(--color-red) 7%, transparent);
+	background-color: color-mix(in srgb, var(--color-red) var(--vk-lint-para-tint), transparent);
 }
 
 /* ——— Hover cards ——— */
