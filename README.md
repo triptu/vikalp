@@ -38,6 +38,7 @@ Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/pl
 
 - `npm run dev` builds in watch mode into `dev-vault/`. Open `dev-vault` in Obsidian with the Hot Reload plugin to see changes live.
 - `npm test` runs behaviour tests. `npm run e2e` runs the end-to-end flows in an isolated Obsidian. `npm run shots` refreshes the screenshots.
+- CI runs typecheck, tests, build and Obsidian's review lint on every push. To release, set the version in `manifest.json`, `package.json` and `versions.json`, then push a tag with the same version (for example `0.1.1`, no `v`). That builds a draft GitHub release with `main.js`, `manifest.json` and `styles.css`; check it and publish.
 - Start with [docs/architecture.md](docs/architecture.md). Storage is described in [docs/storage.md](docs/storage.md), rules in [docs/rules.md](docs/rules.md).
 
 ## Docs
