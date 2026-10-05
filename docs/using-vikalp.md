@@ -53,11 +53,11 @@ A paragraph span can contain word spans. If you switch to a paragraph version th
 
 ## Ghosting
 
-Select text and press **⌘⇧/** (or right-click → *Ghost it*). It fades to about 10% and stays in the note. Hover to read it. Right-click → *Revive* brings it back.
+Select text and press **⌘⇧/** (or right-click → *Ghost it*). It fades to about a third and stays in the note. Hover to read it. Right-click → *Revive* brings it back.
 
 Ghosted words aren't counted in the status bar; the count shows them as "(+12 ghosted)". *Copy clean text* copies the note without them. *Delete all ghosted text in note* removes them for good, after asking.
 
-![A ghosted sentence, still in the note at about 10%](screenshots/guide/ghost.png)
+![A ghosted sentence, still in the note at about a third](screenshots/guide/ghost.png)
 
 ## Overflow
 

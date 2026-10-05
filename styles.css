@@ -6,7 +6,7 @@ body {
 	--vk-accent-faint: color-mix(in srgb, var(--text-accent) 22%, transparent);
 	--vk-para: color-mix(in srgb, var(--color-orange) 70%, transparent);
 	--vk-note: var(--color-yellow);
-	--vk-ghost-opacity: 0.13;
+	--vk-ghost-opacity: 0.32;
 	--vk-lint-tint: 16%;
 	--vk-lint-line: 65%;
 	--vk-lint-para-tint: 6%;
@@ -14,6 +14,7 @@ body {
 
 /* Dark backgrounds swallow light tints, so marks get more color there. */
 body.theme-dark {
+	--vk-ghost-opacity: 0.38;
 	--vk-lint-tint: 30%;
 	--vk-lint-line: 85%;
 	--vk-lint-para-tint: 10%;
@@ -162,7 +163,7 @@ body.theme-dark {
 }
 
 .vk-ghost:hover {
-	opacity: 0.4;
+	opacity: 0.75;
 }
 
 .markdown-rendered .vk-ghost:hover {
@@ -174,7 +175,7 @@ body.theme-dark {
 }
 
 .vk-proposal:hover {
-	opacity: 0.6;
+	opacity: 0.8;
 	text-decoration: line-through;
 	text-decoration-color: var(--text-faint);
 }
