@@ -1005,39 +1005,44 @@ body.theme-dark {
 }
 
 .vk-document-hits {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
 	margin-bottom: var(--size-4-3);
+}
+
+.vk-hit-scope-title {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	margin-bottom: 2px;
 }
 
 .vk-document-hit {
 	position: relative;
-	padding: 8px 28px 8px 10px;
+	padding: 4px 28px 6px 2px;
 	border-radius: var(--radius-s);
-	border-left: 3px solid var(--color-yellow);
+}
+
+.vk-document-hit:hover {
 	background-color: var(--background-modifier-hover);
 }
 
-.vk-document-hit.vk-severity-suggestion {
-	border-left-color: var(--color-blue);
-}
-
-.vk-document-hit.vk-severity-error {
-	border-left-color: var(--color-red);
-}
-
-.vk-hit-label {
-	font-weight: var(--font-semibold);
+.vk-document-hit-heading {
 	display: flex;
-	gap: 6px;
 	align-items: center;
+	gap: 8px;
+}
+
+.vk-document-hit .vk-hit-message {
+	padding-left: 16px;
 }
 
 .vk-hit-ignore {
 	position: absolute;
-	top: 4px;
-	right: 4px;
+	top: 2px;
+	right: 2px;
+	visibility: hidden;
+}
+
+.vk-document-hit:hover .vk-hit-ignore {
+	visibility: visible;
 }
 
 .vk-fix-all {
@@ -1109,6 +1114,7 @@ body.theme-dark {
 	margin-left: -8px;
 	border-radius: var(--radius-s);
 	cursor: pointer;
+	position: relative;
 }
 
 .vk-hit:hover {
@@ -1134,9 +1140,11 @@ body.theme-dark {
 }
 
 .vk-hit-actions {
+	position: absolute;
+	top: 4px;
+	right: 4px;
 	display: flex;
 	gap: 4px;
-	margin-top: 4px;
 	visibility: hidden;
 }
 
