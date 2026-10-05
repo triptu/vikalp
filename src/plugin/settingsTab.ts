@@ -1,8 +1,15 @@
 import { PluginSettingTab, Setting, type App } from "obsidian";
 import { DEFAULT_SETTINGS, MODEL_MODE_LABELS, type ModelMode } from "../core/settings";
+import { engineChoice } from "../core/rules/draft";
+import { groupRulesByLabel, usesAi } from "../core/rules/groups";
+import type { Rule } from "../core/rules/types";
 import type VikalpPlugin from "../main";
+import { RuleEditorModal } from "./ruleEditor";
 
 export class VikalpSettingTab extends PluginSettingTab {
+	/** Rule families the user has expanded, kept while settings stay open. */
+	private readonly expandedFamilies = new Set<string>();
+
 	constructor(
 		app: App,
 		private readonly plugin: VikalpPlugin,
@@ -13,7 +20,9 @@ export class VikalpSettingTab extends PluginSettingTab {
 	display() {
 		const { containerEl } = this;
 		const settings = this.plugin.settings;
+		const scrollTop = containerEl.scrollTop;
 		containerEl.empty();
+		window.requestAnimationFrame(() => (containerEl.scrollTop = scrollTop));
 		containerEl.addClass("vk-settings");
 
 		new Setting(containerEl).setName("AI").setHeading();
@@ -128,34 +137,25 @@ export class VikalpSettingTab extends PluginSettingTab {
 			);
 		new Setting(containerEl)
 			.setName("Rules folder")
-			.setDesc("Folder inside the plugin folder for YAML rule files. Built-in rules are copied here so you can edit them.")
+			.setDesc("Where rule files live, inside the plugin folder. You can edit them here or in any text editor.")
 			.addText((text) =>
 				text.setValue(settings.rulesFolder).onChange(async (value) => {
 					settings.rulesFolder = value.trim().replace(/^\/+|\/+$/g, "") || DEFAULT_SETTINGS.rulesFolder;
 					await this.plugin.saveSettings();
 				}),
 			)
-			.addButton((button) => button.setButtonText("Open folder").onClick(() => this.plugin.linter.openRulesFolder()))
-			.addButton((button) =>
-				button.setButtonText("Reload rules").onClick(async () => {
-					await this.plugin.linter.reloadRules();
-					this.display();
-				}),
+			.addExtraButton((button) => button.setIcon("folder-open").setTooltip("Open the rules folder").onClick(() => this.plugin.linter.openRulesFolder()))
+			.addExtraButton((button) =>
+				button
+					.setIcon("refresh-cw")
+					.setTooltip("Reload rule files")
+					.onClick(async () => {
+						await this.plugin.linter.reloadRules();
+						this.display();
+					}),
 			);
 
-		const rulesContainer = containerEl.createDiv({ cls: "vk-settings-rules" });
-		for (const rule of this.plugin.linter.allRules()) {
-			const disabled = settings.disabledRules.includes(rule.id);
-			new Setting(rulesContainer)
-				.setName(rule.label)
-				.setDesc(`${rule.description ?? ""}${rule.engine === "classifier" || rule.engine === "llm" || rule.judgment ? " Uses AI judgment." : ""}`)
-				.addToggle((toggle) =>
-					toggle.setValue(!disabled).onChange(async (enabled) => {
-						settings.disabledRules = enabled ? settings.disabledRules.filter((id) => id !== rule.id) : [...settings.disabledRules, rule.id];
-						await this.plugin.saveSettings();
-					}),
-				);
-		}
+		this.renderRules(containerEl);
 
 		new Setting(containerEl).setName("Lab").setHeading();
 		new Setting(containerEl)
@@ -188,5 +188,80 @@ export class VikalpSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+	}
+
+	private renderRules(containerEl: HTMLElement) {
+		const linter = this.plugin.linter;
+		const settings = this.plugin.settings;
+		new Setting(containerEl)
+			.setName("Rules")
+			.setDesc("Each rule can be switched off, opened and edited. Rules with the same name are grouped.")
+			.addButton((button) =>
+				button
+					.setButtonText("Add rule")
+					.setCta()
+					.onClick(() => this.openEditor(null)),
+			);
+
+		const list = containerEl.createDiv({ cls: "vk-settings-rules" });
+		const isOn = (rule: Rule) => !settings.disabledRules.includes(rule.id);
+		const setOn = async (rules: Rule[], enabled: boolean) => {
+			const ids = new Set(rules.map((rule) => rule.id));
+			settings.disabledRules = enabled ? settings.disabledRules.filter((id) => !ids.has(id)) : [...new Set([...settings.disabledRules, ...ids])];
+			await this.plugin.saveSettings();
+			this.display();
+		};
+
+		for (const family of groupRulesByLabel(linter.allRules())) {
+			const onCount = family.rules.filter(isOn).length;
+			const single = family.rules.length === 1;
+			const expanded = this.expandedFamilies.has(family.label);
+			const familyRow = new Setting(list).setClass("vk-rule-family");
+			familyRow.nameEl.setText(family.label);
+			if (family.rules.some((rule) => rule.origin === "user")) familyRow.nameEl.createSpan({ cls: "vk-rule-tag", text: "yours" });
+			if (family.rules.some(usesAi)) familyRow.nameEl.createSpan({ cls: "vk-rule-tag is-ai", text: "AI" });
+			const partial = onCount > 0 && onCount < family.rules.length ? ` ${onCount} of ${family.rules.length} checks on.` : "";
+			familyRow.setDesc(`${family.description}${partial}`);
+			if (single) {
+				familyRow.addExtraButton((button) => button.setIcon("pencil").setTooltip("Open and edit").onClick(() => this.openEditor(family.rules[0]!)));
+			} else {
+				familyRow.addExtraButton((button) =>
+					button
+						.setIcon(expanded ? "chevron-down" : "chevron-right")
+						.setTooltip(expanded ? "Hide checks" : `Show ${family.rules.length} checks`)
+						.onClick(() => {
+							if (expanded) this.expandedFamilies.delete(family.label);
+							else this.expandedFamilies.add(family.label);
+							this.display();
+						}),
+				);
+			}
+			familyRow.addToggle((toggle) => toggle.setValue(onCount > 0).onChange((enabled) => void setOn(family.rules, enabled)));
+			if (!single) {
+				familyRow.settingEl.addClass("mod-clickable");
+				familyRow.infoEl.addEventListener("click", () => {
+					if (expanded) this.expandedFamilies.delete(family.label);
+					else this.expandedFamilies.add(family.label);
+					this.display();
+				});
+			}
+			if (single || !expanded) continue;
+
+			const checks = list.createDiv({ cls: "vk-rule-checks" });
+			for (const rule of family.rules) {
+				const row = new Setting(checks).setClass("vk-rule-check");
+				row.setName(rule.description || rule.id);
+				const details = [engineChoice(rule.engine).name, rule.judgment ? "plus an AI question" : "", rule.scope === "document" ? "whole note" : `each ${rule.scope}`]
+					.filter(Boolean)
+					.join(" · ");
+				row.setDesc(linter.isEdited(rule.id) ? `${details} · edited` : details);
+				row.addExtraButton((button) => button.setIcon("pencil").setTooltip("Open and edit").onClick(() => this.openEditor(rule)));
+				row.addToggle((toggle) => toggle.setValue(isOn(rule)).onChange((enabled) => void setOn([rule], enabled)));
+			}
+		}
+	}
+
+	private openEditor(rule: Rule | null) {
+		new RuleEditorModal(this.app, this.plugin.linter, rule, () => this.display()).open();
 	}
 }

@@ -1591,12 +1591,107 @@ body {
 	font-size: var(--font-ui-smaller);
 }
 
-.vk-settings-rules .setting-item {
-	padding: 6px 0;
-}
-
 .vk-settings-rules .setting-item-description {
 	font-size: var(--font-ui-smaller);
+}
+
+.vk-rule-family.mod-clickable .setting-item-info {
+	cursor: pointer;
+}
+
+.vk-rule-tag {
+	margin-left: 8px;
+	font-size: 10px;
+	font-weight: var(--font-semibold);
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 3px;
+	padding: 0 4px;
+	vertical-align: 2px;
+}
+
+.vk-rule-tag.is-ai {
+	color: var(--color-purple);
+	border-color: color-mix(in srgb, var(--color-purple) 45%, transparent);
+}
+
+.vk-rule-checks {
+	margin: 0 0 var(--size-4-2) var(--size-4-3);
+	padding-left: var(--size-4-4);
+	border-left: 1px solid var(--background-modifier-border);
+}
+
+.vk-rule-checks .setting-item {
+	padding: 6px 0;
+	border-top: none;
+}
+
+.vk-rule-checks .setting-item-name {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-normal);
+}
+
+.vk-rule-editor {
+	width: min(680px, 92vw);
+}
+
+.vk-rule-editor .setting-item {
+	padding: 8px 0;
+}
+
+.vk-rule-wide {
+	width: 280px;
+}
+
+.vk-rule-textarea {
+	width: 280px;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	resize: vertical;
+}
+
+.vk-rule-footer {
+	position: sticky;
+	bottom: calc(-1 * var(--size-4-4));
+	margin: 0 calc(-1 * var(--size-4-4)) calc(-1 * var(--size-4-4));
+	padding: var(--size-4-2) var(--size-4-4) 0;
+	background-color: var(--modal-background, var(--background-primary));
+	border-top: 1px solid var(--background-modifier-border);
+	z-index: 1;
+}
+
+.vk-rule-preview {
+	margin-top: var(--size-4-1);
+	padding: 8px 10px;
+	border-radius: var(--radius-s);
+	background-color: var(--background-modifier-hover);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.vk-rule-preview:empty,
+.vk-rule-errors:empty {
+	display: none;
+}
+
+.vk-rule-preview-count {
+	color: var(--text-normal);
+}
+
+.vk-rule-errors {
+	margin-top: var(--size-4-2);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-error);
+}
+
+.vk-rule-buttons {
+	border-top: none;
+	padding: var(--size-4-2) 0 var(--size-4-3);
+}
+
+.vk-rule-buttons .setting-item-control {
+	gap: 8px;
 }
 
 .vk-prompt-input {

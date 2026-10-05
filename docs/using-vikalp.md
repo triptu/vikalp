@@ -77,7 +77,7 @@ Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the
 
 ![Lint marks in the note, a hover card, and the Lint panel grouped by rule](screenshots/guide/linter.png)
 
-Rules are YAML files you can edit and add to. Select a phrase you hate and run *New rule from selection* to flag it everywhere from now on. See [rules.md](rules.md).
+Rules live in Settings → Vikalp → Rules, grouped by name. Switch a group or a single check off, open any rule to edit it in a form, or press **Add rule**. The form previews how many marks a rule makes on the open note before you save. Select a phrase you hate and run *New rule from selection* to flag it everywhere from now on. See [rules.md](rules.md).
 
 ## The Lab
 
