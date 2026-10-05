@@ -62,7 +62,7 @@ class SignInModal extends Modal {
 	waitForPastedAddress(signal: AbortSignal | undefined): Promise<string> {
 		return new Promise((resolve, reject) => {
 			this.submitPasted = resolve;
-			signal?.addEventListener("abort", () => reject(signal.reason), { once: true });
+			signal?.addEventListener("abort", () => reject(signal.reason instanceof Error ? signal.reason : new Error("Sign-in cancelled")), { once: true });
 		});
 	}
 
