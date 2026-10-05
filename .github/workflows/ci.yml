@@ -39,6 +39,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # typescript-eslint doesn't support TypeScript 7 yet, so this job lints with TypeScript 5.9.
-      - run: npm install --no-save --legacy-peer-deps typescript@~5.9.0 eslint@^9 @eslint/js@^9 typescript-eslint@^8 eslint-plugin-obsidianmd @eslint/json@0.14.0
+      # typescript-eslint supports TypeScript up to 6.0, so this job lints with 6.0 instead of the project's 7.
+      - run: npm install --no-save --legacy-peer-deps typescript@~6.0.3 eslint@^10 @eslint/js@^10 typescript-eslint@^8 eslint-plugin-obsidianmd @eslint/json@0.14.0
       - run: npx eslint src
