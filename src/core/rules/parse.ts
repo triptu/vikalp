@@ -32,8 +32,13 @@ const ENGINE_FIELDS: Record<RuleEngineName, string[]> = {
 	llm: ["prompt"],
 };
 
-/** Control characters other than tab and newline. In a YAML double-quoted string, "\b" turns into one of these. */
-const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/;
+/** True for control characters other than tab, newline and carriage return. In a YAML double-quoted string, "\b" turns into one of these. */
+function hasControlCharacter(text: string): boolean {
+	return [...text].some((char) => {
+		const code = char.charCodeAt(0);
+		return code < 0x20 && char !== "\t" && char !== "\n" && char !== "\r";
+	});
+}
 
 type Fields = Record<string, unknown>;
 
@@ -162,7 +167,7 @@ function readJudgment(value: unknown, isLocal: boolean, report: (problem: string
 }
 
 function checkPattern(pattern: string, ignorecase: boolean, report: (problem: string) => void): void {
-	if (CONTROL_CHARACTER.test(pattern)) {
+	if (hasControlCharacter(pattern)) {
 		report(`pattern '${pattern}' contains a control character. Write patterns in single quotes so backslashes like \\b stay as written`);
 		return;
 	}

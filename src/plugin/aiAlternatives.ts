@@ -79,7 +79,7 @@ export class AiAlternatives {
 
 		try {
 			const { value } = await this.client.structured<AlternativesOutput>({
-				purpose: `Alternatives for “${truncate(meta.versions[0]!.text, 40)}”`,
+				purpose: `Alternatives for “${truncate(meta.versions[0].text, 40)}”`,
 				mode,
 				system: ALTERNATIVES_SYSTEM,
 				user: alternativesPrompt({

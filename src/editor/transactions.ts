@@ -36,7 +36,17 @@ export const noHistory = Transaction.addToHistory.of(false);
 
 /** Keeps a Vikalp edit in its own undo step, never merged with typing around it. */
 export function isolated(spec: TransactionSpec): TransactionSpec {
-	const annotations = spec.annotations ? (Array.isArray(spec.annotations) ? spec.annotations : [spec.annotations]) : [];
+	const annotations = asList(spec.annotations);
 	if (annotations.some((annotation) => annotation.type === Transaction.addToHistory)) return spec;
 	return { ...spec, annotations: [...annotations, isolateHistory.of("full")] };
+}
+
+/** A TransactionSpec field (effects, annotations) as a plain array. */
+export function asList<T>(value: T | readonly T[] | undefined): T[] {
+	if (value === undefined) return [];
+	return isList(value) ? [...value] : [value];
+}
+
+function isList<T>(value: T | readonly T[]): value is readonly T[] {
+	return Array.isArray(value);
 }

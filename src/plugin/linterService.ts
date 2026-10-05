@@ -105,7 +105,7 @@ export class LinterService {
 		const adapter = this.app.vault.adapter;
 		if (!(await adapter.exists(dir))) await adapter.mkdir(dir);
 		const recordPath = `${dir}/${BUILTIN_RECORD}`;
-		const written: Record<string, string> = (await adapter.exists(recordPath)) ? JSON.parse(await adapter.read(recordPath)) : {};
+		const written: Record<string, string> = (await adapter.exists(recordPath)) ? (JSON.parse(await adapter.read(recordPath)) as Record<string, string>) : {};
 		for (const file of BUILTIN_RULE_FILES) {
 			const path = `${dir}/${file.fileName}`;
 			const exists = await adapter.exists(path);
@@ -326,12 +326,12 @@ export class LinterService {
 		let cursor = 0;
 		const worker = async () => {
 			while (cursor < groups.length && stillCurrent()) {
-				const group = groups[cursor++]!;
+				const group = groups[cursor++];
 				if (jevDown) {
 					failed.push(...group);
 					continue;
 				}
-				const first = group[0]!;
+				const first = group[0];
 				const state = first.rule.scope === "document" ? { note: first.unit.text } : { text: first.unit.text, paragraph: first.paragraph.text };
 				const questions = Object.fromEntries(
 					group.map((task, index) => [
@@ -409,7 +409,7 @@ export class LinterService {
 			if (!stillCurrent()) return;
 			const currentDoc = view.state.doc.toString();
 			const { placed } = placeQuotes(currentDoc, sentences, (value.hits ?? []).map((hit) => ({ unit_id: hit.unit_id, quote: hit.quote, extra: hit.reason })));
-			for (const quote of placed) this.addJudgmentHit(view, path, tasks[0]!, quote, quote.extra || tasks[0]!.message, model, null);
+			for (const quote of placed) this.addJudgmentHit(view, path, tasks[0], quote, quote.extra || tasks[0].message, model, null);
 		} catch (error) {
 			this.patchRun({ notice: error instanceof AiError ? error.message : `${rule.label} failed: ${String(error)}` });
 		}
@@ -548,7 +548,7 @@ export class LinterService {
 		const adapter = this.app.vault.adapter;
 		if (!(await adapter.exists(this.rulesDir))) await adapter.mkdir(this.rulesDir);
 		const { origin: _origin, ...toWrite } = rule;
-		await adapter.write(`${this.rulesDir}/${id}.yaml`, serializeRule(toWrite as Rule));
+		await adapter.write(`${this.rulesDir}/${id}.yaml`, serializeRule(toWrite));
 		await this.loadRules();
 		new Notice(`Added “${phrase}” to ${rule.label}.`);
 		if (this.controller.editor === view) this.runLocal(view);

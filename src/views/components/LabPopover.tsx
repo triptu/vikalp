@@ -118,7 +118,7 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 					<button
 						className="clickable-icon"
 						aria-label="More: clear marks, remove AI versions, settings"
-						onClick={(event) => actions.openMenu(event.currentTarget as HTMLElement, markCount)}
+						onClick={(event) => actions.openMenu(event.currentTarget, markCount)}
 					>
 						<Icon name="more-horizontal" />
 					</button>

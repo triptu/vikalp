@@ -18,7 +18,7 @@ import {
 import { runAction } from "../editor/interaction";
 import { addOverflowBlock, moveOverflowBlock, noteModeField, overflowField, removeOverflowBlock, setNoteMode, updateOverflowBlock } from "../editor/noteFields";
 import { listSpans, removeSpan, spanMeta, spanRange } from "../editor/spansField";
-import { VIKALP_EVENT, isolated, noHistory } from "../editor/transactions";
+import { VIKALP_EVENT, asList, isolated, noHistory } from "../editor/transactions";
 import type { UiStore } from "../store/uiStore";
 import type { AlternativesActions, OverflowActions } from "../views/context";
 import type { AiAlternatives } from "./aiAlternatives";
@@ -238,8 +238,7 @@ export function createOverflowActions(deps: AlternativesDeps): OverflowActions {
 				new Notice(result.message);
 				return;
 			}
-			const effects = result.spec.effects ? (Array.isArray(result.spec.effects) ? result.spec.effects : [result.spec.effects]) : [];
-			view.dispatch(isolated({ ...result.spec, effects: [...effects, removeOverflowBlock.of({ id: blockId })] }));
+			view.dispatch(isolated({ ...result.spec, effects: [...asList(result.spec.effects), removeOverflowBlock.of({ id: blockId })] }));
 		}),
 		copyBlock: withEditor(controller, (view, blockId: string) => {
 			const text = blockText(view, blockId);

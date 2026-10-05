@@ -102,8 +102,8 @@ function fuzzyResolve(doc: string, anchor: Anchor): TextRange | null {
 				commonPrefixLength(doc.slice(match.end, match.end + CONTEXT_LENGTH), anchor.suffix),
 		}));
 		withContext.sort((a, b) => b.score - a.score);
-		if (withContext[0]!.score === withContext[1]!.score) return null;
-		return { from: withContext[0]!.match.start, to: withContext[0]!.match.end };
+		if (withContext[0].score === withContext[1].score) return null;
+		return { from: withContext[0].match.start, to: withContext[0].match.end };
 	}
 	const chosen = best.reduce((longest, match) => (match.end - match.start > longest.end - longest.start ? match : longest));
 	if (exact.length < DISTINCTIVE_LENGTH && contextScore(doc, anchor, chosen.start, chosen.end) < requiredAgreement(anchor)) return null;
@@ -120,13 +120,13 @@ export function findQuote(doc: string, quote: string, options: { within?: TextRa
 	const scopes: TextRange[] = options.within ? [options.within, { from: 0, to: doc.length }] : [{ from: 0, to: doc.length }];
 	for (const scope of scopes) {
 		const hits = allIndexesOf(doc, needle, scope.from, scope.to);
-		if (hits.length === 1) return { from: hits[0]!, to: hits[0]! + needle.length };
+		if (hits.length === 1) return { from: hits[0], to: hits[0] + needle.length };
 		if (hits.length > 1) {
 			const before = options.before?.trim() ?? "";
 			const preferred = before
 				? hits.find((index) => doc.slice(Math.max(0, index - before.length - 2), index).includes(before))
 				: undefined;
-			const chosen = preferred ?? hits[0]!;
+			const chosen = preferred ?? hits[0];
 			return { from: chosen, to: chosen + needle.length };
 		}
 	}

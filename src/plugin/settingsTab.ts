@@ -213,7 +213,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			const partial = onCount > 0 && onCount < family.rules.length ? ` ${onCount} of ${family.rules.length} checks on.` : "";
 			familyRow.setDesc(`${family.description}${partial}`);
 			if (single) {
-				familyRow.addExtraButton((button) => button.setIcon("pencil").setTooltip("Open and edit").onClick(() => this.openEditor(family.rules[0]!)));
+				familyRow.addExtraButton((button) => button.setIcon("pencil").setTooltip("Open and edit").onClick(() => this.openEditor(family.rules[0])));
 			} else {
 				familyRow.addExtraButton((button) =>
 					button

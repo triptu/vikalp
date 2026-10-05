@@ -41,7 +41,7 @@ export const overflowField = StateField.define<readonly OverflowBlock[]>({
 				if (effect.is(addOverflowBlock)) inverses.push(removeOverflowBlock.of({ id: effect.value.block.id }));
 				else if (effect.is(removeOverflowBlock)) {
 					const index = start.findIndex((block) => block.id === effect.value.id);
-					if (index !== -1) inverses.push(addOverflowBlock.of({ block: start[index]!, index }));
+					if (index !== -1) inverses.push(addOverflowBlock.of({ block: start[index], index }));
 				}
 			}
 			return inverses;

@@ -194,7 +194,7 @@ function invertSpanEffects(start: SpansValue, end: SpansValue, tr: Transaction):
 		} else if (effect.is(deleteVersion)) {
 			const meta = start.meta.get(effect.value.id);
 			const index = meta?.versions.findIndex((version) => version.id === effect.value.versionId) ?? -1;
-			if (meta && index !== -1) inverses.push(addVersion.of({ id: meta.id, version: meta.versions[index]!, index }));
+			if (meta && index !== -1) inverses.push(addVersion.of({ id: meta.id, version: meta.versions[index], index }));
 		} else if (effect.is(setSpanNote)) {
 			const meta = start.meta.get(effect.value.id);
 			if (meta) inverses.push(setSpanNote.of({ id: meta.id, note: meta.note ?? "" }));

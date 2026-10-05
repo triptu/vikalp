@@ -15,14 +15,14 @@ export function activeIndex(span: SpanMeta): number {
 }
 
 export function activeVersionOf(span: SpanMeta): Version {
-	return span.versions[activeIndex(span)]!;
+	return span.versions[activeIndex(span)];
 }
 
 /** The version `step` places away from the active one, wrapping around. */
 export function versionAtStep(span: SpanMeta, step: number): Version {
 	const count = span.versions.length;
 	const index = (((activeIndex(span) + step) % count) + count) % count;
-	return span.versions[index]!;
+	return span.versions[index];
 }
 
 /** Records the text currently in the document as the active version's text. */
@@ -50,5 +50,5 @@ export function versionAfterDelete(span: SpanMeta, versionId: string, prefer: "p
 	if (index === -1 || span.versions.length < 2) return null;
 	const count = span.versions.length;
 	const neighbour = prefer === "next" ? (index + 1) % count : index === 0 ? 1 : index - 1;
-	return span.versions[neighbour]!;
+	return span.versions[neighbour];
 }
