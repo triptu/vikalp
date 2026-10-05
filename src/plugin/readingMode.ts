@@ -51,8 +51,7 @@ function wrapOccurrence(element: HTMLElement, text: string, occurrence: number) 
 			if (seen++ < occurrence) continue;
 			const ghostNode = node.splitText(index);
 			ghostNode.splitText(text.length);
-			const wrapper = document.createElement("span");
-			wrapper.className = "vk-ghost";
+			const wrapper = createSpan({ cls: "vk-ghost" });
 			ghostNode.replaceWith(wrapper);
 			wrapper.appendChild(ghostNode);
 			return;

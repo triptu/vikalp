@@ -191,20 +191,9 @@ const hostBridge = ViewPlugin.fromClass(
 );
 
 function tooltipButton(parent: HTMLElement, label: string, onClick: () => void, primary = false) {
-	const button = document.createElement("button");
-	button.textContent = label;
-	button.className = primary ? "vk-tooltip-button mod-cta" : "vk-tooltip-button";
+	const button = parent.createEl("button", { text: label, cls: primary ? "vk-tooltip-button mod-cta" : "vk-tooltip-button" });
 	button.addEventListener("mousedown", (event) => event.preventDefault());
 	button.addEventListener("click", onClick);
-	parent.appendChild(button);
-}
-
-function appendText(parent: HTMLElement, tag: string, className: string, text: string) {
-	const element = document.createElement(tag);
-	element.className = className;
-	element.textContent = text;
-	parent.appendChild(element);
-	return element;
 }
 
 /** Hover cards for lint marks (rules hit, fixes) and for spans that carry a note. */
@@ -225,36 +214,30 @@ const vikalpTooltips = hoverTooltip(
 			end,
 			above: true,
 			create: () => {
-				const dom = document.createElement("div");
-				dom.className = "vk-tooltip";
+				const dom = createDiv({ cls: "vk-tooltip" });
 				if (spanNote && meta) {
-					const noteRow = appendText(dom, "div", "vk-tooltip-note", spanNote);
-					noteRow.prepend(Object.assign(document.createElement("span"), { className: "vk-tooltip-note-dot" }));
-					appendText(dom, "div", "vk-tooltip-meta", `${activeIndex(meta) + 1} of ${meta.versions.length} versions`);
+					const noteRow = dom.createDiv({ cls: "vk-tooltip-note" });
+					noteRow.createSpan({ cls: "vk-tooltip-note-dot" });
+					noteRow.appendText(spanNote);
+					dom.createDiv({ cls: "vk-tooltip-meta", text: `${activeIndex(meta) + 1} of ${meta.versions.length} versions` });
 				}
 				for (const { meta: hit } of hits) {
-					const row = document.createElement("div");
-					row.className = `vk-tooltip-hit vk-severity-${hit.severity}`;
-					const heading = document.createElement("div");
-					heading.className = "vk-tooltip-hit-heading";
-					appendText(heading, "span", "vk-tooltip-rule", hit.label);
-					if (hit.source === "lab" || hit.judgment) appendText(heading, "span", "vk-ai-badge", "AI");
-					row.appendChild(heading);
-					appendText(row, "div", "vk-tooltip-message", hit.message);
+					const row = dom.createDiv({ cls: `vk-tooltip-hit vk-severity-${hit.severity}` });
+					const heading = row.createDiv({ cls: "vk-tooltip-hit-heading" });
+					heading.createSpan({ cls: "vk-tooltip-rule", text: hit.label });
+					if (hit.source === "lab" || hit.judgment) heading.createSpan({ cls: "vk-ai-badge", text: "AI" });
+					row.createDiv({ cls: "vk-tooltip-message", text: hit.message });
 					if (hit.suggestion !== undefined) {
-						const fix = appendText(row, "div", "vk-tooltip-fix", "");
-						appendText(fix, "span", "vk-tooltip-fix-label", "Fix: ");
-						appendText(fix, "span", "vk-tooltip-fix-text", hit.suggestion || "(delete)");
+						const fix = row.createDiv({ cls: "vk-tooltip-fix" });
+						fix.createSpan({ cls: "vk-tooltip-fix-label", text: "Fix: " });
+						fix.createSpan({ cls: "vk-tooltip-fix-text", text: hit.suggestion || "(delete)" });
 					}
 					const host = view.state.facet(vikalpHost);
 					if (host) {
-						const actions = document.createElement("div");
-						actions.className = "vk-tooltip-actions";
+						const actions = row.createDiv({ cls: "vk-tooltip-actions" });
 						if (hit.suggestion !== undefined) tooltipButton(actions, "Apply", () => host.applyLintFix(view, hit.id), true);
 						tooltipButton(actions, "Ignore", () => host.ignoreLintHit(view, hit.id));
-						row.appendChild(actions);
 					}
-					dom.appendChild(row);
 				}
 				return { dom };
 			},
