@@ -635,6 +635,10 @@ body {
 	opacity: 0;
 }
 
+.vk-version:first-child .vk-version-text {
+	padding-right: 52px;
+}
+
 .vk-version-delete,
 .vk-panel .vk-version-delete {
 	position: absolute;
