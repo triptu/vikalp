@@ -1,9 +1,10 @@
 import { Platform, PluginSettingTab, type App, type ExtraButtonComponent, type Setting, type SettingDefinition, type SettingDefinitionItem } from "obsidian";
-import { DEFAULT_SETTINGS, MODEL_MODE_LABELS, type ModelMode, type VikalpSettings } from "../core/settings";
+import { DEFAULT_SETTINGS, MODEL_MODE_LABELS, type AiProvider, type ModelMode, type VikalpSettings } from "../core/settings";
 import { engineChoice } from "../core/rules/draft";
 import { groupRulesByLabel, usesAi, type RuleFamily } from "../core/rules/groups";
 import type { Rule } from "../core/rules/types";
 import type VikalpPlugin from "../main";
+import { signInWithChatGPT } from "./chatgptSignIn";
 import { RuleEditorModal } from "./ruleEditor";
 
 const MODEL_MODES: ModelMode[] = ["lite", "medium", "heavy"];
@@ -47,11 +48,42 @@ export class VikalpSettingTab extends PluginSettingTab {
 
 	private aiSettings(): SettingDefinition[] {
 		const settings = this.plugin.settings;
+		const uses = (provider: AiProvider) => () => this.plugin.settings.aiProvider === provider;
 		return [
+			{
+				name: "AI provider",
+				desc: "OpenRouter uses your own API key and any model. ChatGPT uses OpenAI models and your ChatGPT plan.",
+				aliases: ["openai", "openrouter", "chatgpt"],
+				control: { type: "dropdown", key: "aiProvider", options: { openrouter: "OpenRouter", chatgpt: "ChatGPT" } },
+			},
+			{
+				name: "ChatGPT account",
+				desc: settings.chatgptToken ? "Signed in. AI actions count against your ChatGPT plan." : "Sign in to use your ChatGPT plan. The sign-in is kept in plugin data, not in your notes.",
+				aliases: ["sign in", "login", "openai"],
+				visible: uses("chatgpt"),
+				render: (setting) => {
+					setting.addButton((button) => {
+						if (settings.chatgptToken) {
+							button.setButtonText("Sign out").onClick(async () => {
+								await this.plugin.ai.signOutOfChatGPT();
+								this.update();
+							});
+						} else {
+							button
+								.setButtonText("Sign in with ChatGPT")
+								.setCta()
+								.onClick(async () => {
+									if (await signInWithChatGPT(this.app, this.plugin.ai)) this.update();
+								});
+						}
+					});
+				},
+			},
 			{
 				name: "OpenRouter API key",
 				desc: "Kept in plugin data, not in your notes. Used only when you click an AI action.",
 				aliases: ["key", "token"],
+				visible: uses("openrouter"),
 				render: (setting) => {
 					setting.addText((text) => {
 						text.inputEl.type = "password";
@@ -75,7 +107,16 @@ export class VikalpSettingTab extends PluginSettingTab {
 				(mode): SettingDefinition => ({
 					name: `${MODEL_MODE_LABELS[mode]} model`,
 					desc: `OpenRouter model id. Default: ${DEFAULT_SETTINGS.models[mode]}`,
+					visible: uses("openrouter"),
 					control: { type: "text", key: `models.${mode}`, placeholder: DEFAULT_SETTINGS.models[mode] },
+				}),
+			),
+			...MODEL_MODES.map(
+				(mode): SettingDefinition => ({
+					name: `${MODEL_MODE_LABELS[mode]} model`,
+					desc: `OpenAI model id. Default: ${DEFAULT_SETTINGS.chatgptModels[mode]}`,
+					visible: uses("chatgpt"),
+					control: { type: "text", key: `chatgptModels.${mode}`, placeholder: DEFAULT_SETTINGS.chatgptModels[mode] },
 				}),
 			),
 			{
@@ -130,6 +171,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			{
 				name: "Judgment rules use",
 				desc: "Jev is fast, cheap and only answers yes or no. If it's down, Vikalp uses the Lite model and tells you.",
+				visible: () => this.plugin.settings.aiProvider === "openrouter",
 				control: { type: "dropdown", key: "judgmentEngine", options: { jev: "Jev (TypeSafe)", llm: "The selected model" } },
 			},
 			{
@@ -256,6 +298,16 @@ export class VikalpSettingTab extends PluginSettingTab {
 		const settings = this.plugin.settings;
 		if (key === "suggestedHotkeys") return { get: () => settings.suggestedHotkeys, set: (value) => this.plugin.setSuggestedHotkeys(value === true) };
 		if (key === "modelMode") return { get: () => settings.modelMode, set: (value) => this.plugin.setModelMode(value as ModelMode) };
+		if (key === "aiProvider") {
+			return {
+				get: () => settings.aiProvider,
+				set: async (value) => {
+					settings.aiProvider = value as AiProvider;
+					await this.plugin.saveSettings();
+					this.update();
+				},
+			};
+		}
 		if (key === "voiceReferenceNotes") {
 			return {
 				get: () => settings.voiceReferenceNotes.join("\n"),
@@ -268,12 +320,12 @@ export class VikalpSettingTab extends PluginSettingTab {
 				},
 			};
 		}
-		const mode = MODEL_MODES.find((candidate) => key === `models.${candidate}`);
-		if (mode) {
+		const [group, modeKey] = key.split(".") as [string, ModelMode | undefined];
+		if ((group === "models" || group === "chatgptModels") && modeKey && MODEL_MODES.includes(modeKey)) {
 			return {
-				get: () => settings.models[mode],
+				get: () => settings[group][modeKey],
 				set: (value) => {
-					settings.models[mode] = String(value).trim() || DEFAULT_SETTINGS.models[mode];
+					settings[group][modeKey] = String(value).trim() || DEFAULT_SETTINGS[group][modeKey];
 					return this.plugin.saveSettings();
 				},
 			};

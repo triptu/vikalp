@@ -2,6 +2,7 @@
 // Usage: npm run e2e            (all flows)
 //        npm run e2e -- ghost   (flows whose name contains "ghost")
 import { writeFileSync, readFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { prepareScratchVault } from "./obsidian.mjs";
 import { startSession } from "./driver.mjs";
@@ -384,6 +385,58 @@ await flow("lint: clicking a mark in the note scrolls to it; the in-order list f
 		await mark.click();
 		await driver.wait(300);
 		assert(await driver.evaluate(() => Boolean(document.querySelector(".vk-hit.is-revealed"))), "the clicked mark's row is revealed");
+	});
+});
+
+await flow("chatgpt: switching provider asks to sign in; the sign-in opens OpenAI and cancelling frees the port", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote(ESSAY);
+		const settings = await driver.openSettings();
+		await driver.evaluate(() => {
+			window.vikalpOpened = [];
+			window.open = (url) => {
+				window.vikalpOpened.push(String(url));
+				return null;
+			};
+		});
+		await settings.locator(".setting-item", { hasText: "AI provider" }).locator("select:not(.is-measuring)").selectOption("chatgpt");
+		await driver.wait(400);
+		assert(!(await settings.locator(".setting-item", { hasText: "OpenRouter API key" }).isVisible()), "the OpenRouter key is hidden");
+		assert(!(await settings.locator(".setting-item", { hasText: "Judgment rules use" }).isVisible()), "the Jev choice is hidden");
+		const hint = await plugin(driver, () => window.app.plugins.plugins.vikalp.store.getState().aiSetupHint);
+		assert(hint === "Sign in with ChatGPT in Vikalp settings", `panels ask to sign in (${hint})`);
+
+		await settings.locator("button", { hasText: "Sign in with ChatGPT" }).click();
+		await driver.page.waitForFunction(() => window.vikalpOpened.some((opened) => opened.startsWith("https:")), null, { timeout: 10000 });
+		const url = new URL(await driver.evaluate(() => window.vikalpOpened.find((opened) => opened.startsWith("https:"))));
+		assert(url.host === "auth.openai.com", `the browser opens OpenAI's sign-in (${url.host})`);
+		assert(url.searchParams.get("agent_name_hint") === "Vikalp", "OpenAI is told the app is Vikalp");
+
+		const pages = driver.page.context().browser().contexts().flatMap((context) => context.pages());
+		const withModal = [];
+		for (const candidate of pages) if (await candidate.locator(".modal", { hasText: "Sign in with ChatGPT" }).count()) withModal.push(candidate);
+		assert(withModal.length === 1, "a sign-in window waits for the browser");
+		await withModal[0].locator(".modal button", { hasText: "Cancel" }).click();
+		await driver.wait(500);
+		const portFree = await new Promise((done) => {
+			const probe = createServer().once("error", () => done(false)).listen(1455, "127.0.0.1", () => probe.close(() => done(true)));
+		});
+		assert(portFree, "cancelling stops listening for the browser");
+		assert((await plugin(driver, () => window.app.plugins.plugins.vikalp.settings.chatgptToken)) === null, "nothing is saved after cancelling");
+
+		const failure = await plugin(driver, async () => {
+			const vikalp = window.app.plugins.plugins.vikalp;
+			vikalp.settings.chatgptToken = { type: "oauth", access: "not-a-real-token", refresh: "unused", expires: Date.now() + 3600000, clientId: "unused" };
+			try {
+				await vikalp.ai.structured({ purpose: "e2e", mode: "lite", system: "Say ok.", user: "ok", toolName: "answer", toolDescription: "Answer.", schema: { type: "object", properties: {} } });
+				return "no error";
+			} catch (error) {
+				return error.message;
+			} finally {
+				vikalp.settings.chatgptToken = null;
+			}
+		});
+		assert(failure.includes("ChatGPT sign-in has expired"), `a bad token reaches OpenAI and says to sign in again (${failure})`);
 	});
 });
 
