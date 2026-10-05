@@ -93,7 +93,7 @@ export class RuleEditorModal extends Modal {
 		new Setting(container).setName("Looks at").addDropdown((dropdown) => {
 			const scopes = draft.engine === "metric" ? METRIC_SCOPES[draft.metric] : (Object.keys(SCOPE_NAMES) as LintScope[]);
 			for (const scope of scopes) dropdown.addOption(scope, SCOPE_NAMES[scope]);
-			dropdown.setValue(draft.scope).onChange((scope) => this.update({ scope: scope as LintScope }));
+			dropdown.setValue(draft.scope).onChange((scope) => this.update({ scope: scope as LintScope }, draft.engine === "classifier"));
 		});
 		new Setting(container).setName("Shown as").addDropdown((dropdown) => {
 			for (const severity of Object.keys(SEVERITY_NAMES) as Severity[]) dropdown.addOption(severity, SEVERITY_NAMES[severity]);
@@ -166,6 +166,15 @@ export class RuleEditorModal extends Modal {
 					this.update({ question }),
 				);
 				this.thresholdSetting(container, "Flag when the chance of “yes” is at least", draft.threshold, (threshold) => this.update({ threshold }));
+				if (draft.scope === "document") {
+					textarea(
+						"Then ask each paragraph",
+						"Optional. When the whole note is flagged, this question finds which paragraphs are behind it.",
+						draft.paragraphQuestion,
+						"Does this paragraph read like part of a LinkedIn post?",
+						(paragraphQuestion) => this.update({ paragraphQuestion }),
+					);
+				}
 				break;
 			case "llm":
 				textarea("Instructions", "What the model should look for. It quotes matching text with a short reason.", draft.prompt, "Mark claims that need a source.", (prompt) =>

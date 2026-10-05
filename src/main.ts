@@ -107,7 +107,7 @@ export default class VikalpPlugin extends Plugin {
 		);
 
 		this.app.workspace.onLayoutReady(() => {
-			this.statusBar = new StatusBar(this, this.store, () => this.settings, {
+			this.statusBar = new StatusBar(this, this.store, {
 				toggleMarkers: () => {
 					const view = this.controller.editor;
 					if (view) this.toggleMarkers(view);

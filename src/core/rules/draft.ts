@@ -23,6 +23,8 @@ export interface RuleDraft {
 	minWords: string;
 	question: string;
 	threshold: number;
+	/** Note-level AI questions: asked per paragraph when the note is flagged. */
+	paragraphQuestion: string;
 	prompt: string;
 	/** An extra AI yes/no check that runs alongside a local rule. */
 	aiCheck: boolean;
@@ -82,6 +84,7 @@ export function emptyDraft(id: string): RuleDraft {
 		minWords: "",
 		question: "",
 		threshold: 0.7,
+		paragraphQuestion: "",
 		prompt: "",
 		aiCheck: false,
 		aiQuestion: "",
@@ -131,6 +134,7 @@ export function draftFromRule(rule: Rule): RuleDraft {
 		case "classifier":
 			draft.question = rule.question;
 			draft.threshold = rule.threshold;
+			draft.paragraphQuestion = rule.paragraphQuestion ?? "";
 			break;
 		case "llm":
 			draft.prompt = rule.prompt;
@@ -200,7 +204,13 @@ export function ruleFromDraft(draft: RuleDraft): RuleParseResult {
 			};
 			break;
 		case "classifier":
-			rule = { ...base, engine: "classifier", question: draft.question.trim(), threshold: draft.threshold };
+			rule = {
+				...base,
+				engine: "classifier",
+				question: draft.question.trim(),
+				threshold: draft.threshold,
+				...(draft.scope === "document" && draft.paragraphQuestion.trim() ? { paragraphQuestion: draft.paragraphQuestion.trim() } : {}),
+			};
 			break;
 		case "llm":
 			rule = { ...base, engine: "llm", prompt: draft.prompt.trim() };

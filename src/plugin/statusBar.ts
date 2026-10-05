@@ -1,7 +1,6 @@
 import { setIcon, setTooltip, type Plugin } from "obsidian";
-import { MODEL_MODE_LABELS, type VikalpSettings } from "../core/settings";
-import { sessionCost, type UiStore, type VikalpUiState } from "../store/uiStore";
-import { formatCost } from "../views/format";
+import { MODEL_MODE_LABELS } from "../core/settings";
+import type { UiStore, VikalpUiState } from "../store/uiStore";
 
 export interface StatusBarActions {
 	toggleMarkers(): void;
@@ -11,7 +10,7 @@ export interface StatusBarActions {
 
 /**
  * Vikalp's status bar: word count (also the markers switch), lint marks, and
- * the Lab button with the model mode and session cost.
+ * the Lab button with the model mode.
  */
 export class StatusBar {
 	private readonly words: HTMLElement;
@@ -23,7 +22,6 @@ export class StatusBar {
 	constructor(
 		plugin: Plugin,
 		private readonly store: UiStore,
-		private readonly getSettings: () => VikalpSettings,
 		actions: StatusBarActions,
 	) {
 		this.lint = this.item(plugin, "vk-status-lint", actions.openLint);
@@ -51,11 +49,9 @@ export class StatusBar {
 			note?.markersOn,
 			note?.lintHits.length,
 			state.modelMode,
-			state.costs.length,
 			state.lab.runningPass,
 			state.trim.status,
 			state.aiPendingSpans.length,
-			this.getSettings().showCost,
 		]);
 		if (signature === this.lastSignature) return;
 		this.lastSignature = signature;
@@ -90,11 +86,9 @@ export class StatusBar {
 		const running = state.lab.runningPass !== null || state.trim.status === "reading" || state.aiPendingSpans.length > 0;
 		if (running) this.lab.createSpan({ cls: "vk-spinner" });
 		this.lab.createSpan({ cls: "vk-status-lab-label", text: "Lab" });
-		const showCost = this.getSettings().showCost && state.costs.length > 0;
-		const mode = MODEL_MODE_LABELS[state.modelMode];
-		this.lab.createSpan({ cls: "vk-status-lab-mode", text: showCost ? `${mode} · ${formatCost(sessionCost(state))}` : mode });
+		this.lab.createSpan({ cls: "vk-status-lab-mode", text: MODEL_MODE_LABELS[state.modelMode] });
 
-		setTooltip(this.lab, "The Lab: AI marks, trim, model mode and cost", { placement: "top" });
+		setTooltip(this.lab, "The Lab: AI marks, trim and model mode", { placement: "top" });
 	}
 
 	dispose() {

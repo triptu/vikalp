@@ -28,7 +28,7 @@ const ENGINE_FIELDS: Record<RuleEngineName, string[]> = {
 	regex: ["patterns", "ignorecase"],
 	substitution: ["swap", "ignorecase"],
 	metric: ["metric", "max", "minWords"],
-	classifier: ["question", "threshold"],
+	classifier: ["question", "threshold", "paragraphQuestion"],
 	llm: ["prompt"],
 };
 
@@ -125,7 +125,9 @@ function validateRule(fields: Fields): RuleParseResult {
 		case "classifier": {
 			const question = read.requiredText("question", "'question' is required: a yes/no question about the text, ending in '?'");
 			const threshold = read.number("threshold", { min: 0, max: 1 }, "'threshold' must be a number between 0 and 1");
-			if (question !== undefined && threshold !== undefined) rule = { ...base, engine, question, threshold };
+			const paragraphQuestion = typeof fields.paragraphQuestion === "string" && fields.paragraphQuestion.trim() ? fields.paragraphQuestion.trim() : undefined;
+			if (paragraphQuestion && base.scope !== "document") report("'paragraphQuestion' only works on rules with scope 'document'");
+			if (question !== undefined && threshold !== undefined) rule = { ...base, engine, question, threshold, ...(paragraphQuestion ? { paragraphQuestion } : {}) };
 			break;
 		}
 		case "llm": {
@@ -305,6 +307,7 @@ export function serializeRule(rule: Rule): string {
 		case "classifier":
 			fields.question = rule.question;
 			fields.threshold = rule.threshold;
+			if (rule.paragraphQuestion) fields.paragraphQuestion = rule.paragraphQuestion;
 			break;
 		case "llm":
 			fields.prompt = rule.prompt;

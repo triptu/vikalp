@@ -17,7 +17,7 @@ import {
 } from "../editor/actions";
 import { runAction } from "../editor/interaction";
 import { addOverflowBlock, moveOverflowBlock, noteModeField, overflowField, removeOverflowBlock, setNoteMode, updateOverflowBlock } from "../editor/noteFields";
-import { removeSpan, spanMeta, spanRange } from "../editor/spansField";
+import { listSpans, removeSpan, spanMeta, spanRange } from "../editor/spansField";
 import { VIKALP_EVENT, isolated, noHistory } from "../editor/transactions";
 import type { AlternativesActions, OverflowActions } from "../views/context";
 import type { AiAlternatives } from "./aiAlternatives";
@@ -52,7 +52,25 @@ export function startAlternatives(deps: AlternativesDeps, view: EditorView, unit
 	const panelSpanId = deps.panelSpanId();
 	const panelSpan = panelSpanId && spanRange(view.state, panelSpanId) ? panelSpanId : null;
 	const selection = view.state.selection.main;
-	const base = unit && panelSpan && selection.empty ? spanRange(view.state, panelSpan)! : { from: selection.from, to: selection.to };
+	const panelRange = panelSpan ? spanRange(view.state, panelSpan) : null;
+	const cursorInPanelSpan = panelRange !== null && panelRange.from <= selection.head && selection.head <= panelRange.to;
+	let base = unit && panelRange && selection.empty && !cursorInPanelSpan ? panelRange : { from: selection.from, to: selection.to };
+	if (unit === "word" && /\s/.test(view.state.doc.sliceString(base.from, base.to).trim())) {
+		// A word tab on a longer selection means its first word.
+		const text = view.state.doc.sliceString(base.from, base.to);
+		const firstWord = base.from + Math.max(0, text.search(/[\p{L}\p{N}]/u));
+		base = { from: firstWord, to: firstWord };
+	}
+	if (unit) {
+		const existing = smallestSpanOfUnitAround(view, unit, base);
+		if (existing) {
+			ensureMarkersOn(view);
+			deps.controller.setPanelSpan(existing);
+			deps.controller.publishNow();
+			void deps.panels.focusAlternativesInput();
+			return;
+		}
+	}
 	const result = createSpanFromSelection(view.state, base, unit);
 	if (!result.ok) {
 		new Notice(result.message);
@@ -69,6 +87,15 @@ export function startAlternatives(deps: AlternativesDeps, view: EditorView, unit
 	} else {
 		void deps.panels.focusAlternativesInput();
 	}
+}
+
+/** An existing span of this unit (word, sentence, paragraph) that covers the range, if any. */
+function smallestSpanOfUnitAround(view: EditorView, unit: SpanUnit, range: { from: number; to: number }): string | null {
+	const matches = listSpans(view.state).filter(
+		(span) => span.meta.unit === unit && span.range && span.range.from <= range.from && range.to <= span.range.to,
+	);
+	matches.sort((a, b) => a.range!.to - a.range!.from - (b.range!.to - b.range!.from));
+	return matches[0]?.meta.id ?? null;
 }
 
 export function createAlternativesActions(deps: AlternativesDeps): AlternativesActions {

@@ -45,6 +45,8 @@ export class NoteController implements VikalpHost {
 	private readonly editors = new Map<EditorView, EditorEntry>();
 	private activeView: EditorView | null = null;
 	private publishTimer: number | null = null;
+	/** The span at the cursor when we last published. The panel follows the cursor only when this changes. */
+	private lastCursorSpan: string | null = null;
 	hooks: ControllerHooks | null = null;
 
 	constructor(
@@ -234,7 +236,9 @@ export class NoteController implements VikalpHost {
 		const note = snapshotNote(view.state, path);
 		const { panelSpanId } = this.store.getState();
 		let nextPanelSpan = panelSpanId;
-		if (note.cursorSpanId && note.cursorSpanId !== panelSpanId && note.spans.some((span) => span.id === note.cursorSpanId && !span.orphaned)) {
+		const cursorMoved = note.cursorSpanId !== this.lastCursorSpan;
+		this.lastCursorSpan = note.cursorSpanId;
+		if (cursorMoved && note.cursorSpanId && note.cursorSpanId !== panelSpanId && note.spans.some((span) => span.id === note.cursorSpanId && !span.orphaned)) {
 			nextPanelSpan = note.cursorSpanId;
 		}
 		if (nextPanelSpan && !note.spans.some((span) => span.id === nextPanelSpan)) nextPanelSpan = null;

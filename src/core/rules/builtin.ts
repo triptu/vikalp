@@ -282,6 +282,7 @@ const SHIPPED_RULES: Rule[] = [
 		severity: "warning",
 		question: "Does this note read like a LinkedIn post: a hook opener, short punchy lines, a personal lesson, and a call to engage?",
 		threshold: 0.7,
+		paragraphQuestion: "Does this paragraph read like part of a LinkedIn post: a hook, a punchy one-liner, a humblebrag, a lesson-learned line, or a call to engage?",
 		message: "Reads like a LinkedIn post",
 	},
 	{

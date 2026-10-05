@@ -79,6 +79,11 @@ export interface ClassifierRule extends RuleBase {
 	engine: "classifier";
 	question: string;
 	threshold: number;
+	/**
+	 * For note-level rules: when the whole note is flagged, this question is
+	 * asked about each paragraph to show which ones are behind the verdict.
+	 */
+	paragraphQuestion?: string;
 }
 
 export interface LlmRule extends RuleBase {

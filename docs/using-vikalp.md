@@ -104,7 +104,7 @@ The model may only quote your own text. Anything it can't quote exactly is dropp
 
 ## Cost
 
-The status bar shows this session's AI spend next to the model mode. The Lab popover links to a log of every call: what it was for, the model, tokens and cost. Each linter run also shows its own cost in the Lint panel.
+The Lab popover shows this session's AI spend and links to a log of every call: what it was for, the model, tokens and cost. Each linter run also shows its own cost in the Lint panel.
 
 ## Hotkeys
 
