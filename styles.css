@@ -1521,7 +1521,8 @@ body.theme-light {
 	font-size: var(--font-ui-smaller);
 }
 
-.vk-settings-rules .setting-item-description {
+.vk-rule-family .setting-item-description,
+.vk-rule-check .setting-item-description {
 	font-size: var(--font-ui-smaller);
 }
 
@@ -1546,18 +1547,14 @@ body.theme-light {
 	border-color: color-mix(in srgb, var(--color-purple) 45%, transparent);
 }
 
-.vk-rule-checks {
-	margin: 0 0 var(--size-4-2) var(--size-4-3);
-	padding-left: var(--size-4-4);
+.setting-item.vk-rule-check {
+	margin-left: var(--size-4-3);
+	padding: var(--size-2-3) 0 var(--size-2-3) var(--size-4-4);
+	border-top: none;
 	border-left: 1px solid var(--background-modifier-border);
 }
 
-.vk-rule-checks .setting-item {
-	padding: var(--size-2-3) 0;
-	border-top: none;
-}
-
-.vk-rule-checks .setting-item-name {
+.vk-rule-check .setting-item-name {
 	font-size: var(--font-ui-small);
 	font-weight: var(--font-normal);
 }

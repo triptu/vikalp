@@ -26,7 +26,7 @@ import type { VikalpViewContext } from "./views/context";
 import { ALTERNATIVES_VIEW, AlternativesView, LINT_VIEW, LintView, OVERFLOW_VIEW, OverflowView } from "./views/panelViews";
 
 export default class VikalpPlugin extends Plugin {
-	settings!: VikalpSettings;
+	declare settings: VikalpSettings;
 	store!: UiStore;
 	controller!: NoteController;
 	panels!: Panels;

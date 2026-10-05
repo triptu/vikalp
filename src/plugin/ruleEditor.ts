@@ -222,7 +222,7 @@ export class RuleEditorModal extends Modal {
 			buttons.addButton((button) =>
 				button
 					.setButtonText("Delete rule")
-					.setWarning()
+					.setDestructive()
 					.onClick(async () => {
 						const confirmed = await confirmAction(this.app, { title: "Delete this rule?", body: `“${this.draft.label}” will be removed from your rules folder.`, confirmLabel: "Delete", warning: true });
 						if (!confirmed) return;
