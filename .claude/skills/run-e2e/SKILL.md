@@ -12,6 +12,8 @@ What to know:
 
 - The harness copies `dev-vault/` to `e2e/.artifacts/vault/` and launches `/Applications/Obsidian.app` with `--user-data-dir=e2e/.profile` and a debugging port (9333). The maintainer's running Obsidian and real vault are never touched.
 - If a run is killed, stop only the isolated instance: `pkill -f "user-data-dir=.*vikalp/e2e/.profile"`. Never kill other Obsidian processes.
+- The installer in `/Applications` is older than the app Obsidian downloads for itself, so the harness copies the newest `obsidian-<version>.asar` from `~/Library/Application Support/obsidian/` into the test profile. The window title shows the version that ran.
+- Since Obsidian 1.13, settings open in their own window. Use `driver.openSettings()`, which returns that window's page, to query or click inside settings.
 - A new scratch vault path triggers Obsidian's "trust author" prompt; `e2e/obsidian.mjs` clicks it.
 - The driver finds the editor through `window.app.plugins.plugins.vikalp.controller.editor`, because `workspace.activeEditor` is null while a Vikalp panel has focus.
 - To test state across restarts, call `prepareScratchVault()` once, then `startSession({ keepVault: true })` for each launch.

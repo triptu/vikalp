@@ -1,7 +1,8 @@
 // Launches an isolated Obsidian instance on the dev vault and connects to it over CDP.
 // Uses its own user-data dir so Tushar's running Obsidian and real vault are never touched.
 import { spawn, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, writeFileSync, rmSync } from "node:fs";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { chromium } from "playwright-core";
 
@@ -9,6 +10,8 @@ const OBSIDIAN_BINARY = "/Applications/Obsidian.app/Contents/MacOS/Obsidian";
 const REPO_ROOT = resolve(new URL("..", import.meta.url).pathname);
 const PROFILE_DIR = resolve(REPO_ROOT, "e2e/.profile");
 const DEBUG_PORT = 9333;
+// Obsidian updates itself by downloading obsidian-<version>.asar into its user-data dir.
+const INSTALLED_APP_DIR = resolve(homedir(), "Library/Application Support/obsidian");
 
 /**
  * Copies the dev vault to a scratch folder so runs never change the checked-in
@@ -33,6 +36,7 @@ export async function launchObsidian({ vaultPath, keepVault = false, freshProfil
 	vaultPath = vaultPath ?? prepareScratchVault({ keepVault });
 	if (freshProfile) rmSync(PROFILE_DIR, { recursive: true, force: true });
 	mkdirSync(PROFILE_DIR, { recursive: true });
+	useInstalledAppVersion();
 	writeFileSync(
 		resolve(PROFILE_DIR, "obsidian.json"),
 		JSON.stringify({ vaults: { vikalpdev0000000: { path: vaultPath, ts: Date.now(), open: true } }, updateDisabled: true }),
@@ -60,6 +64,20 @@ export async function launchObsidian({ vaultPath, keepVault = false, freshProfil
 			if (child.exitCode === null) child.kill("SIGKILL");
 		},
 	};
+}
+
+/**
+ * The Obsidian.app installer is older than the app Tushar runs, so the test
+ * profile gets a copy of the newest downloaded app version. The source is only read.
+ */
+function useInstalledAppVersion() {
+	if (!existsSync(INSTALLED_APP_DIR)) return;
+	const newest = readdirSync(INSTALLED_APP_DIR)
+		.filter((name) => /^obsidian-[\d.]+\.asar$/.test(name))
+		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+		.at(-1);
+	if (!newest || existsSync(resolve(PROFILE_DIR, newest))) return;
+	copyFileSync(resolve(INSTALLED_APP_DIR, newest), resolve(PROFILE_DIR, newest));
 }
 
 async function connectWithRetry() {

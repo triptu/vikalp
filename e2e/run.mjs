@@ -255,22 +255,21 @@ await flow("editing while judgment rules run never breaks the editor", async () 
 await flow("settings: rules are grouped, and a new rule added in the editor flags text", async () => {
 	await withObsidian({}, async (driver) => {
 		await driver.openNote("Essays/LinkedIn draft.md");
-		await driver.evaluate(() => {
-			window.app.setting.open();
-			window.app.setting.openTabById("vikalp");
-		});
+		const settings = await driver.openSettings();
 		await driver.wait(600);
-		const familyNames = await driver.evaluate(() => [...document.querySelectorAll(".vk-rule-family .setting-item-name")].map((element) => element.firstChild?.textContent));
+		const familyNames = await settings.evaluate(() => [...document.querySelectorAll(".vk-rule-family .setting-item-name")].map((element) => element.firstChild?.textContent));
 		assert(familyNames.filter((name) => name === "Hedging").length === 1, "Hedging shows once, as a family");
-		await driver.click(".setting-item button", "Add rule");
-		await driver.page.locator(".vk-rule-editor input[type=text]").first().fill("Corporate speak");
-		await driver.page.locator(".vk-rule-editor textarea").first().fill("synergies\nmove the needle");
+		await settings.locator(".setting-item button", { hasText: "Add rule" }).first().click();
+		await settings.locator(".vk-rule-editor input[type=text]").first().fill("Corporate speak");
+		await settings.locator(".vk-rule-editor textarea").first().fill("synergies\nmove the needle");
 		await driver.wait(500);
-		const preview = await driver.evaluate(() => document.querySelector(".vk-rule-preview")?.textContent ?? "");
+		const preview = await settings.evaluate(() => document.querySelector(".vk-rule-preview")?.textContent ?? "");
 		assert(preview.includes("2 marks"), `the editor previews hits on the open note (${preview})`);
-		await driver.click(".vk-rule-editor button", "Add rule");
+		await settings.locator(".vk-rule-editor button", { hasText: "Add rule" }).first().click();
 		await driver.wait(600);
-		await driver.press("Escape");
+		const listed = await settings.evaluate(() => [...document.querySelectorAll(".vk-rule-family .setting-item-name")].some((element) => element.firstChild?.textContent === "Corporate speak"));
+		assert(listed, "the new rule shows in settings straight away");
+		await driver.evaluate(() => window.app.setting.close());
 		await driver.command("vikalp:run-linter");
 		await driver.page.waitForFunction(() => !window.app.plugins.plugins.vikalp.store.getState().lint.running, null, { timeout: 60000 });
 		const labels = (await noteState(driver)).lintHits.map((hit) => hit.label);
