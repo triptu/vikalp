@@ -4,5 +4,6 @@
   "installCommand": "",
   "buildCommand": "rm -rf public && cp -rL site public",
   "outputDirectory": "public",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- site docs/screenshots vercel.json"
 }
