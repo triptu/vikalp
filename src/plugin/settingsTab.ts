@@ -251,6 +251,8 @@ export class VikalpSettingTab extends PluginSettingTab {
 			for (const rule of family.rules) {
 				const row = new Setting(checks).setClass("vk-rule-check");
 				row.setName(rule.description || rule.id);
+				if (usesAi(rule)) row.nameEl.createSpan({ cls: "vk-rule-tag is-ai", text: "AI" });
+				if (rule.origin === "user") row.nameEl.createSpan({ cls: "vk-rule-tag", text: "yours" });
 				const details = [engineChoice(rule.engine).name, rule.judgment ? "plus an AI question" : "", rule.scope === "document" ? "whole note" : `each ${rule.scope}`]
 					.filter(Boolean)
 					.join(" · ");
