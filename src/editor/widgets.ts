@@ -8,21 +8,11 @@ interface DotState {
 
 function renderDots(container: HTMLElement, { count, active, hasNote }: DotState) {
 	for (let index = 0; index < count; index++) {
-		const dot = appendSpan(container, "vk-dot");
-		if (index === active) dot.classList.add("is-active");
-		if (index === 0) dot.classList.add("is-original");
+		const dot = container.createSpan({ cls: "vk-dot" });
+		if (index === active) dot.addClass("is-active");
+		if (index === 0) dot.addClass("is-original");
 	}
-	if (hasNote) {
-		const noteDot = appendSpan(container, "vk-dot vk-note-dot");
-		noteDot.setAttribute("aria-label", "Has a note");
-	}
-}
-
-function appendSpan(parent: HTMLElement, className: string): HTMLSpanElement {
-	const span = document.createElement("span");
-	span.className = className;
-	parent.appendChild(span);
-	return span;
+	if (hasNote) container.createSpan({ cls: "vk-dot vk-note-dot", attr: { "aria-label": "Has a note" } });
 }
 
 /** The row of tiny dots under the end of a word or sentence span. One dot per version. */
@@ -39,12 +29,8 @@ export class DotRowWidget extends WidgetType {
 	}
 
 	toDOM(): HTMLElement {
-		const anchor = document.createElement("span");
-		anchor.className = "vk-dots";
-		anchor.setAttribute("aria-hidden", "true");
-		anchor.dataset.vkSpan = this.spanId;
-		const row = appendSpan(anchor, "vk-dots-row");
-		renderDots(row, this.dots);
+		const anchor = createSpan({ cls: "vk-dots", attr: { "aria-hidden": "true", "data-vk-span": this.spanId } });
+		renderDots(anchor.createSpan({ cls: "vk-dots-row" }), this.dots);
 		return anchor;
 	}
 
@@ -67,12 +53,8 @@ export class ParagraphDotsWidget extends WidgetType {
 	}
 
 	toDOM(): HTMLElement {
-		const anchor = document.createElement("span");
-		anchor.className = "vk-para-dots";
-		anchor.setAttribute("aria-hidden", "true");
-		anchor.dataset.vkSpan = this.spanId;
-		const column = appendSpan(anchor, "vk-para-dots-column");
-		renderDots(column, this.dots);
+		const anchor = createSpan({ cls: "vk-para-dots", attr: { "aria-hidden": "true", "data-vk-span": this.spanId } });
+		renderDots(anchor.createSpan({ cls: "vk-para-dots-column" }), this.dots);
 		return anchor;
 	}
 
