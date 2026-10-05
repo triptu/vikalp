@@ -65,7 +65,7 @@ export function createSpanFromSelection(
 	const crossing = listSpans(state).find(
 		(span) => span.range && span.range.from < range!.to && range!.from < span.range.to && !contains(span.range, range!) && !contains(range!, span.range),
 	);
-	if (crossing) return fail("That overlaps part of another span. Select inside it or all the way around it.");
+	if (crossing) return fail("That overlaps text that already has versions. Select inside it or all the way around it.");
 
 	const meta = createSpanMeta(doc.slice(range.from, range.to), label);
 	return {
@@ -110,7 +110,7 @@ export function switchToVersion(
 ): ActionResult {
 	const meta = spanMeta(state, spanId);
 	const range = spanRange(state, spanId);
-	if (!meta || !range) return fail("That span is not in the note right now.");
+	if (!meta || !range) return fail("Those versions aren't placed in the note right now.");
 	const doc = state.doc.toString();
 	const currentText = doc.slice(range.from, range.to);
 	const active = activeVersionOf(meta);
@@ -181,7 +181,7 @@ export function addVersionToSpan(
 ): ActionResult<{ version: Version | null }> {
 	const meta = spanMeta(state, spanId);
 	const cleaned = text.replace(/\s*\n\s*/g, " ").trim();
-	if (!meta) return fail("That span no longer exists.");
+	if (!meta) return fail("Those versions are gone.");
 	if (!cleaned) return fail("Type a version first.");
 	if (isDuplicateVersion(meta, cleaned)) {
 		const existing = meta.versions.find((version) => version.text.trim() === cleaned);
@@ -211,7 +211,7 @@ export function deleteVersionFromSpan(
 	options: SwitchOptions & { prefer: "previous" | "next" },
 ): ActionResult {
 	const meta = spanMeta(state, spanId);
-	if (!meta) return fail("That span no longer exists.");
+	if (!meta) return fail("Those versions are gone.");
 	const isActive = meta.activeVersion === versionId;
 	const isOriginal = meta.versions[0]?.id === versionId;
 	if (isActive && isOriginal && meta.versions.length > 1) return fail("Switch to another version before deleting the original.");
@@ -250,16 +250,16 @@ export function settleSpans(state: EditorState, spanIds: string[]): ActionResult
 
 export function removeAiVersions(state: EditorState, spanId: string, options: SwitchOptions): ActionResult<{ removed: number }> {
 	const meta = spanMeta(state, spanId);
-	if (!meta) return fail("That span no longer exists.");
+	if (!meta) return fail("Those versions are gone.");
 	const aiVersions = meta.versions.filter((version) => version.source === "ai");
-	if (aiVersions.length === 0) return fail("This span has no AI versions.");
+	if (aiVersions.length === 0) return fail("There are no AI versions here.");
 	const humanVersions = meta.versions.filter((version) => version.source === "human");
 	const removals = aiVersions.map((version) => deleteVersion.of({ id: spanId, versionId: version.id }));
 	const activeIsAi = aiVersions.some((version) => version.id === meta.activeVersion);
 	let spec: TransactionSpec = { effects: removals, userEvent: VIKALP_EVENT.edit };
 	if (activeIsAi) {
 		const fallback = humanVersions[humanVersions.length - 1] ?? humanVersions[0];
-		if (!fallback) return fail("This span has no human versions to fall back to.");
+		if (!fallback) return fail("There is no version of yours to fall back to.");
 		const switched = switchToVersion(state, spanId, fallback, options, removals);
 		if (!switched.ok) return switched;
 		spec = switched.spec;
@@ -269,21 +269,21 @@ export function removeAiVersions(state: EditorState, spanId: string, options: Sw
 }
 
 export function setNoteOnSpan(state: EditorState, spanId: string, note: string): ActionResult {
-	if (!spanMeta(state, spanId)) return fail("That span no longer exists.");
+	if (!spanMeta(state, spanId)) return fail("Those versions are gone.");
 	return { ok: true, spec: { effects: setSpanNote.of({ id: spanId, note }), annotations: noHistory } };
 }
 
 /** Re-attaches an unplaced span to the selection, which becomes its active text. */
 export function placeSpanOnSelection(state: EditorState, spanId: string, selection: TextRange): ActionResult {
 	const meta = spanMeta(state, spanId);
-	if (!meta) return fail("That span no longer exists.");
+	if (!meta) return fail("Those versions are gone.");
 	const doc = state.doc.toString();
 	const range = trimRange(doc, selection);
-	if (range.to <= range.from) return fail("Select the text this span should sit on.");
+	if (range.to <= range.from) return fail("Select the text these versions belong to.");
 	const crossing = listSpans(state).find(
 		(span) => span.meta.id !== spanId && span.range && span.range.from < range.to && range.from < span.range.to && !contains(span.range, range) && !contains(range, span.range),
 	);
-	if (crossing) return fail("That overlaps part of another span.");
+	if (crossing) return fail("That overlaps text that already has versions.");
 	return {
 		ok: true,
 		spec: {

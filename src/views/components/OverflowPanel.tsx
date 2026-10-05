@@ -48,7 +48,7 @@ export function OverflowPanel({ hasNote, blocks, hasPanelSpan, actions, now }: O
 					}}
 				/>
 				{draft.trim() && (
-					<button className="vk-small-button" onClick={addDraft}>
+					<button className="vk-compact-button" onClick={addDraft}>
 						Add <kbd>⌘↵</kbd>
 					</button>
 				)}
@@ -131,9 +131,6 @@ function OverflowBlockRow({
 			}}
 			data-index={index}
 		>
-			<div className="vk-overflow-grip" title="Drag into the note, or to reorder">
-				<Icon name="grip-vertical" />
-			</div>
 			<div className="vk-overflow-body">
 				<AutoTextarea
 					value={text}
@@ -148,7 +145,12 @@ function OverflowBlockRow({
 					}}
 				/>
 				<div className="vk-overflow-meta">
-					<span className="vk-overflow-age">{relativeTime(block.createdAt, now)}</span>
+					<span className="vk-overflow-age">
+						<span className="vk-overflow-grip" title="Drag into the note, or up and down to reorder">
+							<Icon name="grip-vertical" />
+						</span>
+						{relativeTime(block.createdAt, now)}
+					</span>
 					<span className="vk-overflow-actions">
 						<button className="clickable-icon" aria-label="Insert at cursor (⌘J)" onClick={() => actions.insertAtCursor(block.id, false)}>
 							<Icon name="corner-down-left" />
@@ -158,7 +160,7 @@ function OverflowBlockRow({
 						</button>
 						<button
 							className="clickable-icon"
-							aria-label={hasPanelSpan ? "Make it a version of the span in the Alternatives panel" : "Open a span in the Alternatives panel to add this as a version"}
+							aria-label={hasPanelSpan ? "Add as a version of what the Alternatives panel shows" : "Open alternatives for some text first, then add this as a version"}
 							disabled={!hasPanelSpan}
 							onClick={() => actions.promoteToAlternative(block.id)}
 						>

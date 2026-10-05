@@ -61,9 +61,10 @@ export class CostLogModal extends Modal {
 		this.titleEl.setText("AI cost this session");
 		this.modalEl.addClass("vk-cost-modal");
 		const total = this.entries.reduce((sum, entry) => sum + entry.cost, 0);
+		const runs = groupCalls(this.entries).length;
 		this.contentEl.createEl("p", {
 			cls: "vk-cost-total",
-			text: `${formatCost(total)} across ${this.entries.length} ${this.entries.length === 1 ? "call" : "calls"}.`,
+			text: `${preciseCost(total)} across ${this.entries.length} ${this.entries.length === 1 ? "call" : "calls"} in ${runs} ${runs === 1 ? "run" : "runs"}.`,
 		});
 		if (this.entries.length === 0) {
 			this.contentEl.createEl("p", { cls: "vk-faint", text: "Nothing yet. AI only runs when you click something." });

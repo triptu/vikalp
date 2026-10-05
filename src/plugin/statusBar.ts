@@ -87,12 +87,13 @@ export class StatusBar {
 
 	private renderLab(state: VikalpUiState) {
 		this.lab.empty();
+		const running = state.lab.runningPass !== null || state.trim.status === "reading" || state.aiPendingSpans.length > 0;
+		if (running) this.lab.createSpan({ cls: "vk-spinner" });
 		this.lab.createSpan({ cls: "vk-status-lab-label", text: "Lab" });
 		const showCost = this.getSettings().showCost && state.costs.length > 0;
 		const mode = MODEL_MODE_LABELS[state.modelMode];
 		this.lab.createSpan({ cls: "vk-status-lab-mode", text: showCost ? `${mode} · ${formatCost(sessionCost(state))}` : mode });
-		const running = state.lab.runningPass !== null || state.trim.status === "reading" || state.aiPendingSpans.length > 0;
-		this.lab.toggleClass("is-busy", running);
+
 		setTooltip(this.lab, "The Lab: AI marks, trim, model mode and cost", { placement: "top" });
 	}
 

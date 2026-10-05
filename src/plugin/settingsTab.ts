@@ -60,7 +60,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 				});
 		}
 		new Setting(containerEl)
-			.setName("AI alternatives per request")
+			.setName("AI versions per request")
 			.setDesc(`${settings.alternativesCount} at a time.`)
 			.addSlider((slider) =>
 				slider
@@ -86,7 +86,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Writing").setHeading();
 		new Setting(containerEl)
 			.setName("Show markers in new notes")
-			.setDesc("Off keeps notes looking plain until you click the word count or create a span.")
+			.setDesc("Off keeps notes looking plain until you click the word count or add alternatives.")
 			.addToggle((toggle) =>
 				toggle.setValue(settings.markersOnByDefault).onChange(async (value) => {
 					settings.markersOnByDefault = value;
@@ -104,7 +104,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			);
 		new Setting(containerEl)
 			.setName("Cycle with arrow keys while hovering")
-			.setDesc("Hover a span and press the arrow keys. Alt+↑/↓ works from the cursor.")
+			.setDesc("Hover a marked word and press the arrow keys. Alt+↑/↓ works from the cursor.")
 			.addToggle((toggle) =>
 				toggle.setValue(settings.hoverCycling).onChange(async (value) => {
 					settings.hoverCycling = value;

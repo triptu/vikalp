@@ -69,8 +69,20 @@ export function TrimBarContainer() {
 		trim: state.trim,
 		proposalCount: state.note?.proposalCount ?? 0,
 		proposalWords: state.note?.proposalWords ?? 0,
+		walkReason: state.note?.walkReason ?? null,
+		riskyCount: state.note?.riskyCount ?? 0,
 		visible: state.trim.status !== "idle" && state.trim.notePath === state.note?.path,
 	}));
 	if (!slice.visible) return null;
-	return <TrimBar trim={slice.trim} proposalCount={slice.proposalCount} proposalWords={slice.proposalWords} primary={trimPrimary()} actions={lab} />;
+	return (
+		<TrimBar
+			trim={slice.trim}
+			proposalCount={slice.proposalCount}
+			proposalWords={slice.proposalWords}
+			walkReason={slice.walkReason}
+			riskyCount={slice.riskyCount}
+			primary={trimPrimary()}
+			actions={lab}
+		/>
+	);
 }

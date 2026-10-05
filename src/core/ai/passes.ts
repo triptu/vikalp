@@ -1,5 +1,11 @@
-/** Shown while "find words worth playing with" runs. */
-export const SPOTS_PASS = "Finding words worth playing with";
+/** Id of the "find words worth playing with" run, alongside the mark pass ids. */
+export const SPOTS_PASS = "spots";
+
+/** What to call a running Lab job in progress messages. */
+export function runningLabel(runningPass: string): string {
+	if (runningPass === SPOTS_PASS) return "Finding words worth playing with";
+	return LAB_PASSES.find((pass) => pass.id === runningPass)?.label ?? runningPass;
+}
 
 export type LabPassId = "typos" | "weakest" | "long" | "convoluted" | "tone" | "hedges";
 
