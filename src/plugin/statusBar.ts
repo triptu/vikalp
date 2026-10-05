@@ -3,9 +3,9 @@ import { MODEL_MODE_LABELS } from "../core/settings";
 import type { UiStore, VikalpUiState } from "../store/uiStore";
 
 export interface StatusBarActions {
-	toggleMarkers(): void;
-	openLint(): void;
-	toggleLab(anchor: HTMLElement): void;
+	toggleMarkers: () => void;
+	openLint: () => void;
+	toggleLab: (anchor: HTMLElement) => void;
 }
 
 /**

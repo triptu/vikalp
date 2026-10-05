@@ -37,7 +37,7 @@ export function placeQuotes<Extra>(
 function stripWrappingQuotes(text: string): string {
 	const trimmed = text.trim();
 	const match = /^["“'‘](.*)["”'’]$/s.exec(trimmed);
-	return match && !/["“”]/.test(match[1]!) ? match[1]! : trimmed;
+	return match && !/["“”]/.test(match[1]) ? match[1] : trimmed;
 }
 
 /** Cleans AI alternatives: trims, drops empties and duplicates of existing versions, caps the count. */

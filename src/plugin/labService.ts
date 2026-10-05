@@ -246,8 +246,8 @@ export class LabService {
 				.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
 				.map((entry) => trimProposals.effects.updateMeta.of({ ...entry.meta, risky: true }));
 			if (updates.length) view.dispatch({ effects: updates, annotations: noHistory });
-		} catch (error) {
-			console.info("Vikalp: grammar check skipped", error);
+		} catch {
+			// The grammar check is optional. Without it, no cut is flagged as risky.
 		}
 	}
 
@@ -337,7 +337,7 @@ export class LabService {
 			this.finishWalk();
 			return;
 		}
-		const next = proposals.find((proposal) => afterPosition === null || proposal.range.from >= afterPosition) ?? proposals[0]!;
+		const next = proposals.find((proposal) => afterPosition === null || proposal.range.from >= afterPosition) ?? proposals[0];
 		view.dispatch({
 			effects: [setNoteMode.of({ walkProposal: next.meta.id }), EditorView.scrollIntoView(next.range.from, { y: "center" })],
 			annotations: noHistory,

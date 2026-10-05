@@ -184,7 +184,7 @@ function SpanEditor({
 				<button
 					className="clickable-icon vk-span-more"
 					aria-label="More: settle, remove AI versions, add a note"
-					onClick={(event) => actions.openMenu(span.id, event.currentTarget as HTMLElement)}
+					onClick={(event) => actions.openMenu(span.id, event.currentTarget)}
 				>
 					<Icon name="more-horizontal" />
 				</button>

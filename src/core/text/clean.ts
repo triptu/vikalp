@@ -30,7 +30,7 @@ export function tidyDeletion(doc: string, range: TextRange): TextRange {
 	const charBefore = doc[from - 1] ?? "\n";
 	const charAfter = doc[to] ?? "\n";
 	if (charBefore === " " && (charAfter === " " || /[.,;:!?)\]]/.test(charAfter) || charAfter === "\n")) from--;
-	else if (charAfter === " " && (charBefore === "\n" || /[(\["“]/.test(charBefore))) to++;
+	else if (charAfter === " " && (charBefore === "\n" || /[(["“]/.test(charBefore))) to++;
 	return { from, to };
 }
 

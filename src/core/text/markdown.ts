@@ -86,7 +86,7 @@ export function findBlocks(doc: string): Block[] {
 						: "paragraph";
 			const textFrom = lineStart + prefix.length;
 			const textTo = lineStart + line.trimEnd().length;
-			const continues = current !== null && prefix === "" && (current as Block).kind !== "heading";
+			const continues = current !== null && prefix === "" && (current).kind !== "heading";
 			if (continues && current) {
 				current.to = textTo;
 			} else {

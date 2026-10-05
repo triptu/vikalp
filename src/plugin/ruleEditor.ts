@@ -83,7 +83,7 @@ export class RuleEditorModal extends Modal {
 			.addDropdown((dropdown) => {
 				for (const choice of ENGINE_CHOICES) dropdown.addOption(choice.engine, choice.name);
 				dropdown.setValue(draft.engine).onChange((engine) => {
-					const scope = engine === "metric" && !METRIC_SCOPES[draft.metric].includes(draft.scope) ? METRIC_SCOPES[draft.metric][0]! : draft.scope;
+					const scope = engine === "metric" && !METRIC_SCOPES[draft.metric].includes(draft.scope) ? METRIC_SCOPES[draft.metric][0] : draft.scope;
 					this.update({ engine: engine as RuleEngineName, scope }, true);
 				});
 			});
@@ -149,7 +149,7 @@ export class RuleEditorModal extends Modal {
 					for (const choice of METRIC_CHOICES) dropdown.addOption(choice.metric, choice.name);
 					dropdown.setValue(draft.metric).onChange((value) => {
 						const metric = value as MetricName;
-						const scope = METRIC_SCOPES[metric].includes(draft.scope) ? draft.scope : METRIC_SCOPES[metric][0]!;
+						const scope = METRIC_SCOPES[metric].includes(draft.scope) ? draft.scope : METRIC_SCOPES[metric][0];
 						this.update({ metric, scope }, true);
 					});
 				});

@@ -5,7 +5,7 @@ import { newId } from "./core/model/ids";
 import { MODEL_MODE_LABELS, mergeSettings, type ModelMode, type VikalpSettings } from "./core/settings";
 import { vikalpEditorExtension } from "./editor";
 import { noteModeField, setNoteMode } from "./editor/noteFields";
-import { SidecarRepository, type FileAdapter } from "./persistence/sidecar";
+import { SidecarRepository } from "./persistence/sidecar";
 import { ActionMenuHost } from "./plugin/actionMenu";
 import { AiAlternatives } from "./plugin/aiAlternatives";
 import { registerCommands } from "./plugin/commands";
@@ -42,12 +42,12 @@ export default class VikalpPlugin extends Plugin {
 	private trimBar: TrimBarHost | null = null;
 
 	override async onload() {
-		this.settings = mergeSettings(await this.loadData());
+		this.settings = mergeSettings((await this.loadData()) as Partial<VikalpSettings> | null);
 		this.store = createUiStore();
 		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
-		const repository = new SidecarRepository(this.app.vault.adapter as unknown as FileAdapter, pluginDir, (notePath, backup) => {
+		const repository = new SidecarRepository(this.app.vault.adapter, pluginDir, (notePath, backup) => {
 			new Notice(`Vikalp couldn't read the saved alternatives for "${notePath}". The file was kept as ${backup.replace(/^.*\//, "")}.`, 10000);
 		});
 		this.controller = new NoteController(this.app, repository, this.store, () => this.settings);

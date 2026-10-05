@@ -84,5 +84,5 @@ export const TRIM_LEVELS: TrimLevel[] = [
 ];
 
 export function trimLevel(id: TrimLevelId): TrimLevel {
-	return TRIM_LEVELS.find((level) => level.id === id) ?? TRIM_LEVELS[0]!;
+	return TRIM_LEVELS.find((level) => level.id === id) ?? TRIM_LEVELS[0];
 }

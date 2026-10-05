@@ -23,7 +23,7 @@ import {
 	spanRange,
 	spansField,
 } from "./spansField";
-import { VIKALP_EVENT, noHistory } from "./transactions";
+import { VIKALP_EVENT, asList, noHistory } from "./transactions";
 
 export type ActionResult<Extra = object> = ({ ok: true; spec: TransactionSpec } & Extra) | { ok: false; message: string };
 
@@ -60,10 +60,10 @@ export function createSpanFromSelection(
 	if (overlapsAny(range, findNonProseRanges(doc))) return fail("Alternatives can't go inside code, math or frontmatter.");
 	if (/\n\s*\n/.test(doc.slice(range.from, range.to))) return fail("Alternatives work on one paragraph at a time.");
 
-	const sameRange = listSpans(state).find((span) => span.range?.from === range!.from && span.range.to === range!.to);
+	const sameRange = listSpans(state).find((span) => span.range?.from === range.from && span.range.to === range.to);
 	if (sameRange) return { ok: true, spec: {}, spanId: sameRange.meta.id, created: false };
 	const crossing = listSpans(state).find(
-		(span) => span.range && span.range.from < range!.to && range!.from < span.range.to && !contains(span.range, range!) && !contains(range!, span.range),
+		(span) => span.range && span.range.from < range.to && range.from < span.range.to && !contains(span.range, range) && !contains(range, span.range),
 	);
 	if (crossing) return fail("That overlaps text that already has versions. Select inside it or all the way around it.");
 
@@ -246,15 +246,10 @@ export function deleteVersionFromSpan(
 	const switched = switchToVersion(state, spanId, next, options, [removal]);
 	if (!switched.ok) return switched;
 	if (remaining < 2) {
-		const effects = [...asArray(switched.spec.effects), removeSpan.of({ id: spanId })];
+		const effects = [...asList(switched.spec.effects), removeSpan.of({ id: spanId })];
 		return { ok: true, spec: { ...switched.spec, effects } };
 	}
 	return switched;
-}
-
-function asArray(effects: TransactionSpec["effects"]): StateEffect<unknown>[] {
-	if (!effects) return [];
-	return Array.isArray(effects) ? [...effects] : [effects as StateEffect<unknown>];
 }
 
 /** Keeps the showing text and drops every other version, plus spans hidden inside. */
@@ -282,7 +277,7 @@ export function removeAiVersions(state: EditorState, spanId: string, options: Sw
 		if (!switched.ok) return switched;
 		spec = switched.spec;
 	}
-	if (humanVersions.length < 2) spec = { ...spec, effects: [...asArray(spec.effects), removeSpan.of({ id: spanId })] };
+	if (humanVersions.length < 2) spec = { ...spec, effects: [...asList(spec.effects), removeSpan.of({ id: spanId })] };
 	return { ok: true, removed: aiVersions.length, spec };
 }
 

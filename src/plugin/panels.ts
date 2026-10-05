@@ -5,7 +5,6 @@ type Side = "left" | "right";
 
 /** Opens, reveals and toggles Vikalp's side panels. */
 export class Panels {
-	private warnedNoLeftLeaf = false;
 
 	constructor(private readonly app: App) {}
 
@@ -18,8 +17,6 @@ export class Panels {
 		if (!leaf) {
 			leaf = side === "left" ? this.app.workspace.getLeftLeaf(false) : this.app.workspace.getRightLeaf(false);
 			if (!leaf && side === "left") {
-				if (!this.warnedNoLeftLeaf) console.info("Vikalp: no left sidebar leaf available, opening on the right.");
-				this.warnedNoLeftLeaf = true;
 				leaf = this.app.workspace.getRightLeaf(false);
 			}
 			if (!leaf) return null;

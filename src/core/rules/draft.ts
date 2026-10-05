@@ -63,7 +63,7 @@ export const METRIC_CHOICES: Array<{ metric: MetricName; name: string }> = [
 ];
 
 export function engineChoice(engine: RuleEngineName): EngineChoice {
-	return ENGINE_CHOICES.find((choice) => choice.engine === engine) ?? ENGINE_CHOICES[0]!;
+	return ENGINE_CHOICES.find((choice) => choice.engine === engine) ?? ENGINE_CHOICES[0];
 }
 
 export function emptyDraft(id: string): RuleDraft {
