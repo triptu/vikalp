@@ -25,4 +25,4 @@ The linter flow calls Jev for real, so it needs `openRouterApiKey` in `dev-vault
 
 ## Screenshots
 
-`npm run shots` drives the dev vault through the main features in light and dark themes and writes PNGs to `docs/screenshots/`. Look at them after any UI change.
+`npm run shots` drives the dev vault through the main features in light and dark themes and writes PNGs to `docs/screenshots/`. Look at them after any UI change. Then `python3 e2e/crop-guide.py` refreshes the cropped images in `docs/screenshots/guide/` that the user guide shows.
