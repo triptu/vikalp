@@ -35,6 +35,15 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 				.onClick(() => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true })),
 		);
 	}
+	if (hasSelection && view.state.doc.sliceString(selection.from, selection.to).split(/\s+/).length > 12) {
+		menu.addItem((item) =>
+			item
+				.setTitle("Find words worth playing with")
+				.setIcon("wand-sparkles")
+				.setSection("vikalp")
+				.onClick(() => plugin.findSpots()),
+		);
+	}
 	if (ghostHere.length > 0) {
 		menu.addItem((item) =>
 			item

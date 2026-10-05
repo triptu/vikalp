@@ -77,3 +77,14 @@ describe("trim targets", () => {
 		expect(selectToTarget(proposals, 20).map((proposal) => proposal.id)).toEqual(["b", "c", "d"]);
 	});
 });
+
+describe("finding words worth playing with", () => {
+	it("the prompt asks for a bounded number of spots and lists text that already has versions", async () => {
+		const { spotsPrompt } = await import("../../src/core/ai/prompts/spots");
+		const prompt = spotsPrompt({ noteTitle: "Essay", numberedNote: "[s1] Much of the tension comes from balance.", maxSpots: 8, perSpot: 5, existingSpans: ["tension"] });
+		expect(prompt).toContain("up to 8 spots");
+		expect(prompt).toContain("5 alternatives");
+		expect(prompt).toContain("- tension");
+		expect(prompt).toContain("[s1] Much of the tension");
+	});
+});

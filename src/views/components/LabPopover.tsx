@@ -1,4 +1,4 @@
-import { LAB_PASSES, TRIM_LEVELS } from "../../core/ai/passes";
+import { LAB_PASSES, SPOTS_PASS, TRIM_LEVELS } from "../../core/ai/passes";
 import type { ModelMode } from "../../core/settings";
 import type { LabPassState, TrimState } from "../../store/uiStore";
 import type { LabActions } from "../context";
@@ -58,6 +58,24 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 					</button>
 				</div>
 			)}
+
+			<section className="vk-lab-section">
+				<div className="vk-lab-section-title">Alternatives</div>
+				<div className="vk-lab-passes">
+					<button
+						className={`vk-lab-pass${lab.runningPass === SPOTS_PASS ? " is-running" : ""}`}
+						disabled={disabled || (lab.runningPass !== null && lab.runningPass !== SPOTS_PASS)}
+						onClick={actions.findSpots}
+						title="Picks up to 8 words or lines in the note (or the selection) and adds AI versions to each. The note doesn't change until you pick one."
+					>
+						<span className="vk-lab-pass-label">Find words worth playing with</span>
+						{lab.runningPass === SPOTS_PASS && <span className="vk-spinner" />}
+					</button>
+					<button className="vk-lab-pass" disabled={!hasNote} onClick={actions.removeAllAiVersions} title="Removes every AI version in this note. Your own versions stay.">
+						<span className="vk-lab-pass-label vk-faint-label">Remove all AI versions</span>
+					</button>
+				</div>
+			</section>
 
 			<section className="vk-lab-section">
 				<div className="vk-lab-section-title">Mark</div>

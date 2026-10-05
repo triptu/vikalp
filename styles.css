@@ -1328,6 +1328,10 @@ body {
 	font-size: var(--font-ui-small);
 }
 
+.vk-lab-pass-label.vk-faint-label {
+	color: var(--text-muted);
+}
+
 .vk-lab-status {
 	margin-top: var(--size-4-2);
 	color: var(--text-muted);

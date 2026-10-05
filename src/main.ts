@@ -157,6 +157,23 @@ export default class VikalpPlugin extends Plugin {
 		view.dispatch({ effects: setNoteMode.of({ markersOn }) });
 	}
 
+	findSpots() {
+		const view = this.controller.editor;
+		if (!view) {
+			new Notice("Open a note first.");
+			return;
+		}
+		const title = (this.controller.activePath ?? "").replace(/^.*\//, "").replace(/\.md$/, "");
+		void this.aiAlternatives.suggestSpots(view, title);
+	}
+
+	removeAllAiVersions() {
+		const view = this.controller.editor;
+		if (!view) return;
+		const removed = this.aiAlternatives.removeAllAiVersions(view);
+		new Notice(removed ? `Removed ${removed} AI ${removed === 1 ? "version" : "versions"}.` : "No AI versions in this note.");
+	}
+
 	showCostLog() {
 		new CostLogModal(this.app, this.store.getState().costs).open();
 	}
@@ -190,6 +207,8 @@ export default class VikalpPlugin extends Plugin {
 			lab: {
 				setModelMode: (mode) => void this.setModelMode(mode),
 				runPass: (passId) => void this.lab.runPass(passId as never),
+				findSpots: () => this.findSpots(),
+				removeAllAiVersions: () => this.removeAllAiVersions(),
 				setTrimLevel: (level) => {
 					this.labPopover.close();
 					void this.lab.setTrimLevel(level);

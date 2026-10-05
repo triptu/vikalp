@@ -1,3 +1,6 @@
+/** Shown while "find words worth playing with" runs. */
+export const SPOTS_PASS = "Finding words worth playing with";
+
 export type LabPassId = "typos" | "weakest" | "long" | "convoluted" | "tone" | "hedges";
 
 export interface LabPass {

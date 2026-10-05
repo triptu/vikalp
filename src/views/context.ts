@@ -46,6 +46,9 @@ export interface LintActions {
 export interface LabActions {
 	setModelMode(mode: ModelMode): void;
 	runPass(passId: string): void;
+	/** AI picks the words worth trying alternatives for and adds versions to each. */
+	findSpots(): void;
+	removeAllAiVersions(): void;
 	setTrimLevel(level: TrimLevel): void;
 	ghostCuts(): void;
 	makeCuts(): void;
