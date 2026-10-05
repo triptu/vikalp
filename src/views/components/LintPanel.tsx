@@ -6,7 +6,7 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 	const { hasNote, total, documentHits, groups, fixableCount, running, ranAt, run, isCurrentNote, labRunning, actions } = model;
 	if (!hasNote) {
 		return (
-			<div className="vk-panel vk-lint">
+			<div className="vk-panel vk-lint-panel">
 				<div className="vk-empty">
 					<p>Open a note to lint it.</p>
 				</div>
@@ -15,7 +15,7 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 	}
 
 	return (
-		<div className="vk-panel vk-lint">
+		<div className="vk-panel vk-lint-panel">
 			<div className="vk-lint-toolbar">
 				<button className="vk-run-button" onClick={actions.run} disabled={running}>
 					{running ? <span className="vk-spinner" /> : <Icon name="scan-text" />}
