@@ -9,7 +9,7 @@ export interface AlternativesPanelModel {
 	activeUnit: SpanUnit | null;
 	aiPending: boolean;
 	unplaced: SpanView[];
-	hasApiKey: boolean;
+	aiSetupHint: string | null;
 	actions: AlternativesActions;
 	modelLabel: string;
 	/** True while the writer is adding a note from the ⋯ menu. */
@@ -24,7 +24,7 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		note: state.note,
 		panelSpanId: state.panelSpanId,
 		aiPendingSpans: state.aiPendingSpans,
-		hasApiKey: state.hasApiKey,
+		aiSetupHint: state.aiSetupHint,
 		modelMode: state.modelMode,
 		noteEditor: state.noteEditorSpanId,
 		keyHints: state.keyHints,
@@ -36,7 +36,7 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		activeUnit: span?.unit ?? null,
 		aiPending: span ? slice.aiPendingSpans.includes(span.id) : false,
 		unplaced: slice.note?.spans.filter((candidate) => candidate.orphaned) ?? [],
-		hasApiKey: slice.hasApiKey,
+		aiSetupHint: slice.aiSetupHint,
 		actions: alternatives,
 		modelLabel: modelLabel(slice.modelMode),
 		editingNote: span !== null && slice.noteEditor === span.id,

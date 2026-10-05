@@ -54,7 +54,7 @@ export function LabContainer({ modelIdFor }: { modelIdFor: (mode: string) => str
 	const { store, lab } = useViewContext();
 	const slice = useStoreSlice(store, (state) => ({
 		modelMode: state.modelMode,
-		hasApiKey: state.hasApiKey,
+		aiSetupHint: state.aiSetupHint,
 		hasNote: state.note !== null,
 		lab: state.lab,
 		trim: state.trim,
