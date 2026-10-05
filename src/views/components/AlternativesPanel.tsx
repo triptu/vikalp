@@ -176,7 +176,7 @@ function SpanEditor({
 					spellcheck
 				/>
 			</div>
-			{asksAi && !model.hasApiKey && <div className="vk-inline-warning">Add an OpenRouter key in Vikalp settings to ask AI.</div>}
+			{asksAi && model.aiSetupHint && <div className="vk-inline-warning">{model.aiSetupHint} to ask AI.</div>}
 			<div className="vk-span-actions">
 				<button className="vk-link-button" onClick={() => actions.askAi(span.id)} disabled={model.aiPending} title="Or type ?? and press return">
 					<Icon name="sparkles" /> Ask AI

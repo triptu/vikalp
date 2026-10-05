@@ -14,7 +14,7 @@ src/
     ai/          prompts, output schemas, placing model quotes in the note
   editor/        CodeMirror state fields, decorations, keymaps, tooltips, actions
   persistence/   one JSON sidecar per note
-  ai/            the OpenRouter client (pi-ai)
+  ai/            the model client (pi-ai) and its backends
   store/         the zustand UI store
   views/         Preact components, hooks and the Obsidian panel shells
   plugin/        Obsidian wiring: commands, menus, status bar, settings, services
@@ -53,7 +53,7 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 ## AI
 
-`ai/aiClient.ts` wraps pi-ai's OpenRouter provider. Every call:
+`ai/aiClient.ts` wraps pi-ai. Where calls go and how they are authorised lives in a backend (`ai/backend.ts`); today the only one is OpenRouter (`ai/openRouter.ts`). Every call:
 
 - runs only from a click or command,
 - asks for structured output through a single tool call (with a JSON fallback),
@@ -61,7 +61,7 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 Models never get character offsets. Prompts number the sentences (`[s4] …`) and models answer with a sentence id plus an exact quote. `core/ai/placement.ts` finds each quote with the anchoring code and rejects anything that isn't there verbatim. See [adding-a-lab-pass.md](adding-a-lab-pass.md).
 
-Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so.
+Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so. A backend without Jev sends judgments to the selected model and skips the grammar check.
 
 ## Views
 
