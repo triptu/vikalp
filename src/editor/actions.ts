@@ -81,7 +81,10 @@ function existingSpanFor(state: EditorState, selection: TextRange, unit?: SpanUn
 	if (selection.from !== selection.to || unit) return null;
 	const doc = state.doc.toString();
 	const word = expandToWords(doc, selection);
-	const spans = listSpans(state).filter((span) => span.range && span.range.from <= word.from && word.to <= span.range.to);
+	// A span with one version is scaffolding left open in the panel; it shouldn't capture words inside it.
+	const spans = listSpans(state).filter(
+		(span) => span.range && span.meta.versions.length > 1 && span.range.from <= word.from && word.to <= span.range.to,
+	);
 	spans.sort((a, b) => a.range!.to - a.range!.from - (b.range!.to - b.range!.from));
 	return spans[0]?.meta.id ?? null;
 }

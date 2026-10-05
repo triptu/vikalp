@@ -114,6 +114,24 @@ describe("alternatives", () => {
 		expect(result.ok && editor.spanText(result.spanId)).toBe("tension");
 	});
 
+	it("the cursor on a word inside a paragraph that was opened but never given a version starts a word span", () => {
+		const editor = new Editor(essay);
+		editor.apply(createSpanFromSelection(editor.state, editor.select("balance"), "paragraph"));
+		const cursor = editor.select("tension").from + 2;
+		const result = createSpanFromSelection(editor.state, { from: cursor, to: cursor });
+		editor.apply(result);
+		expect(result.ok && result.created && editor.spanText(result.spanId)).toBe("tension");
+	});
+
+	it("the cursor on a word inside a span with versions reopens that span", () => {
+		const editor = new Editor(essay);
+		const id = editor.createSpan("product development");
+		editor.addVersion(id, "making things");
+		const cursor = editor.select("making").from + 1;
+		const result = createSpanFromSelection(editor.state, { from: cursor, to: cursor });
+		expect(result.ok && !result.created && result.spanId).toBe(id);
+	});
+
 	it("refuses a selection that partly overlaps another span", () => {
 		const editor = new Editor(essay);
 		editor.createSpan("product development");
