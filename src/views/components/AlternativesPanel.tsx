@@ -60,12 +60,12 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 				if (!next || !(event.currentTarget as HTMLElement).contains(next)) actions.setPanelFocused(false);
 			}}
 		>
-			<div className="vk-unit-tabs" role="group" aria-label="Make alternatives for">
+			<div className="vk-segmented vk-unit-switch" role="group" aria-label="Alternatives for">
 				{UNITS.map(({ unit, label }) => (
 					<button
 						key={unit}
 						aria-pressed={model.activeUnit === unit}
-						className={`vk-unit-tab${model.activeUnit === unit ? " is-active" : ""}`}
+						className={`vk-segment${model.activeUnit === unit ? " is-active" : ""}`}
 						onClick={() => actions.createForUnit(unit)}
 						title={`Alternatives for the ${unit} at the cursor`}
 					>
@@ -89,8 +89,6 @@ export function AlternativesPanel({ model, focusRequest }: { model: Alternatives
 			)}
 
 			{unplaced.length > 0 && <UnplacedList spans={unplaced} model={model} />}
-
-			{span && <div className="vk-panel-footer">↵ add · ?? ask AI · esc back to note</div>}
 		</div>
 	);
 }
@@ -117,6 +115,13 @@ function SpanEditor({
 	const hasAi = span.versions.some((version) => version.source === "ai");
 	return (
 		<div className="vk-span-editor">
+			{span.unit !== "paragraph" && span.text !== null && (
+				<div className="vk-span-context" title="Where this sits in the note">
+					{span.before}
+					<mark className="vk-span-context-mark">{span.text}</mark>
+					{span.after}
+				</div>
+			)}
 			<ul className="vk-version-list" role="listbox" aria-label="Versions">
 				{span.versions.map((version, index) => {
 					const isActive = index === activeIndex;
@@ -173,6 +178,12 @@ function SpanEditor({
 				/>
 			</div>
 			{asksAi && !model.hasApiKey && <div className="vk-inline-warning">Add an OpenRouter key in Vikalp settings to ask AI.</div>}
+			<div className="vk-key-hints">
+				<span><kbd>↵</kbd> add</span>
+				<span><kbd>↑</kbd><kbd>↓</kbd> try</span>
+				<span><kbd>??</kbd> ask AI</span>
+				<span><kbd>esc</kbd> back</span>
+			</div>
 
 			<div className="vk-span-actions">
 				<button className="vk-link-button" onClick={() => actions.askAi(span.id)} disabled={model.aiPending}>
@@ -180,12 +191,12 @@ function SpanEditor({
 				</button>
 				{hasAi && (
 					<button className="vk-link-button" onClick={() => actions.removeAiVersions(span.id)}>
-						Remove AI versions
+						<Icon name="x" /> Remove AI versions
 					</button>
 				)}
 				{span.versions.length > 1 && (
 					<button className="vk-link-button" onClick={() => actions.settleSpan(span.id)} title="Keep the showing version and drop the rest">
-						Settle
+						<Icon name="check" /> Settle
 					</button>
 				)}
 			</div>
@@ -219,16 +230,32 @@ function NoteField({ span, onChange }: { span: SpanView; onChange: (note: string
 }
 
 function EmptyState({ hasNote }: { hasNote: boolean }) {
-	return (
-		<div className="vk-empty">
-			{hasNote ? (
-				<>
-					<p>Select text and press ⌘⇧A.</p>
-					<p className="vk-empty-hint">Or pick a unit above to use the one at the cursor.</p>
-				</>
-			) : (
+	if (!hasNote) {
+		return (
+			<div className="vk-empty">
 				<p>Open a note to play with alternatives.</p>
-			)}
+			</div>
+		);
+	}
+	return (
+		<div className="vk-empty vk-alt-empty">
+			<p>
+				Put the cursor on a word and press <kbd>⌘J</kbd>.
+			</p>
+			<ul className="vk-empty-keys">
+				<li>
+					<kbd>⌘J</kbd> again widens to the sentence, then the paragraph
+				</li>
+				<li>
+					<kbd>⌘⇧J</kbd> asks AI for versions
+				</li>
+				<li>
+					<kbd>⌥↑</kbd> <kbd>⌥↓</kbd> try versions from the note
+				</li>
+				<li>
+					<kbd>⌘.</kbd> shows every action
+				</li>
+			</ul>
 		</div>
 	);
 }

@@ -8,7 +8,7 @@ Inspired from [Jason's](https://x.com/jasonfried/status/2105403067793584590) and
 
 ## What it does
 
-- **Alternatives.** Select text, press ⌘⇧A, type versions. Hover and press the arrow keys to read each one in place. Whatever is showing is the note.
+- **Alternatives.** Put the cursor on a word, press ⌘J, type versions. Press ⌘J again for the sentence, again for the paragraph. Hover and press the arrow keys to read each one in place. Whatever is showing is the note.
 - **Ghosting.** Fade a passage instead of deleting it. Revive it later, or copy the note without it.
 - **Overflow.** A per-note side panel for writing you cut but want nearby. Drag it back when it fits.
 - **Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. Judgment rules use Jev, TypeSafe's yes/no model.

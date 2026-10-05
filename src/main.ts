@@ -6,6 +6,7 @@ import { MODEL_MODE_LABELS, mergeSettings, type ModelMode, type VikalpSettings }
 import { vikalpEditorExtension } from "./editor";
 import { noteModeField, setNoteMode } from "./editor/noteFields";
 import { SidecarRepository, type FileAdapter } from "./persistence/sidecar";
+import { ActionMenuHost } from "./plugin/actionMenu";
 import { AiAlternatives } from "./plugin/aiAlternatives";
 import { registerCommands } from "./plugin/commands";
 import { fillEditorMenu } from "./plugin/editorMenu";
@@ -35,6 +36,7 @@ export default class VikalpPlugin extends Plugin {
 	lab!: LabService;
 	readThrough!: ReadThrough;
 	labPopover!: LabPopoverHost;
+	actionMenu!: ActionMenuHost;
 	alternativesDeps!: AlternativesDeps;
 	private statusBar: StatusBar | null = null;
 	private trimBar: TrimBarHost | null = null;
@@ -75,6 +77,7 @@ export default class VikalpPlugin extends Plugin {
 		};
 		const viewContext = this.createViewContext();
 		this.labPopover = new LabPopoverHost(viewContext, () => this.settings);
+		this.actionMenu = new ActionMenuHost(this);
 
 		this.registerEditorExtension(vikalpEditorExtension(this.controller));
 		this.registerView(ALTERNATIVES_VIEW, (leaf) => new AlternativesView(leaf, viewContext));
@@ -132,6 +135,7 @@ export default class VikalpPlugin extends Plugin {
 		this.lab.dispose();
 		this.linter.dispose();
 		this.labPopover.close();
+		this.actionMenu.close();
 		this.statusBar?.dispose();
 		this.trimBar?.dispose();
 		this.readThrough.restore();

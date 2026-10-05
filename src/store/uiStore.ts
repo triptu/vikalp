@@ -13,6 +13,9 @@ export interface SpanView {
 	hidden: boolean;
 	orphaned: boolean;
 	lastText: string | null;
+	/** Text around the span in its sentence, for the panel's context line. Empty for paragraphs. */
+	before: string;
+	after: string;
 }
 
 export interface LintHitView {
