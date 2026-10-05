@@ -33,6 +33,7 @@ export interface ControllerHooks {
 	applyLintFix(view: EditorView, hitId: string): void;
 	ignoreLintHit(view: EditorView, hitId: string): void;
 	vetoProposal(view: EditorView, proposalId: string): void;
+	revealLintHit(view: EditorView, hitId: string): void;
 	noteChanged(view: EditorView, update: ViewUpdate): void;
 }
 
@@ -126,6 +127,10 @@ export class NoteController implements VikalpHost {
 		this.hooks?.vetoProposal(view, proposalId);
 	}
 
+	revealLintHit(view: EditorView, hitId: string) {
+		this.hooks?.revealLintHit(view, hitId);
+	}
+
 	dropOverflowBlock(view: EditorView, blockId: string, position: number, keepCopy: boolean) {
 		runAction(view, insertOverflowBlock(view.state, blockId, position, keepCopy));
 		view.focus();
@@ -177,7 +182,7 @@ export class NoteController implements VikalpHost {
 	setPanelSpan(spanId: string | null) {
 		const previous = this.store.getState().panelSpanId;
 		if (previous === spanId) return;
-		this.store.setState({ panelSpanId: spanId });
+		this.store.setState({ panelSpanId: spanId, noteEditorSpanId: null });
 		if (previous) this.pruneSingleVersionSpan(previous);
 		this.syncFocusDimming();
 	}

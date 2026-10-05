@@ -172,7 +172,8 @@ await flow("span notes and read-through mode", async () => {
 		await driver.command("vikalp:alternatives-for-selection");
 		await driver.type("sorting");
 		await driver.press("Enter");
-		await driver.click(".vk-note-field input");
+		await driver.click(".vk-span-more");
+		await driver.click(".menu-item", "Add a note");
 		await driver.type("too abstract?");
 		await driver.press("Enter");
 		await driver.press("Escape");
@@ -356,6 +357,27 @@ await flow("keys: ⌘J widens word to sentence to paragraph, ⌘. then G ghosts"
 		await driver.press("g");
 		await driver.wait(200);
 		assert((await driver.evaluate(() => document.querySelectorAll(".vk-ghost").length)) === 1, "G ghosts the selection");
+	});
+});
+
+await flow("lint: clicking a mark in the note scrolls to it; the in-order list follows the text", async () => {
+	await withObsidian({}, async (driver) => {
+		await driver.openNote("Essays/LinkedIn draft.md");
+		await driver.command("vikalp:toggle-lint");
+		await driver.command("vikalp:run-linter");
+		await driver.page.waitForFunction(() => !window.app.plugins.plugins.vikalp.store.getState().lint.running, null, { timeout: 90000 });
+		await driver.click(".vk-lint-layout .vk-segment:nth-child(2)");
+		const order = await driver.evaluate(() => {
+			const note = window.app.plugins.plugins.vikalp.store.getState().note;
+			const byId = new Map(note.lintHits.map((hit) => [hit.id, hit.from]));
+			return [...document.querySelectorAll(".vk-hit-list .vk-hit")].map((row) => byId.get(row.dataset.hit));
+		});
+		assert(order.length > 3 && order.every((from, index) => index === 0 || order[index - 1] <= from), "the flat list is in text order");
+		const mark = driver.page.locator(".cm-content .vk-lint").last();
+		await mark.scrollIntoViewIfNeeded();
+		await mark.click();
+		await driver.wait(300);
+		assert(await driver.evaluate(() => Boolean(document.querySelector(".vk-hit.is-revealed"))), "the clicked mark's row is revealed");
 	});
 });
 

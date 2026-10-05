@@ -18,6 +18,7 @@ export interface VikalpSettings {
 	voiceReferenceNotes: string[];
 	markersOnByDefault: boolean;
 	alternativesCount: number;
+	lintLayout: "by-rule" | "in-order";
 }
 
 export const DEFAULT_SETTINGS: VikalpSettings = {
@@ -39,6 +40,7 @@ export const DEFAULT_SETTINGS: VikalpSettings = {
 	voiceReferenceNotes: [],
 	markersOnByDefault: false,
 	alternativesCount: 5,
+	lintLayout: "by-rule",
 };
 
 export const MODEL_MODE_LABELS: Record<ModelMode, string> = { lite: "Lite", medium: "Medium", heavy: "Heavy" };

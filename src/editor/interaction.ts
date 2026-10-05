@@ -119,6 +119,16 @@ export const domHandlers = EditorView.domEventHandlers({
 		}
 		return false;
 	},
+	click(event, view) {
+		if (event.button !== 0 || view.state.field(noteModeField).readThrough) return false;
+		const position = view.posAtCoords({ x: event.clientX, y: event.clientY });
+		if (position === null) return false;
+		const hits = lintMarks.at(view.state, position).filter((hit) => hit.meta.scope !== "document");
+		hits.sort((a, b) => a.range.to - a.range.from - (b.range.to - b.range.from));
+		const hit = hits[0];
+		if (hit) view.state.facet(vikalpHost)?.revealLintHit(view, hit.meta.id);
+		return false;
+	},
 	mousedown(event, view) {
 		if (view.state.field(hoverField).armed) updateHover(view, view.state.field(hoverField).spanId, false);
 		const target = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>("[data-vk-proposal]") : null;

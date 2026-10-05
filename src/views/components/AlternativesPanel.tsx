@@ -112,7 +112,6 @@ function SpanEditor({
 }) {
 	const { actions } = model;
 	const asksAi = draft.trim() === ASK_AI;
-	const hasAi = span.versions.some((version) => version.source === "ai");
 	return (
 		<div className="vk-span-editor">
 			{span.unit !== "paragraph" && span.text !== null && (
@@ -171,48 +170,45 @@ function SpanEditor({
 					className="vk-version-input"
 					type="text"
 					value={draft}
-					placeholder={span.versions.length < 2 ? "Type another version…" : "Add a version…"}
+					placeholder={span.versions.length < 2 ? "Type another version, then return" : "Add a version"}
 					onInput={(event) => setDraft((event.target as HTMLInputElement).value)}
 					onKeyDown={onInputKey}
 					spellcheck
 				/>
 			</div>
 			{asksAi && !model.hasApiKey && <div className="vk-inline-warning">Add an OpenRouter key in Vikalp settings to ask AI.</div>}
-			<div className="vk-key-hints">
-				<span><kbd>↵</kbd> add</span>
-				<span><kbd>↑</kbd><kbd>↓</kbd> try</span>
-				<span><kbd>??</kbd> ask AI</span>
-				<span><kbd>esc</kbd> back</span>
-			</div>
-
 			<div className="vk-span-actions">
-				<button className="vk-link-button" onClick={() => actions.askAi(span.id)} disabled={model.aiPending}>
+				<button className="vk-link-button" onClick={() => actions.askAi(span.id)} disabled={model.aiPending} title="Or type ?? and press return">
 					<Icon name="sparkles" /> Ask AI
 				</button>
-				{hasAi && (
-					<button className="vk-link-button" onClick={() => actions.removeAiVersions(span.id)}>
-						<Icon name="x" /> Remove AI versions
-					</button>
-				)}
-				{span.versions.length > 1 && (
-					<button className="vk-link-button" onClick={() => actions.settleSpan(span.id)} title="Keep the showing version and drop the rest">
-						<Icon name="check" /> Settle
-					</button>
-				)}
+				<button
+					className="clickable-icon vk-span-more"
+					aria-label="More: settle, remove AI versions, add a note"
+					onClick={(event) => actions.openMenu(span.id, event.currentTarget as HTMLElement)}
+				>
+					<Icon name="more-horizontal" />
+				</button>
 			</div>
 
-			<NoteField span={span} onChange={(note) => actions.setNote(span.id, note)} />
+			{(span.note || model.editingNote) && (
+				<NoteField span={span} autoFocus={model.editingNote && !span.note} onChange={(note) => actions.setNote(span.id, note)} />
+			)}
 		</div>
 	);
 }
 
-function NoteField({ span, onChange }: { span: SpanView; onChange: (note: string) => void }) {
+function NoteField({ span, autoFocus, onChange }: { span: SpanView; autoFocus: boolean; onChange: (note: string) => void }) {
 	const [value, setValue] = useState(span.note);
+	const ref = useRef<HTMLInputElement>(null);
 	useEffect(() => setValue(span.note), [span.id, span.note]);
+	useEffect(() => {
+		if (autoFocus) ref.current?.focus();
+	}, [autoFocus]);
 	return (
 		<label className="vk-note-field">
 			<Icon name="sticky-note" className={`vk-note-icon${value.trim() ? " is-set" : ""}`} />
 			<input
+				ref={ref}
 				type="text"
 				value={value}
 				placeholder="Note to self…"

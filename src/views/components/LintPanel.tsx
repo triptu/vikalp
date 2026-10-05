@@ -1,9 +1,25 @@
+import { useEffect, useRef } from "preact/hooks";
+import type { LintHitView } from "../../store/uiStore";
+import type { LintActions } from "../context";
 import type { LintPanelModel } from "../hooks/useLintPanel";
 import { formatCost, relativeTime } from "../format";
 import { Icon } from "./Icon";
 
 export function LintPanel({ model, now }: { model: LintPanelModel; now: number }) {
-	const { hasNote, total, documentHits, groups, fixableCount, running, ranAt, run, isCurrentNote, labRunning, actions } = model;
+	const { hasNote, total, documentHits, groups, ordered, layout, focus, fixableCount, running, ranAt, run, isCurrentNote, labRunning, actions } = model;
+	const listRef = useRef<HTMLDivElement>(null);
+
+	// A click on a mark in the note scrolls its row into view and flashes it once.
+	useEffect(() => {
+		if (!focus) return;
+		const row = listRef.current?.querySelector<HTMLElement>(`[data-hit="${focus.hitId}"]`);
+		if (!row) return;
+		row.closest("details")?.setAttribute("open", "");
+		row.scrollIntoView({ block: "center", behavior: "smooth" });
+		row.classList.remove("is-revealed");
+		void row.offsetWidth;
+		row.classList.add("is-revealed");
+	}, [focus?.at]);
 	if (!hasNote) {
 		return (
 			<div className="vk-panel vk-lint-panel">
@@ -25,6 +41,26 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 					<button className="vk-toolbar-button" onClick={actions.clear}>
 						Clear
 					</button>
+				)}
+				{total > 1 && (
+					<div className="vk-segmented vk-lint-layout" role="group" aria-label="List marks">
+						<button
+							className={`vk-segment${layout === "by-rule" ? " is-active" : ""}`}
+							aria-pressed={layout === "by-rule"}
+							onClick={() => actions.setLayout("by-rule")}
+							title="Group marks by rule"
+						>
+							<Icon name="list-tree" />
+						</button>
+						<button
+							className={`vk-segment${layout === "in-order" ? " is-active" : ""}`}
+							aria-pressed={layout === "in-order"}
+							onClick={() => actions.setLayout("in-order")}
+							title="List marks in the order they appear"
+						>
+							<Icon name="list-ordered" />
+						</button>
+					</div>
 				)}
 			</div>
 			<div className="vk-lint-summary">
@@ -90,65 +126,33 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 				</div>
 			)}
 
-			<div className="vk-hit-groups">
-				{groups.map((group) => (
-					<details key={group.key} className={`vk-hit-group vk-severity-${group.severity}`} open>
-						<summary>
-							<Icon name="chevron-right" className="vk-disclosure" />
-							<span className={`vk-severity-chip vk-severity-${group.severity}`} />
-							<span className="vk-hit-group-label">{group.label}</span>
-							{group.byAi && <span className="vk-ai-badge" title="Some of these marks were made by a model">AI</span>}
-							<span className="vk-hit-count">{group.hits.length}</span>
-						</summary>
-						<ul>
-							{group.hits.map((hit) => (
-								<li
-									key={hit.id}
-									className="vk-hit"
-									tabIndex={0}
-									onClick={() => actions.jumpTo(hit.id)}
-									onKeyDown={(event) => {
-										if (event.key === "Enter" && event.target === event.currentTarget) actions.jumpTo(hit.id);
-									}}
-								>
-									<div className="vk-hit-excerpt">{truncate(hit.excerpt, 140)}</div>
-									{hit.suggestion !== undefined && (
-										<div className="vk-hit-fix">
-											<span className="vk-quiet">Fix:</span> {hit.suggestion || "delete it"}
-										</div>
-									)}
-									<div className="vk-hit-message">
-										{hit.message}
-										{hit.suggestion !== undefined && (
-											<>
-												<span className="vk-quiet"> · </span>
-												<button
-													className="vk-inline-action"
-													onClick={(event) => {
-														event.stopPropagation();
-														actions.applyFix(hit.id);
-													}}
-												>
-													Apply
-												</button>
-											</>
-										)}
-										<span className="vk-quiet"> · </span>
-										<button
-											className="vk-inline-action"
-											onClick={(event) => {
-												event.stopPropagation();
-												actions.ignore(hit.id);
-											}}
-										>
-											Ignore
-										</button>
-									</div>
-								</li>
-							))}
-						</ul>
-					</details>
-				))}
+			<div ref={listRef}>
+				{layout === "in-order" ? (
+					<ul className="vk-hit-list">
+						{ordered.map((hit) => (
+							<HitRow key={hit.id} hit={hit} actions={actions} showRule />
+						))}
+					</ul>
+				) : (
+					<div className="vk-hit-groups">
+						{groups.map((group) => (
+							<details key={group.key} className="vk-hit-group" open>
+								<summary>
+									<Icon name="chevron-right" className="vk-disclosure" />
+									<span className={`vk-severity-chip vk-severity-${group.severity}`} />
+									<span className="vk-hit-group-label">{group.label}</span>
+									{group.byAi && <span className="vk-ai-badge" title="Some of these marks were made by a model">AI</span>}
+									<span className="vk-hit-count">{group.hits.length}</span>
+								</summary>
+								<ul>
+									{group.hits.map((hit) => (
+										<HitRow key={hit.id} hit={hit} actions={actions} showRule={false} />
+									))}
+								</ul>
+							</details>
+						))}
+					</div>
+				)}
 			</div>
 
 			{isCurrentNote && run.ruleErrors.length > 0 && (
@@ -172,6 +176,61 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 				</button>
 			</div>
 		</div>
+	);
+}
+
+function HitRow({ hit, actions, showRule }: { hit: LintHitView; actions: LintActions; showRule: boolean }) {
+	return (
+		<li
+			className="vk-hit"
+			data-hit={hit.id}
+			tabIndex={0}
+			onClick={() => actions.jumpTo(hit.id)}
+			onKeyDown={(event) => {
+				if (event.key === "Enter" && event.target === event.currentTarget) actions.jumpTo(hit.id);
+			}}
+		>
+			{showRule && (
+				<div className="vk-hit-rule">
+					<span className={`vk-severity-chip vk-severity-${hit.severity}`} />
+					{hit.label}
+					{hit.byAi && <span className="vk-ai-badge">AI</span>}
+				</div>
+			)}
+			<div className="vk-hit-excerpt">{truncate(hit.excerpt, 140)}</div>
+			{hit.suggestion !== undefined && (
+				<div className="vk-hit-fix">
+					<span className="vk-quiet">Fix:</span> {hit.suggestion || "delete it"}
+				</div>
+			)}
+			<div className="vk-hit-message">
+				{hit.message}
+				{hit.suggestion !== undefined && (
+					<>
+						<span className="vk-quiet"> · </span>
+						<button
+							className="vk-inline-action"
+							onClick={(event) => {
+								event.stopPropagation();
+								actions.applyFix(hit.id);
+							}}
+						>
+							Apply
+						</button>
+					</>
+				)}
+				<span className="vk-quiet"> · </span>
+				<button
+					className="vk-inline-action"
+					onClick={(event) => {
+						event.stopPropagation();
+						actions.ignore(hit.id);
+					}}
+				>
+					Ignore
+				</button>
+			</div>
+		</li>
 	);
 }
 

@@ -1,6 +1,6 @@
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { Notice } from "obsidian";
+import { Menu, Notice } from "obsidian";
 import { newId } from "../core/model/ids";
 import type { SpanUnit } from "../core/model/types";
 import {
@@ -19,6 +19,7 @@ import { runAction } from "../editor/interaction";
 import { addOverflowBlock, moveOverflowBlock, noteModeField, overflowField, removeOverflowBlock, setNoteMode, updateOverflowBlock } from "../editor/noteFields";
 import { listSpans, removeSpan, spanMeta, spanRange } from "../editor/spansField";
 import { VIKALP_EVENT, isolated, noHistory } from "../editor/transactions";
+import type { UiStore } from "../store/uiStore";
 import type { AlternativesActions, OverflowActions } from "../views/context";
 import type { AiAlternatives } from "./aiAlternatives";
 import type { NoteController } from "./noteController";
@@ -30,6 +31,7 @@ export interface AlternativesDeps {
 	ai: AiAlternatives;
 	articleFix: () => boolean;
 	panelSpanId: () => string | null;
+	store: UiStore;
 }
 
 function withEditor<Args extends unknown[]>(controller: NoteController, run: (view: EditorView, ...args: Args) => void) {
@@ -171,6 +173,36 @@ export function createAlternativesActions(deps: AlternativesDeps): AlternativesA
 			controller.editor?.focus();
 		},
 		setPanelFocused: (focused: boolean) => controller.setPanelFocused(focused),
+		openMenu: withEditor(controller, (view, spanId: string, anchor: HTMLElement) => {
+			const meta = spanMeta(view.state, spanId);
+			if (!meta) return;
+			const menu = new Menu();
+			if (meta.versions.length > 1) {
+				menu.addItem((item) =>
+					item
+						.setTitle("Settle: keep the showing version")
+						.setIcon("check")
+						.onClick(() => runAction(view, settleSpans(view.state, [spanId]))),
+				);
+			}
+			if (meta.versions.some((version) => version.source === "ai")) {
+				menu.addItem((item) =>
+					item
+						.setTitle("Remove AI versions")
+						.setIcon("x")
+						.onClick(() => runAction(view, removeAiVersions(view.state, spanId, switchOptions()))),
+				);
+			}
+			menu.addItem((item) =>
+				item
+					.setTitle(meta.note ? "Edit note" : "Add a note")
+					.setIcon("sticky-note")
+					.onClick(() => deps.store.setState({ noteEditorSpanId: spanId })),
+			);
+			const rect = anchor.getBoundingClientRect();
+			// After this click finishes; Obsidian closes a menu on the click that opened it.
+			window.setTimeout(() => menu.showAtPosition({ x: rect.left, y: rect.bottom + 4 }), 0);
+		}),
 	};
 }
 
