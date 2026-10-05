@@ -1,29 +1,68 @@
 name: Release
 
-# Push a tag that matches manifest.json's version (for example 0.1.1, no "v")
-# to build the plugin and open a draft release with the files Obsidian needs.
+# Run from the Actions tab, or: gh workflow run release.yml -f bump=patch
+# Checks the plugin, bumps the version in every file that carries it, commits
+# and tags that on main, builds, and publishes a GitHub release with the three
+# files Obsidian installs.
 on:
-  push:
-    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "patch, minor, major, or an exact version like 1.2.3"
+        required: true
+        default: patch
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Tag matches manifest.json
-        run: test "$(node -p 'require("./manifest.json").version')" = "$GITHUB_REF_NAME"
+      - run: npm run typecheck
       - run: npm test
+
+      - name: Bump the version
+        id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: echo "version=$(node scripts/bump-version.mjs "$BUMP")" >> "$GITHUB_OUTPUT"
+
+      - name: The version is new
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$VERSION")" ]; then
+            echo "::error::$VERSION is already released."
+            exit 1
+          fi
+
       - run: npm run build
-      - name: Draft release
+
+      - name: Commit and tag
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # An exact version that matches the current one (the first release) has nothing to commit.
+          git diff --quiet || git commit -am "Release $VERSION"
+          git tag "$VERSION"
+          git push origin HEAD:main "refs/tags/$VERSION"
+
+      - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css --draft --title "$GITHUB_REF_NAME" --generate-notes
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: gh release create "$VERSION" main.js manifest.json styles.css --title "$VERSION" --generate-notes --verify-tag
