@@ -10,3 +10,5 @@ dev-vault/.obsidian/cache
 dev-vault/.trash/
 e2e/.profile/
 e2e/.artifacts/
+public/
+.vercel/
