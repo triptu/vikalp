@@ -50,8 +50,8 @@ export class LabService {
 			new Notice("Open a note first.");
 			return null;
 		}
-		if (!this.client.hasKey) {
-			new Notice("Add an OpenRouter API key in Vikalp settings to use the Lab.");
+		if (!this.client.isReady) {
+			new Notice(`${this.client.setupHint} to use the Lab.`);
 			return null;
 		}
 		return { view, path };
@@ -220,6 +220,7 @@ export class LabService {
 
 	/** Asks Jev whether each sentence touched by a cut still reads as a whole sentence; flags the risky cuts. */
 	private async checkGrammar(view: EditorView, sentences: NumberedSentence[], entries: Array<{ range: TextRange; meta: TrimProposalMeta }>) {
+		if (!this.client.hasJev) return;
 		const doc = view.state.doc.toString();
 		const affected = sentences
 			.map((sentence) => ({ sentence, cuts: entries.filter((entry) => entry.range.from >= sentence.from && entry.range.to <= sentence.to) }))

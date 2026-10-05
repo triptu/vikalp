@@ -44,7 +44,8 @@ export default class VikalpPlugin extends Plugin {
 	override async onload() {
 		this.settings = mergeSettings((await this.loadData()) as Partial<VikalpSettings> | null);
 		this.store = createUiStore();
-		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
+		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
+		this.store.setState({ modelMode: this.settings.modelMode, aiSetupHint: this.ai.isReady ? null : this.ai.setupHint, lintLayout: this.settings.lintLayout });
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
 		const repository = new SidecarRepository(this.app.vault.adapter, pluginDir, (notePath, backup) => {
@@ -52,7 +53,6 @@ export default class VikalpPlugin extends Plugin {
 		});
 		this.controller = new NoteController(this.app, repository, this.store, () => this.settings);
 		this.panels = new Panels(this.app);
-		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
 		this.aiAlternatives = new AiAlternatives(this.ai, this.store, () => this.settings);
 		this.linter = new LinterService(this.app, this.ai, this.controller, this.store, () => this.settings, pluginDir, () => void this.panels.openLint());
 		this.lab = new LabService(this.app, this.ai, this.controller, this.store, () => this.settings, () => void this.panels.openLint());
@@ -148,7 +148,7 @@ export default class VikalpPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.store.setState({ modelMode: this.settings.modelMode, hasApiKey: this.settings.openRouterApiKey.length > 0, lintLayout: this.settings.lintLayout });
+		this.store.setState({ modelMode: this.settings.modelMode, aiSetupHint: this.ai.isReady ? null : this.ai.setupHint, lintLayout: this.settings.lintLayout });
 		this.statusBar?.render();
 	}
 

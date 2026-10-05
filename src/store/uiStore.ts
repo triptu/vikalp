@@ -111,7 +111,8 @@ export interface VikalpUiState {
 	lab: LabPassState;
 	costs: CostEntry[];
 	modelMode: ModelMode;
-	hasApiKey: boolean;
+	/** Why AI can't run yet, as the start of a sentence. Null once it can. */
+	aiSetupHint: string | null;
 	/** The lint mark the writer last clicked in the text; the Lint panel scrolls to it. */
 	lintFocus: { hitId: string; at: number } | null;
 	lintLayout: LintLayout;
@@ -140,7 +141,7 @@ export const initialUiState: VikalpUiState = {
 	lab: { runningPass: null, message: null },
 	costs: [],
 	modelMode: "lite",
-	hasApiKey: false,
+	aiSetupHint: null,
 	lintFocus: null,
 	lintLayout: "by-rule",
 	noteEditorSpanId: null,

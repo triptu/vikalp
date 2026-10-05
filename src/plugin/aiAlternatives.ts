@@ -33,8 +33,8 @@ export class AiAlternatives {
 
 	async request(view: EditorView, spanId: string, noteTitle: string) {
 		if (this.inFlight.has(spanId)) return;
-		if (!this.client.hasKey) {
-			new Notice("Add an OpenRouter API key in Vikalp settings to ask for AI alternatives.");
+		if (!this.client.isReady) {
+			new Notice(`${this.client.setupHint} to ask for AI alternatives.`);
 			return;
 		}
 		const meta = spanMeta(view.state, spanId);
@@ -118,8 +118,8 @@ export class AiAlternatives {
 	 * all from one model call. The note's text doesn't change.
 	 */
 	async suggestSpots(view: EditorView, noteTitle: string) {
-		if (!this.client.hasKey) {
-			new Notice("Add an OpenRouter API key in Vikalp settings to find words worth playing with.");
+		if (!this.client.isReady) {
+			new Notice(`${this.client.setupHint} to find words worth playing with.`);
 			return;
 		}
 		if (this.store.getState().lab.runningPass) return;
