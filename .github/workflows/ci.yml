@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Versions agree
+        run: |
+          node -e '
+            const manifest = require("./manifest.json");
+            const pkg = require("./package.json");
+            const versions = require("./versions.json");
+            if (pkg.version !== manifest.version) throw new Error(`package.json is ${pkg.version}, manifest.json is ${manifest.version}`);
+            if (versions[manifest.version] !== manifest.minAppVersion) throw new Error(`versions.json needs "${manifest.version}": "${manifest.minAppVersion}"`);
+          '
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  review-lint:
+    name: Obsidian review lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # typescript-eslint doesn't support TypeScript 7 yet, so this job lints with TypeScript 5.9.
+      - run: npm install --no-save --legacy-peer-deps typescript@~5.9.0 eslint@^9 @eslint/js@^9 typescript-eslint@^8 eslint-plugin-obsidianmd @eslint/json@0.14.0
+      - run: npx eslint src
