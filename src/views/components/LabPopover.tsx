@@ -1,6 +1,6 @@
 import { LAB_PASSES, SPOTS_PASS, TRIM_LEVELS } from "../../core/ai/passes";
 import type { ModelMode } from "../../core/settings";
-import type { LabPassState, TrimState } from "../../store/uiStore";
+import type { KeyHints, LabPassState, TrimState } from "../../store/uiStore";
 import type { LabActions } from "../context";
 import { formatCost } from "../format";
 import { Icon } from "./Icon";
@@ -20,10 +20,11 @@ export interface LabPopoverProps {
 	trim: TrimState;
 	sessionCost: number;
 	markCount: number;
+	keyHints: KeyHints;
 	actions: LabActions;
 }
 
-export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, sessionCost, markCount, actions }: LabPopoverProps) {
+export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, sessionCost, markCount, keyHints, actions }: LabPopoverProps) {
 	const disabled = !hasApiKey || !hasNote;
 	const busy = lab.runningPass !== null;
 	return (
@@ -109,7 +110,17 @@ export function LabPopover({ modelMode, modelId, hasApiKey, hasNote, lab, trim, 
 
 			<footer className="vk-lab-footer">
 				<span className="vk-lab-keys">
-					<kbd>⌘J</kbd> alternatives · <kbd>⌘.</kbd> all actions
+					{keyHints.alternatives && (
+						<>
+							<kbd>{keyHints.alternatives}</kbd> alternatives
+						</>
+					)}
+					{keyHints.alternatives && keyHints.actions && " · "}
+					{keyHints.actions && (
+						<>
+							<kbd>{keyHints.actions}</kbd> all actions
+						</>
+					)}
 				</span>
 				<span className="vk-lab-footer-end">
 					<button className="vk-inline-action" onClick={actions.showCostLog} title="Show the cost log">

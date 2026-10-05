@@ -19,6 +19,8 @@ export interface VikalpSettings {
 	markersOnByDefault: boolean;
 	alternativesCount: number;
 	lintLayout: "by-rule" | "in-order";
+	/** Gives the main commands Vikalp's suggested hotkeys. Off so Vikalp never takes keys unasked. */
+	suggestedHotkeys: boolean;
 }
 
 export const DEFAULT_SETTINGS: VikalpSettings = {
@@ -41,6 +43,7 @@ export const DEFAULT_SETTINGS: VikalpSettings = {
 	markersOnByDefault: false,
 	alternativesCount: 5,
 	lintLayout: "by-rule",
+	suggestedHotkeys: false,
 };
 
 export const MODEL_MODE_LABELS: Record<ModelMode, string> = { lite: "Lite", medium: "Medium", heavy: "Heavy" };

@@ -117,6 +117,14 @@ export interface VikalpUiState {
 	lintLayout: LintLayout;
 	/** Alternatives whose note field the writer just asked to open. */
 	noteEditorSpanId: string | null;
+	keyHints: KeyHints;
+}
+
+/** The hotkey each main command has right now, as Obsidian prints it, or null when it has none. */
+export interface KeyHints {
+	alternatives: string | null;
+	askAi: string | null;
+	actions: string | null;
 }
 
 /** How the Lint panel lists marks: grouped by rule, or in the order they appear. */
@@ -136,6 +144,7 @@ export const initialUiState: VikalpUiState = {
 	lintFocus: null,
 	lintLayout: "by-rule",
 	noteEditorSpanId: null,
+	keyHints: { alternatives: null, askAi: null, actions: null },
 };
 
 export function createUiStore() {

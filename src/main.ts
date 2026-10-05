@@ -8,7 +8,7 @@ import { noteModeField, setNoteMode } from "./editor/noteFields";
 import { SidecarRepository } from "./persistence/sidecar";
 import { ActionMenuHost } from "./plugin/actionMenu";
 import { AiAlternatives } from "./plugin/aiAlternatives";
-import { registerCommands } from "./plugin/commands";
+import { HOTKEY_COMMANDS, registerCommands, registerHotkeyCommands } from "./plugin/commands";
 import { fillEditorMenu } from "./plugin/editorMenu";
 import { LabService } from "./plugin/labService";
 import { LinterService } from "./plugin/linterService";
@@ -21,7 +21,7 @@ import { VikalpSettingTab } from "./plugin/settingsTab";
 import { StatusBar } from "./plugin/statusBar";
 import { createAlternativesActions, createOverflowActions, type AlternativesDeps } from "./plugin/viewActions";
 import { registerReadingModeGhosts } from "./plugin/readingMode";
-import { createUiStore, type UiStore } from "./store/uiStore";
+import { createUiStore, type KeyHints, type UiStore } from "./store/uiStore";
 import type { VikalpViewContext } from "./views/context";
 import { ALTERNATIVES_VIEW, AlternativesView, LINT_VIEW, LintView, OVERFLOW_VIEW, OverflowView } from "./views/panelViews";
 
@@ -91,6 +91,9 @@ export default class VikalpPlugin extends Plugin {
 		this.addRibbonIcon("split", "Toggle Alternatives", () => void this.panels.toggle(ALTERNATIVES_VIEW, "left"));
 		registerCommands(this);
 		this.addSettingTab(new VikalpSettingTab(this.app, this));
+		this.app.workspace.onLayoutReady(() => this.refreshKeyHints());
+		// Hotkeys change in the Settings window; refresh the hints when the writer comes back.
+		this.registerDomEvent(window, "focus", () => this.refreshKeyHints());
 
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, _editor, info) => {
@@ -152,6 +155,25 @@ export default class VikalpPlugin extends Plugin {
 	async setModelMode(mode: ModelMode) {
 		this.settings.modelMode = mode;
 		await this.saveSettings();
+	}
+
+	/** Turns Vikalp's suggested hotkeys on or off by registering the commands that carry them again. */
+	async setSuggestedHotkeys(enabled: boolean) {
+		this.settings.suggestedHotkeys = enabled;
+		await this.saveSettings();
+		for (const id of Object.values(HOTKEY_COMMANDS)) this.removeCommand(id);
+		registerHotkeyCommands(this, enabled);
+		this.refreshKeyHints();
+	}
+
+	/** Reads the hotkeys the main commands have now, so the hints in the panels match them. */
+	refreshKeyHints() {
+		// Obsidian has no public API for a command's current hotkey, so this reads the internal one when it exists.
+		const manager = (this.app as unknown as { hotkeyManager?: { printHotkeyForCommand?: (commandId: string) => string } }).hotkeyManager;
+		const hintFor = (commandId: string) => manager?.printHotkeyForCommand?.(`${this.manifest.id}:${commandId}`).replace(/\s+/g, "") || null;
+		const keyHints: KeyHints = { alternatives: hintFor(HOTKEY_COMMANDS.alternatives), askAi: hintFor(HOTKEY_COMMANDS.askAi), actions: hintFor(HOTKEY_COMMANDS.actions) };
+		const current = this.store.getState().keyHints;
+		if (keyHints.alternatives !== current.alternatives || keyHints.askAi !== current.askAi || keyHints.actions !== current.actions) this.store.setState({ keyHints });
 	}
 
 	switchOptions() {
