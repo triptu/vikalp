@@ -41,6 +41,7 @@ Lower layers never import higher ones. Only `plugin/` and `views/*View.ts` impor
 - All written content (docs, UI copy, commit messages) is simple, direct and plain. No filler.
 - Small, frequent commits, one concern each.
 - Review screenshots after UI work (`npm run shots`) in light and dark themes before calling it done.
+- Every PR description carries proof. List what was run and its result (tests, e2e, CI), and say plainly what wasn't tested. Attach any useful proof you captured (screenshots, recordings) with `gh pr create/edit --attach` (gh 2.99+): reference the local files in the body, e.g. `![Swap menu, dark](./swap-dark.png)`, and gh uploads them and swaps in the URLs. Never push proof to the repo.
 
 ## Learned skills
 
