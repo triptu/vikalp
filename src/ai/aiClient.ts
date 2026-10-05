@@ -1,9 +1,11 @@
-import type { AssistantMessage, Context, Tool } from "@earendil-works/pi-ai";
+import type { AssistantMessage, AuthInteraction, Context, Tool } from "@earendil-works/pi-ai";
 import { createModels } from "@earendil-works/pi-ai/models";
 import type { TSchema } from "typebox";
-import type { ModelMode, VikalpSettings } from "../core/settings";
+import type { AiProvider, ModelMode, VikalpSettings } from "../core/settings";
 import { AiError, type AiBackend } from "./backend";
+import { CHATGPT_PROVIDER_ID, chatgptBackend } from "./chatgpt";
 import { openRouterBackend } from "./openRouter";
+import { SettingsCredentialStore } from "./settingsCredentialStore";
 
 export { AiError };
 
@@ -46,13 +48,21 @@ export interface ClassifyResult {
  * comes from settings on each call, since the renderer has no environment.
  */
 export class AiClient {
-	private readonly models = createModels();
-	private readonly backend: AiBackend = openRouterBackend(this.models);
+	private readonly models;
+	private readonly backends: Record<AiProvider, AiBackend>;
 
 	constructor(
 		private readonly getSettings: () => VikalpSettings,
+		saveSettings: () => Promise<void>,
 		private readonly recordCost: (record: CostRecord) => void,
-	) {}
+	) {
+		this.models = createModels({ credentials: new SettingsCredentialStore(CHATGPT_PROVIDER_ID, getSettings, saveSettings) });
+		this.backends = { openrouter: openRouterBackend(this.models), chatgpt: chatgptBackend(this.models) };
+	}
+
+	private get backend(): AiBackend {
+		return this.backends[this.getSettings().aiProvider];
+	}
 
 	get isReady(): boolean {
 		return this.backend.isReady(this.getSettings());
@@ -69,7 +79,22 @@ export class AiClient {
 	}
 
 	modelId(mode: ModelMode): string {
-		return this.getSettings().models[mode];
+		return this.backend.modelId(this.getSettings(), mode);
+	}
+
+	/**
+	 * Runs Sign in with ChatGPT. `interaction` gets the URL to open in the browser and may be asked
+	 * for the redirect URL if the browser can't reach Vikalp. The token is saved in settings.
+	 */
+	async signInWithChatGPT(interaction: AuthInteraction): Promise<void> {
+		const settings = this.getSettings();
+		await this.models.login(CHATGPT_PROVIDER_ID, "oauth", interaction, {
+			getDeviceId: () => (settings.deviceId ||= crypto.randomUUID()),
+		});
+	}
+
+	async signOutOfChatGPT(): Promise<void> {
+		await this.models.logout(CHATGPT_PROVIDER_ID);
 	}
 
 	/** Asks a chat model for output shaped by `schema`, via a single tool call. */
@@ -134,7 +159,7 @@ export class AiClient {
 			model,
 			inputTokens: message.usage?.input ?? 0,
 			outputTokens: message.usage?.output ?? 0,
-			cost: message.usage?.cost?.total ?? 0,
+			cost: this.backend.includedInPlan ? 0 : (message.usage?.cost?.total ?? 0),
 			...(error ? { error } : {}),
 		});
 	}

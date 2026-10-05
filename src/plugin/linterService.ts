@@ -283,7 +283,9 @@ export class LinterService {
 					await this.judgeWithLlm(failed, "lite", flag, done, stillCurrent, true);
 				}
 			} else {
-				await this.judgeWithLlm(batch, settings.modelMode, flag, done, stillCurrent, false);
+				// Without Jev, yes/no judgments go to the Lite model.
+				const mode = this.client.hasJev ? settings.modelMode : "lite";
+				await this.judgeWithLlm(batch, mode, flag, done, stillCurrent, false);
 			}
 		};
 		await judge(classifierTasks);

@@ -44,7 +44,7 @@ export default class VikalpPlugin extends Plugin {
 	override async onload() {
 		this.settings = mergeSettings((await this.loadData()) as Partial<VikalpSettings> | null);
 		this.store = createUiStore();
-		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
+		this.ai = new AiClient(() => this.settings, () => this.saveSettings(), (record) => this.recordCost(record));
 		this.store.setState({ modelMode: this.settings.modelMode, aiSetupHint: this.ai.isReady ? null : this.ai.setupHint, lintLayout: this.settings.lintLayout });
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
@@ -78,7 +78,7 @@ export default class VikalpPlugin extends Plugin {
 			store: this.store,
 		};
 		const viewContext = this.createViewContext();
-		this.labPopover = new LabPopoverHost(viewContext, () => this.settings);
+		this.labPopover = new LabPopoverHost(viewContext, (mode) => this.ai.modelId(mode));
 		this.actionMenu = new ActionMenuHost(this);
 
 		this.registerEditorExtension(vikalpEditorExtension(this.controller));

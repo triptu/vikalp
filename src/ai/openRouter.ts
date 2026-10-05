@@ -16,6 +16,8 @@ export function openRouterBackend(models: MutableModels): AiBackend {
 
 		isReady: (settings) => key(settings).length > 0,
 
+		modelId: (settings, mode) => settings.models[mode],
+
 		requestOptions(settings) {
 			if (!key(settings)) throw new AiError("Add an OpenRouter API key in Vikalp settings first.");
 			return { apiKey: key(settings) };

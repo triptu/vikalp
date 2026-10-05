@@ -1,6 +1,6 @@
 import { MarkdownView, type App } from "obsidian";
 import { h, render } from "preact";
-import type { VikalpSettings } from "../core/settings";
+import type { ModelMode } from "../core/settings";
 import type { UiStore } from "../store/uiStore";
 import { LabContainer, Providers, TrimBarContainer } from "../views/containers";
 import type { VikalpViewContext } from "../views/context";
@@ -26,7 +26,7 @@ export class LabPopoverHost {
 
 	constructor(
 		private readonly context: VikalpViewContext,
-		private readonly getSettings: () => VikalpSettings,
+		private readonly modelIdFor: (mode: ModelMode) => string,
 	) {}
 
 	toggle(anchor: HTMLElement | null) {
@@ -40,7 +40,7 @@ export class LabPopoverHost {
 		const container = document.body.createDiv({ cls: "vk-lab-popover" });
 		this.container = container;
 		render(
-			h(Providers, { context: this.context, icon: renderIcon }, h(LabContainer, { modelIdFor: (mode: string) => this.getSettings().models[mode as "lite"] })),
+			h(Providers, { context: this.context, icon: renderIcon }, h(LabContainer, { modelIdFor: (mode: string) => this.modelIdFor(mode as ModelMode) })),
 			container,
 		);
 		this.position();
