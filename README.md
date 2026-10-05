@@ -15,7 +15,15 @@ Inspired from [Jason's](https://x.com/jasonfried/status/2105403067793584590) and
 - **The Lab.** AI passes that mark typos, weak or convoluted sentences, off-tone words and hedges, and trim levels that fade the words a model would cut. You keep or cut each one.
 - **Read-through.** Hide every marker and read like a reader.
 
-Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys.
+Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys, or see [vikalp-tau.vercel.app](https://vikalp-tau.vercel.app).
+
+## Network use
+
+Alternatives, ghosting, Overflow, the local lint rules and read-through work offline.
+
+The AI features (AI versions, judgment lint rules and the Lab) send text to [OpenRouter](https://openrouter.ai) with your own API key. OpenRouter passes it to the model you picked. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something, and nothing is sent without a key. You pay OpenRouter for what you use; the Lab shows the cost of every call.
+
+Vikalp has no telemetry and no account.
 
 ## Install (from source)
 
