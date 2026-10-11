@@ -69,7 +69,7 @@ export const PROVIDER_PRESETS: Record<ProviderId, ProviderPreset> = {
 		label: "Custom",
 		baseUrl: "",
 		key: "optional",
-		keyPlaceholder: "Only if the server asks for one",
+		keyPlaceholder: "Optional",
 		modes: null,
 		serverName: "the server",
 	},
@@ -86,8 +86,12 @@ export function protocolFor(baseUrl: string): Protocol {
 	return "openai-compatible";
 }
 
-/** True for servers on this computer, whose calls cost nothing. */
-export function isLocalUrl(baseUrl: string): boolean {
+/** True when calls cost nothing: Ollama or LM Studio on this computer. A custom server on localhost may be a proxy to a paid API. */
+export function runsLocally(provider: ProviderId, baseUrl: string): boolean {
+	return (provider === "ollama" || provider === "lmstudio") && isLocalUrl(baseUrl);
+}
+
+function isLocalUrl(baseUrl: string): boolean {
 	const host = hostOf(baseUrl);
 	return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "0.0.0.0";
 }

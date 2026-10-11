@@ -15,6 +15,7 @@ export interface LabPopoverProps {
 	/** False for providers that run one model; the Lab then names it instead of offering modes. */
 	hasModes: boolean;
 	modelId: string;
+	providerLabel: string;
 	aiSetupHint: string | null;
 	hasNote: boolean;
 	lab: LabPassState;
@@ -26,7 +27,7 @@ export interface LabPopoverProps {
 	actions: LabActions;
 }
 
-export function LabPopover({ modelMode, hasModes, modelId, aiSetupHint, hasNote, lab, trim, costText, markCount, keyHints, actions }: LabPopoverProps) {
+export function LabPopover({ modelMode, hasModes, modelId, providerLabel, aiSetupHint, hasNote, lab, trim, costText, markCount, keyHints, actions }: LabPopoverProps) {
 	const disabled = aiSetupHint !== null || !hasNote;
 	const busy = lab.runningPass !== null;
 	return (
@@ -34,7 +35,7 @@ export function LabPopover({ modelMode, hasModes, modelId, aiSetupHint, hasNote,
 			<header className="vk-lab-header">
 				<span className="vk-lab-title">The Lab</span>
 				{hasModes ? (
-					<div className="vk-segmented vk-lab-mode" role="radiogroup" aria-label="Model" title={modelId}>
+					<div className="vk-segmented vk-lab-mode" role="radiogroup" aria-label="Model" title={`${providerLabel} · ${modelId}`}>
 						{MODES.map(({ mode, label }) => (
 							<button
 								key={mode}
@@ -49,7 +50,7 @@ export function LabPopover({ modelMode, hasModes, modelId, aiSetupHint, hasNote,
 					</div>
 				) : (
 					modelId && (
-						<button className="vk-lab-model" onClick={actions.openSettings} title="Change the model in Vikalp settings">
+						<button className="vk-lab-model" onClick={actions.openSettings} title={`${providerLabel} · ${modelId}. Change it in Vikalp settings.`}>
 							{modelId}
 						</button>
 					)

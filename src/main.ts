@@ -2,7 +2,7 @@ import type { EditorView } from "@codemirror/view";
 import { MarkdownView, Menu, Notice, Plugin, TFile } from "obsidian";
 import { AiClient, type CostRecord } from "./ai/aiClient";
 import { newId } from "./core/model/ids";
-import { isLocalUrl, type ProviderId } from "./core/providers";
+import { runsLocally, type ProviderId } from "./core/providers";
 import { activeProvider, mergeSettings, modelFor, type ModelMode, type VikalpSettings } from "./core/settings";
 import { vikalpEditorExtension } from "./editor";
 import { noteModeField, setNoteMode } from "./editor/noteFields";
@@ -158,7 +158,12 @@ export default class VikalpPlugin extends Plugin {
 		const active = activeProvider(this.settings);
 		this.store.setState({
 			modelMode: this.settings.modelMode,
-			aiModel: { hasModes: active.preset.modes !== null, modelId: modelFor(this.settings, this.settings.modelMode), free: isLocalUrl(active.baseUrl) },
+			aiModel: {
+				providerLabel: active.preset.label,
+				hasModes: active.preset.modes !== null,
+				modelId: modelFor(this.settings, this.settings.modelMode),
+				free: runsLocally(active.preset.id, active.baseUrl),
+			},
 			aiSetupHint: this.ai.isReady ? null : this.ai.setupHint,
 			lintLayout: this.settings.lintLayout,
 		});

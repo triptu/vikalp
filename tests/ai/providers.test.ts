@@ -3,7 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { AiClient, AiError, type CostRecord } from "../../src/ai/aiClient";
 import { protocolFor } from "../../src/core/providers";
 import { mergeSettings, type VikalpSettings } from "../../src/core/settings";
-import { initialUiState, sessionCostSummary, type CostEntry } from "../../src/store/uiStore";
+import { initialUiState, sessionCostSummary, type CostEntry, type VikalpUiState } from "../../src/store/uiStore";
+import { formatSessionCost } from "../../src/views/format";
 import { startMockModelServer, type MockModelServer } from "../support/mockModelServer";
 
 function clientFor(settings: VikalpSettings) {
@@ -136,18 +137,20 @@ describe("a model running on this computer", () => {
 
 describe("what the Lab shows for cost", () => {
 	const entry = (pricing: CostEntry["pricing"], cost: number): CostEntry => ({ id: "c", at: 0, purpose: "p", model: "m", inputTokens: 1000, outputTokens: 200, cost, pricing });
+	const shown = (state: VikalpUiState) => formatSessionCost(sessionCostSummary(state));
+	const local = { ...initialUiState, aiModel: { providerLabel: "Ollama", hasModes: false, modelId: "qwen3:0.6b", free: true } };
 
 	it("a price when every call has one", () => {
-		expect(sessionCostSummary({ ...initialUiState, costs: [entry("priced", 0.02)] })).toEqual({ kind: "price", dollars: 0.02 });
+		expect(shown({ ...initialUiState, costs: [entry("priced", 0.02)] })).toBe("$0.02");
 	});
 
 	it("Free on a local model", () => {
-		const state = { ...initialUiState, aiModel: { hasModes: false, modelId: "qwen3:0.6b", free: true } };
-		expect(sessionCostSummary(state)).toEqual({ kind: "free" });
-		expect(sessionCostSummary({ ...state, costs: [entry("free", 0)] })).toEqual({ kind: "free" });
+		expect(shown(local)).toBe("Free");
+		expect(shown({ ...local, costs: [entry("free", 0)] })).toBe("Free");
 	});
 
-	it("tokens when a server's prices are unknown", () => {
-		expect(sessionCostSummary({ ...initialUiState, costs: [entry("unpriced", 0), entry("unpriced", 0)] })).toEqual({ kind: "tokens", tokens: 2400 });
+	it("tokens when a server's prices are unknown, and keeps earlier spend in view", () => {
+		expect(shown({ ...initialUiState, costs: [entry("unpriced", 0), entry("unpriced", 0)] })).toBe("2.4k tokens");
+		expect(shown({ ...initialUiState, costs: [entry("priced", 0.12), entry("unpriced", 0)] })).toBe("$0.12 + 1.2k tokens");
 	});
 });

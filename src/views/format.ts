@@ -23,10 +23,12 @@ export function formatTokens(tokens: number): string {
 	return `${(tokens / 1000).toFixed(tokens < 10000 ? 1 : 0)}k tokens`;
 }
 
+/** "$0.12", "Free", "3.2k tokens", or "$0.12 + 3.2k tokens" after calls to a server with unknown prices. */
 export function formatSessionCost(cost: SessionCost): string {
-	if (cost.kind === "free") return "Free";
-	if (cost.kind === "tokens") return formatTokens(cost.tokens);
-	return formatCost(cost.dollars);
+	if (cost.free) return "Free";
+	if (cost.unpricedTokens === 0) return formatCost(cost.dollars);
+	if (cost.dollars === 0) return formatTokens(cost.unpricedTokens);
+	return `${formatCost(cost.dollars)} + ${formatTokens(cost.unpricedTokens)}`;
 }
 
 export function percentChange(before: number, after: number): string {

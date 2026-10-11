@@ -1459,6 +1459,10 @@ body.theme-light {
 
 .vk-status-lab-mode {
 	color: var(--text-muted);
+	max-width: 16ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* ——— Modals and settings ——— */
