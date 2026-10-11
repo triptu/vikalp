@@ -21,7 +21,7 @@ Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys
 
 Alternatives, ghosting, Overflow, the local lint rules and read-through work offline.
 
-The AI features (AI versions, judgment lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio, nothing leaves your computer and nothing costs money.
+The AI features (AI versions, judgment lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
 
 Vikalp has no telemetry and no account.
 

@@ -88,7 +88,7 @@ Click **Lab** in the status bar.
 
 ![The Lab popover](screenshots/guide/lab.png)
 
-- **Model**: Lite, Medium or Heavy. Applies to every AI action. The status bar shows the current mode next to **Lab**. With Ollama, LM Studio or a custom server there is one model, and the Lab shows its name instead.
+- **Model**: Lite, Medium or Heavy. Applies to every AI action. The status bar shows the current mode next to **Lab**. With Ollama, LM Studio or a custom server there is one model, and the Lab and the status bar show its name instead. Hover either to see the provider and model.
 - **Mark** passes add marks you can review in the Lint panel: typos and punctuation (with Apply / Ignore and *Apply all*), weakest sentences, sentences that run long, convoluted sentences, words that don't fit the tone, and hedges and filler.
 - **Trim** levels strike through the words the model would cut, from ~10% to ~50%. Click a struck passage to keep it. Then **Ghost the cuts** (nothing is deleted), **Make the cuts**, or **Walk through** them one at a time with **K**eep, **C**ut, **S**kip. **Done** discards what's left. Switching levels keeps the passages you chose to keep.
 
@@ -112,18 +112,20 @@ Pick one in Settings → Vikalp → AI → **Provider**:
 |---|---|---|
 | OpenRouter | An OpenRouter API key | Lite, Medium and Heavy, any model OpenRouter has. The only one with Jev for judgment rules. |
 | Anthropic | An Anthropic API key | Lite, Medium and Heavy: Haiku, Sonnet and Opus by default |
-| OpenAI | An OpenAI API key | Lite, Medium and Heavy |
+| OpenAI | An OpenAI API key | Lite, Medium and Heavy: gpt-6-luna, gpt-6-sol and gpt-5.6-sol by default |
 | Ollama | [Ollama](https://ollama.com) running, with a model downloaded | One, picked from the models Ollama has |
 | LM Studio | LM Studio's server started, with CORS turned on in its Developer tab | One, picked from the models LM Studio has |
 | Custom | The URL of any OpenAI-compatible server, and a key if it asks for one | One |
 
-Ollama and LM Studio run on your computer, so nothing leaves it. Small local models are much weaker at marking and trimming than the hosted ones.
+Ollama and LM Studio run models on your own machine, so the text stays there. Small local models are much weaker at marking and trimming than the hosted ones. Model fields for the named providers suggest the models Vikalp knows, and take any other id you type.
 
-Each provider keeps its own key and models, so you can switch back and forth. Named providers keep their server URL under **Advanced**, for a proxy.
+Each provider keeps its own key and models, so you can switch back and forth. Named providers keep their server URL under **Advanced**, for a regional endpoint or an OpenAI-compatible proxy.
+
+Jev only runs on OpenRouter. Elsewhere judgment rules ask the selected model, and the grammar check after a trim is skipped.
 
 ## Cost
 
-The Lab popover shows this session's AI spend and links to a log of every call: what it was for, the model, tokens and cost. Each linter run also shows its own cost in the Lint panel. On Ollama or LM Studio the Lab shows **Free**. For a custom server whose prices Vikalp doesn't know, it shows tokens instead.
+The Lab popover shows this session's AI spend and links to a log of every call: what it was for, the model, tokens and cost. Each linter run also shows its own cost in the Lint panel. On Ollama or LM Studio the Lab shows **Free**. For a custom server whose prices Vikalp doesn't know, it shows tokens instead, after any dollars already spent.
 
 ## Keys
 
