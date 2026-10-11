@@ -124,7 +124,30 @@ describe("a model running on this computer", () => {
 	it("says plainly when the server isn't running", async () => {
 		const { client } = clientFor(localSettings("http://localhost:9/v1", "qwen3:0.6b"));
 		await expect(client.structured(alternativesRequest)).rejects.toThrow("Can't reach localhost:9. Is Ollama running?");
-		await expect(client.listModels()).rejects.toBeInstanceOf(AiError);
+		await expect(client.listModels()).rejects.toThrow("Can't reach localhost:9. Is Ollama running?");
+		expect(await client.listModels().catch((error: AiError) => error.unreachable)).toBe(true);
+	});
+
+	it("says how to fix a URL that has no model list", async () => {
+		const { client } = clientFor(localSettings(server.baseUrl.replace(/\/v1$/, ""), ""));
+		await expect(client.listModels()).rejects.toThrow("No model list at this URL. OpenAI-compatible URLs usually end in /v1.");
+	});
+
+	it("works when the URL is typed without http://", async () => {
+		const { client } = clientFor(localSettings(server.baseUrl.replace("http://", ""), "gemma3:1b"));
+		expect(await client.listModels()).toEqual(["qwen3:0.6b", "gemma3:1b"]);
+	});
+
+	it("a crashed model isn't reported as the writer cancelling", async () => {
+		server.failWith = "llama runner process has terminated: signal: aborted";
+		try {
+			const { client } = clientFor(localSettings(server.baseUrl, "gemma3:1b"));
+			const failure = await client.structured(alternativesRequest).catch((error: Error) => error.message);
+			expect(failure).not.toBe("Cancelled.");
+			expect(failure).toContain("signal: aborted");
+		} finally {
+			server.failWith = null;
+		}
 	});
 
 	it("sends the key to a custom server that asks for one", async () => {

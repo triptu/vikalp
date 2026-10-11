@@ -10,13 +10,15 @@ export interface MockModelServer {
 	baseUrl: string;
 	/** Arguments the server puts in its tool call. */
 	toolArguments: unknown;
+	/** When set, chat requests fail with this message and a 500. */
+	failWith: string | null;
 	/** Bodies of the chat requests received, newest last. */
 	requests: Array<{ model: string; authorization: string | undefined; origin: string | undefined }>;
 	close(): Promise<void>;
 }
 
 export async function startMockModelServer(models: string[]): Promise<MockModelServer> {
-	const mock: MockModelServer = { baseUrl: "", toolArguments: {}, requests: [], close: async () => {} };
+	const mock: MockModelServer = { baseUrl: "", toolArguments: {}, failWith: null, requests: [], close: async () => {} };
 	const server: Server = createServer(async (request, response) => {
 		response.setHeader("access-control-allow-origin", "*");
 		response.setHeader("access-control-allow-headers", "*");
@@ -34,6 +36,11 @@ export async function startMockModelServer(models: string[]): Promise<MockModelS
 		if (request.method === "POST" && request.url === "/v1/chat/completions") {
 			const body = JSON.parse(await readBody(request)) as { model: string; tools?: Array<{ function: { name: string } }> };
 			mock.requests.push({ model: body.model, authorization: request.headers.authorization, origin: request.headers.origin });
+			if (mock.failWith) {
+				response.writeHead(500, { "content-type": "application/json" });
+				response.end(JSON.stringify({ error: { message: mock.failWith } }));
+				return;
+			}
 			if (!models.includes(body.model)) {
 				response.writeHead(404, { "content-type": "application/json" });
 				response.end(JSON.stringify({ error: { message: `model '${body.model}' not found`, type: "not_found_error" } }));

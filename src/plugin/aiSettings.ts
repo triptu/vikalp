@@ -187,8 +187,9 @@ export class AiSettingsSection {
 							this.config().baseUrl = url === preset.baseUrl ? "" : url;
 							await this.plugin.saveSettings();
 						});
-					// Fetch the model list once the writer leaves the field, not on every keystroke.
-					if (!preset.modes) text.inputEl.addEventListener("change", () => this.reloadServerModels());
+					// Act on the new URL once the writer leaves the field, not on every keystroke: list the server's
+					// models, or for named providers redraw, since the host may change the protocol and Jev.
+					text.inputEl.addEventListener("change", () => (preset.modes ? this.rebuild() : this.reloadServerModels()));
 				});
 			},
 		};
@@ -241,24 +242,32 @@ export class AiSettingsSection {
 		return `Connected. ${models.ids.length} ${models.ids.length === 1 ? "model" : "models"} on the server.`;
 	}
 
-	private loadServerModels() {
+	private modelsSource(): string {
 		const { baseUrl, apiKey } = activeProvider(this.plugin.settings);
-		if (!baseUrl) return;
-		const source = `${baseUrl}\n${apiKey}`;
+		return `${this.plugin.settings.provider}\n${baseUrl}\n${apiKey}`;
+	}
+
+	private loadServerModels() {
+		if (!activeProvider(this.plugin.settings).baseUrl) return;
+		const source = this.modelsSource();
 		if (this.serverModels?.source === source) return;
 		const models: ServerModels = { source, status: "loading", ids: [], error: null, answered: false };
 		this.serverModels = models;
+		const current = () => this.serverModels === models && this.modelsSource() === source;
 		void this.plugin.ai
-			.listModels()
+			.listModels(AbortSignal.timeout(10_000))
 			.then(async (ids) => {
 				Object.assign(models, { status: "ready", ids, answered: true });
-				if (!this.config().models.lite && ids[0]) await this.setSingleModel(ids[0], false);
+				// Embedding models can't chat, and servers often list them first.
+				const firstChatModel = ids.find((id) => !/embed/i.test(id));
+				if (current() && !this.config().models.lite && firstChatModel) await this.setSingleModel(firstChatModel, false);
 			})
 			.catch((error: unknown) =>
 				Object.assign(models, { status: "failed", error: error instanceof Error ? error.message : String(error), answered: !(error instanceof AiError && error.unreachable) }),
 			)
+			// If the writer has since changed the URL or key, the next render fetches again; don't redraw under their typing.
 			.finally(() => {
-				if (this.serverModels === models) this.rebuild();
+				if (current()) this.rebuild();
 			});
 	}
 
