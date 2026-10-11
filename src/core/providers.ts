@@ -82,7 +82,8 @@ export function protocolFor(baseUrl: string): Protocol {
 	const host = hostOf(baseUrl);
 	if (host === "openrouter.ai") return "openrouter";
 	if (host === "api.anthropic.com") return "anthropic";
-	if (host === "api.openai.com") return "openai";
+	// OpenAI also serves regional hosts such as eu.api.openai.com.
+	if (host === "api.openai.com" || host.endsWith(".api.openai.com")) return "openai";
 	return "openai-compatible";
 }
 
@@ -99,10 +100,16 @@ function isLocalUrl(baseUrl: string): boolean {
 /** "localhost:11434" for messages, or the URL as typed when it can't be parsed. */
 export function shortServerName(baseUrl: string): string {
 	try {
-		return new URL(baseUrl).host;
+		return new URL(baseUrl).host || baseUrl;
 	} catch {
 		return baseUrl;
 	}
+}
+
+/** Adds the http:// a writer often leaves off ("localhost:11434/v1"), so the URL parses as they meant. */
+export function withScheme(baseUrl: string): string {
+	const url = baseUrl.trim();
+	return url && !/^[a-z][a-z0-9+.-]*:\/\//i.test(url) ? `http://${url}` : url;
 }
 
 function hostOf(baseUrl: string): string {

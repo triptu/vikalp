@@ -1,4 +1,4 @@
-import { PROVIDER_IDS, PROVIDER_PRESETS, type ProviderId, type ProviderPreset } from "./providers";
+import { PROVIDER_IDS, PROVIDER_PRESETS, withScheme, type ProviderId, type ProviderPreset } from "./providers";
 
 export type ModelMode = "lite" | "medium" | "heavy";
 export type JudgmentEngineChoice = "jev" | "llm";
@@ -85,7 +85,7 @@ export interface ActiveProvider {
 export function activeProvider(settings: VikalpSettings): ActiveProvider {
 	const preset = PROVIDER_PRESETS[settings.provider];
 	const config = settings.providers[settings.provider];
-	return { preset, baseUrl: config.baseUrl.trim() || preset.baseUrl, apiKey: config.apiKey.trim(), models: config.models };
+	return { preset, baseUrl: withScheme(config.baseUrl) || preset.baseUrl, apiKey: config.apiKey.trim(), models: config.models };
 }
 
 /** The model a request in `mode` goes to. Providers without modes always use their one model. */

@@ -51,7 +51,7 @@ function openRouterBackend(models: MutableModels, active: ActiveProvider): AiBac
 			const known = models.getModel("openrouter", id);
 			// pi-ai sends Anthropic models through the Anthropic SDK, and OpenRouter's CORS rules block its headers
 			// from Obsidian's renderer. OpenRouter's OpenAI-style endpoint serves every model, so all calls use it.
-			if (known) return { model: { ...known, api: "openai-completions", baseUrl: active.baseUrl } as unknown as Model<never>, pricing: pricingOf(known) };
+			if (known) return { model: { ...known, api: "openai-completions", baseUrl: active.baseUrl } as unknown as Model<never>, pricing: "priced" };
 			const template = models.getModel("openrouter", "openai/gpt-6-luna");
 			if (!template) throw new AiError(`Unknown model "${id}".`);
 			return { model: { ...template, id, name: id, api: "openai-completions", baseUrl: active.baseUrl, cost: ZERO_COST } as unknown as Model<never>, pricing: "unpriced" };
@@ -67,7 +67,7 @@ function catalogBackend(models: MutableModels, active: ActiveProvider, provider:
 		...commonParts(active),
 		chatModel(id) {
 			const known = models.getModel(provider, id);
-			if (known) return { model: { ...known, baseUrl: active.baseUrl } as unknown as Model<never>, pricing: pricingOf(known) };
+			if (known) return { model: { ...known, baseUrl: active.baseUrl } as unknown as Model<never>, pricing: "priced" };
 			const template = models.getModel(provider, active.preset.modes?.lite ?? "");
 			if (!template) throw new AiError(`Unknown model "${id}".`);
 			return { model: { ...template, id, name: id, baseUrl: active.baseUrl, cost: ZERO_COST } as unknown as Model<never>, pricing: "unpriced" };
@@ -102,8 +102,8 @@ function serverBackend(active: ActiveProvider): AiBackend {
 			let response: Response;
 			try {
 				response = await fetch(`${active.baseUrl.replace(/\/+$/, "")}/models`, { headers: active.apiKey ? { Authorization: `Bearer ${active.apiKey}` } : {}, signal });
-			} catch (error) {
-				if (signal?.aborted) throw new AiError("Cancelled.");
+			} catch {
+				// A timeout means the same to the writer as a server that isn't there.
 				throw new AiError(unreachable(active.preset, active.baseUrl), true);
 			}
 			if (response.status === 401 || response.status === 403) throw new AiError(`${displayName(active.preset)} rejected the API key.`);
@@ -133,10 +133,11 @@ function setupHint({ preset, baseUrl, apiKey, models }: ActiveProvider): string 
 
 function friendlyError({ preset, baseUrl }: ActiveProvider, raw: string, modelId?: string): string {
 	const name = displayName(preset);
-	if (/abort/i.test(raw)) return "Cancelled.";
+	// Ollama reports a crashed runner as "signal: aborted", which is not the writer cancelling.
+	if (/\b(request|operation) was aborted\b|aborterror/i.test(raw)) return "Cancelled.";
 	if (/connection error|failed to fetch|fetch failed|econnrefused|network error/i.test(raw)) return unreachable(preset, baseUrl);
 	if (/\b40[13]\b|unauthori[sz]ed|invalid.*api key|no auth/i.test(raw)) return `${name} rejected the API key. Check it in Vikalp settings.`;
-	if (/\b402\b|credit|insufficient/i.test(raw)) return `${name} says the account is out of credits.`;
+	if (/\b402\b|credits|insufficient (funds|balance|quota)/i.test(raw)) return `${name} says the account is out of credits.`;
 	if (/\b404\b/.test(raw) && /model/i.test(raw)) return `${name} doesn't have the model${modelId ? ` "${modelId}"` : ""}. Pick another in Vikalp settings.`;
 	if (/\b429\b|rate limit/i.test(raw)) return `${name} is rate limiting. Wait a moment and try again.`;
 	return `The model call failed: ${shorten(raw)}`;
@@ -158,10 +159,6 @@ function unreachable(preset: ProviderPreset, baseUrl: string): string {
 	if (preset.id === "lmstudio") return `Can't reach ${where}. Is LM Studio's server running, with CORS turned on?`;
 	if (preset.id === "custom") return `Can't reach ${where}. Check the URL, and that the server accepts requests from Obsidian.`;
 	return `Can't reach ${preset.label}. Check your connection and try again.`;
-}
-
-function pricingOf(model: { cost: { input: number; output: number } }): Pricing {
-	return model.cost.input > 0 || model.cost.output > 0 ? "priced" : "unpriced";
 }
 
 function capitalise(text: string): string {
