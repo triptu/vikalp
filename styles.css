@@ -1511,7 +1511,8 @@ body.theme-light {
 	color: var(--text-error);
 }
 
-.vk-settings-key {
+.vk-settings-key,
+.vk-settings-url {
 	width: 260px;
 }
 
@@ -1839,6 +1840,29 @@ body.theme-light {
 
 .vk-lab-mode .vk-segment {
 	padding: var(--size-2-2) var(--size-4-2);
+}
+
+/* One-model providers name the model where the mode switch would be. */
+.vk-lab-model,
+.vk-lab .vk-lab-model {
+	flex: 0 1 auto;
+	min-width: 0;
+	max-width: 60%;
+	height: auto;
+	padding: var(--size-2-2) var(--size-4-2);
+	border: none;
+	box-shadow: none;
+	border-radius: var(--radius-m);
+	background-color: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.vk-lab .vk-lab-model:hover {
+	color: var(--text-normal);
 }
 
 .vk-lab-spots,

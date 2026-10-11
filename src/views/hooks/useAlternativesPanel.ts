@@ -1,5 +1,5 @@
 import type { SpanUnit } from "../../core/model/types";
-import type { KeyHints, SpanView } from "../../store/uiStore";
+import { modelLabel, type KeyHints, type SpanView } from "../../store/uiStore";
 import { useViewContext, type AlternativesActions } from "../context";
 import { useStoreSlice } from "./useStore";
 
@@ -19,13 +19,13 @@ export interface AlternativesPanelModel {
 
 /** Everything the Alternatives panel shows, plus the actions it can take. */
 export function useAlternativesPanel(): AlternativesPanelModel {
-	const { store, alternatives, modelLabel } = useViewContext();
+	const { store, alternatives } = useViewContext();
 	const slice = useStoreSlice(store, (state) => ({
 		note: state.note,
 		panelSpanId: state.panelSpanId,
 		aiPendingSpans: state.aiPendingSpans,
 		aiSetupHint: state.aiSetupHint,
-		modelMode: state.modelMode,
+		modelLabel: modelLabel(state),
 		noteEditor: state.noteEditorSpanId,
 		keyHints: state.keyHints,
 	}));
@@ -38,7 +38,7 @@ export function useAlternativesPanel(): AlternativesPanelModel {
 		unplaced: slice.note?.spans.filter((candidate) => candidate.orphaned) ?? [],
 		aiSetupHint: slice.aiSetupHint,
 		actions: alternatives,
-		modelLabel: modelLabel(slice.modelMode),
+		modelLabel: slice.modelLabel,
 		editingNote: span !== null && slice.noteEditor === span.id,
 		keyHints: slice.keyHints,
 	};

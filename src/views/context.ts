@@ -73,7 +73,6 @@ export interface VikalpViewContext {
 	overflow: OverflowActions;
 	lint: LintActions;
 	lab: LabActions;
-	modelLabel: (mode: ModelMode) => string;
 	trimPrimary: () => "ghost" | "cut";
 }
 
