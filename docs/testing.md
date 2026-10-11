@@ -17,7 +17,7 @@ Tests describe behaviour a writer would recognise. They should survive refactors
 2. launches the installed Obsidian with its own profile in `e2e/.profile/` (a running Obsidian and your real vault are untouched),
 3. connects over the Chrome DevTools protocol with Playwright and runs the flows in `e2e/run.mjs`.
 
-Flows are grouped so a whole group shares one Obsidian and one scratch vault. The first group writes (alternatives, ghosts, Overflow, unit tabs, hotkeys, span notes, two panes), edits the file outside Obsidian, restarts once, and checks that everything was saved and re-attached. The second group lints the LinkedIn draft, adds a rule in settings, edits while judgment rules run, and finds spots with AI. Flows in a group run in order and build on each other, so choose new words when adding one.
+Flows are grouped so a whole group shares one Obsidian and one scratch vault. The first group writes (alternatives, ghosts, Overflow, unit tabs, hotkeys, span notes, two panes), edits the file outside Obsidian, restarts once, and checks that everything was saved and re-attached. The second group lints the LinkedIn draft, adds a rule in settings, edits while judgment rules run, and finds spots with AI. The third switches to Ollama, pointed at a stand-in server (`tests/support/mockModelServer.ts`) so no real Ollama is needed, asks it for versions, and switches back to OpenRouter. Flows in a group run in order and build on each other, so choose new words when adding one.
 
 Run one group by naming any of its flows: `npm run e2e -- ghost`.
 

@@ -4,19 +4,28 @@ import type { AddressInfo } from "node:net";
 /**
  * A stand-in for Ollama or LM Studio: an OpenAI-compatible server on localhost
  * that lists models and answers every chat request by calling the requested tool.
+ * It allows requests from any origin, as Ollama does for Obsidian, so e2e flows can use it too.
  */
 export interface MockModelServer {
 	baseUrl: string;
 	/** Arguments the server puts in its tool call. */
 	toolArguments: unknown;
 	/** Bodies of the chat requests received, newest last. */
-	requests: Array<{ model: string; authorization: string | undefined }>;
+	requests: Array<{ model: string; authorization: string | undefined; origin: string | undefined }>;
 	close(): Promise<void>;
 }
 
 export async function startMockModelServer(models: string[]): Promise<MockModelServer> {
 	const mock: MockModelServer = { baseUrl: "", toolArguments: {}, requests: [], close: async () => {} };
 	const server: Server = createServer(async (request, response) => {
+		response.setHeader("access-control-allow-origin", "*");
+		response.setHeader("access-control-allow-headers", "*");
+		response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
+		if (request.method === "OPTIONS") {
+			response.writeHead(204);
+			response.end();
+			return;
+		}
 		if (request.method === "GET" && request.url === "/v1/models") {
 			response.writeHead(200, { "content-type": "application/json" });
 			response.end(JSON.stringify({ object: "list", data: models.map((id) => ({ id, object: "model" })) }));
@@ -24,7 +33,7 @@ export async function startMockModelServer(models: string[]): Promise<MockModelS
 		}
 		if (request.method === "POST" && request.url === "/v1/chat/completions") {
 			const body = JSON.parse(await readBody(request)) as { model: string; tools?: Array<{ function: { name: string } }> };
-			mock.requests.push({ model: body.model, authorization: request.headers.authorization });
+			mock.requests.push({ model: body.model, authorization: request.headers.authorization, origin: request.headers.origin });
 			if (!models.includes(body.model)) {
 				response.writeHead(404, { "content-type": "application/json" });
 				response.end(JSON.stringify({ error: { message: `model '${body.model}' not found`, type: "not_found_error" } }));
