@@ -57,6 +57,7 @@ export function LabContainer() {
 		modelMode: state.modelMode,
 		hasModes: state.aiModel.hasModes,
 		modelId: state.aiModel.modelId,
+		providerLabel: state.aiModel.providerLabel,
 		aiSetupHint: state.aiSetupHint,
 		hasNote: state.note !== null,
 		lab: state.lab,

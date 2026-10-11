@@ -4,7 +4,7 @@ import { createProvider, type MutableModels } from "@earendil-works/pi-ai/models
 import { anthropicProvider } from "@earendil-works/pi-ai/providers/anthropic";
 import { openaiProvider } from "@earendil-works/pi-ai/providers/openai";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
-import { isLocalUrl, protocolFor, shortServerName, type ProviderPreset } from "../core/providers";
+import { protocolFor, runsLocally, shortServerName, type ProviderPreset } from "../core/providers";
 import { activeProvider, type ActiveProvider, type VikalpSettings } from "../core/settings";
 import { AiError, type AiBackend, type Pricing } from "./backend";
 
@@ -78,7 +78,7 @@ function catalogBackend(models: MutableModels, active: ActiveProvider, provider:
 
 /** Any OpenAI-compatible server: Ollama, LM Studio, or a URL the writer typed. */
 function serverBackend(active: ActiveProvider): AiBackend {
-	const pricing: Pricing = isLocalUrl(active.baseUrl) ? "free" : "unpriced";
+	const pricing: Pricing = runsLocally(active.preset.id, active.baseUrl) ? "free" : "unpriced";
 	return {
 		...commonParts(active),
 		// The OpenAI client refuses to send without a key, and local servers ignore it.
@@ -99,16 +99,19 @@ function serverBackend(active: ActiveProvider): AiBackend {
 			return { model: model as unknown as Model<never>, pricing };
 		},
 		listModels: async (signal) => {
-			const failure = (raw: string) => new AiError(friendlyError(active, raw));
 			let response: Response;
 			try {
 				response = await fetch(`${active.baseUrl.replace(/\/+$/, "")}/models`, { headers: active.apiKey ? { Authorization: `Bearer ${active.apiKey}` } : {}, signal });
 			} catch (error) {
-				throw failure(error instanceof Error ? error.message : String(error));
+				if (signal?.aborted) throw new AiError("Cancelled.");
+				throw new AiError(unreachable(active.preset, active.baseUrl), true);
 			}
-			if (!response.ok) throw failure(`${response.status}: ${await response.text()}`);
-			const listing = (await response.json()) as { data?: Array<{ id?: unknown }> };
-			return (listing.data ?? []).flatMap((entry) => (typeof entry.id === "string" ? [entry.id] : []));
+			if (response.status === 401 || response.status === 403) throw new AiError(`${displayName(active.preset)} rejected the API key.`);
+			if (response.status === 404) throw new AiError("No model list at this URL. OpenAI-compatible URLs usually end in /v1.");
+			if (!response.ok) throw new AiError(`The server answered with error ${response.status}.`);
+			const listing = (await response.json().catch(() => null)) as { data?: Array<{ id?: unknown }> } | null;
+			if (!Array.isArray(listing?.data)) throw new AiError("The server's answer wasn't a model list. OpenAI-compatible URLs usually end in /v1.");
+			return listing.data.flatMap((entry) => (typeof entry.id === "string" ? [entry.id] : []));
 		},
 	};
 }
@@ -129,14 +132,24 @@ function setupHint({ preset, baseUrl, apiKey, models }: ActiveProvider): string 
 }
 
 function friendlyError({ preset, baseUrl }: ActiveProvider, raw: string, modelId?: string): string {
-	const name = preset.modes ? preset.label : capitalise(preset.serverName);
+	const name = displayName(preset);
 	if (/abort/i.test(raw)) return "Cancelled.";
-	if (/connection error|failed to fetch|fetch failed|econnrefused|network/i.test(raw)) return unreachable(preset, baseUrl);
-	if (/401|403|unauthor|invalid.*api key|no auth/i.test(raw)) return `${name} rejected the API key. Check it in Vikalp settings.`;
-	if (/402|credit|insufficient/i.test(raw)) return `${name} says the account is out of credits.`;
-	if (/404/.test(raw) && /model/i.test(raw)) return `${name} doesn't have the model${modelId ? ` "${modelId}"` : ""}. Pick another in Vikalp settings.`;
-	if (/429|rate/i.test(raw)) return `${name} is rate limiting. Wait a moment and try again.`;
-	return `The model call failed: ${raw}`;
+	if (/connection error|failed to fetch|fetch failed|econnrefused|network error/i.test(raw)) return unreachable(preset, baseUrl);
+	if (/\b40[13]\b|unauthori[sz]ed|invalid.*api key|no auth/i.test(raw)) return `${name} rejected the API key. Check it in Vikalp settings.`;
+	if (/\b402\b|credit|insufficient/i.test(raw)) return `${name} says the account is out of credits.`;
+	if (/\b404\b/.test(raw) && /model/i.test(raw)) return `${name} doesn't have the model${modelId ? ` "${modelId}"` : ""}. Pick another in Vikalp settings.`;
+	if (/\b429\b|rate limit/i.test(raw)) return `${name} is rate limiting. Wait a moment and try again.`;
+	return `The model call failed: ${shorten(raw)}`;
+}
+
+/** Keeps an unexpected server answer readable: no markup, one line, not too long. */
+function shorten(raw: string): string {
+	const plain = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+	return plain.length > 140 ? `${plain.slice(0, 140)}…` : plain;
+}
+
+function displayName(preset: ProviderPreset): string {
+	return preset.modes ? preset.label : capitalise(preset.serverName);
 }
 
 function unreachable(preset: ProviderPreset, baseUrl: string): string {

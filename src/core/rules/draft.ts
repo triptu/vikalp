@@ -45,7 +45,7 @@ export const ENGINE_CHOICES: EngineChoice[] = [
 	{ engine: "substitution", name: "Phrases with fixes", hint: "Flags a phrase and suggests a plainer one you can apply.", usesAi: false },
 	{ engine: "regex", name: "Pattern", hint: "A regular expression, for shapes a phrase list can't catch, like “not just X, but Y”.", usesAi: false },
 	{ engine: "metric", name: "Measurement", hint: "Flags text when a number goes over a limit, like words in a sentence.", usesAi: false },
-	{ engine: "classifier", name: "AI yes/no question", hint: "Jev answers a yes/no question about each sentence or paragraph. Costs a little per run.", usesAi: true },
+	{ engine: "classifier", name: "AI yes/no question", hint: "A yes/no question about each sentence or paragraph, answered by Jev on OpenRouter or by the selected model elsewhere. Costs a little per run.", usesAi: true },
 	{ engine: "llm", name: "AI finds quotes", hint: "The selected model reads the note and quotes what matches your instructions. Costs more than a yes/no question.", usesAi: true },
 ];
 

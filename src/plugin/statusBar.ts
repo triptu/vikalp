@@ -48,6 +48,7 @@ export class StatusBar {
 			note?.markersOn,
 			note?.lintHits.length,
 			modelLabel(state),
+			state.aiModel.providerLabel,
 			state.lab.runningPass,
 			state.trim.status,
 			state.aiPendingSpans.length,
@@ -87,7 +88,8 @@ export class StatusBar {
 		this.lab.createSpan({ cls: "vk-status-lab-label", text: "Lab" });
 		this.lab.createSpan({ cls: "vk-status-lab-mode", text: modelLabel(state) });
 
-		setTooltip(this.lab, "The Lab: AI marks, trim and model mode", { placement: "top" });
+		const { providerLabel, modelId, hasModes } = state.aiModel;
+		setTooltip(this.lab, `The Lab: AI marks${hasModes ? ", trim and model mode" : " and trim"}. ${providerLabel} · ${modelId || "no model yet"}`, { placement: "top" });
 	}
 
 	dispose() {

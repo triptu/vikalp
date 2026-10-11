@@ -103,6 +103,8 @@ export interface CostEntry {
 
 /** Where AI calls go: a provider with Lite, Medium and Heavy, or one model the writer picked. */
 export interface AiModelState {
+	/** "Anthropic", "Ollama"… */
+	providerLabel: string;
 	hasModes: boolean;
 	/** The model the current mode uses. */
 	modelId: string;
@@ -153,7 +155,7 @@ export const initialUiState: VikalpUiState = {
 	lab: { runningPass: null, message: null },
 	costs: [],
 	modelMode: "lite",
-	aiModel: { hasModes: true, modelId: "", free: false },
+	aiModel: { providerLabel: "OpenRouter", hasModes: true, modelId: "", free: false },
 	aiSetupHint: null,
 	lintFocus: null,
 	lintLayout: "by-rule",
@@ -176,14 +178,17 @@ export function modelLabel(state: VikalpUiState): string {
 	return state.aiModel.hasModes ? MODEL_MODE_LABELS[state.modelMode] : state.aiModel.modelId;
 }
 
-/** What this session's AI calls cost, as the Lab shows it: a price, "Free" on a local model, or tokens when the price is unknown. */
-export type SessionCost = { kind: "price"; dollars: number } | { kind: "free" } | { kind: "tokens"; tokens: number };
+/** What this session's AI calls cost: dollars where prices are known, tokens where they aren't. */
+export interface SessionCost {
+	dollars: number;
+	/** Tokens sent to servers whose prices Vikalp doesn't know. */
+	unpricedTokens: number;
+	/** Nothing was spent, and the current model runs on this computer. */
+	free: boolean;
+}
 
 export function sessionCostSummary(state: VikalpUiState): SessionCost {
-	if (state.costs.some((entry) => entry.pricing === "unpriced")) {
-		return { kind: "tokens", tokens: state.costs.reduce((sum, entry) => sum + entry.inputTokens + entry.outputTokens, 0) };
-	}
 	const dollars = sessionCost(state);
-	if (dollars === 0 && state.aiModel.free) return { kind: "free" };
-	return { kind: "price", dollars };
+	const unpricedTokens = state.costs.filter((entry) => entry.pricing === "unpriced").reduce((sum, entry) => sum + entry.inputTokens + entry.outputTokens, 0);
+	return { dollars, unpricedTokens, free: dollars === 0 && unpricedTokens === 0 && state.aiModel.free };
 }

@@ -8,8 +8,14 @@ const MODEL_MODES: ModelMode[] = ["lite", "medium", "heavy"];
 
 const SERVER_URL_HELP: Partial<Record<ProviderId, string>> = {
 	ollama: "Ollama's usual address. Change it if Ollama runs elsewhere.",
-	lmstudio: "Start the server in LM Studio's Developer tab and turn on CORS there.",
+	lmstudio: "LM Studio's usual address. Change it if its server runs elsewhere.",
 	custom: "Any OpenAI-compatible server, e.g. https://api.groq.com/openai/v1",
+};
+
+/** What to do when the server answers but has no models. */
+const NO_MODELS_HELP: Partial<Record<ProviderId, string>> = {
+	ollama: "Ollama has no models yet. Run “ollama pull qwen3:8b” in a terminal, then refresh.",
+	lmstudio: "LM Studio has no models loaded. Load one in LM Studio, then refresh.",
 };
 
 /** What the server said the last time Vikalp asked it for models. */
@@ -19,6 +25,8 @@ interface ServerModels {
 	status: "loading" | "ready" | "failed";
 	ids: string[];
 	error: string | null;
+	/** The server answered, so typing a model id by hand may still work. */
+	answered: boolean;
 }
 
 /**
@@ -27,7 +35,7 @@ interface ServerModels {
  */
 export class AiSettingsSection {
 	private serverModels: ServerModels | null = null;
-	/** Model ids pi-ai knows for the provider. Null ids while loading. */
+	/** Model ids pi-ai knows for the provider, offered as suggestions. Null ids while loading. */
 	private catalog: { provider: ProviderId; ids: string[] | null } | null = null;
 	private showAdvanced = false;
 
@@ -44,7 +52,7 @@ export class AiSettingsSection {
 		return [
 			{
 				name: "Provider",
-				desc: "Where AI calls go. Ollama and LM Studio run models on this computer, so nothing leaves it.",
+				desc: "Where AI calls go. Ollama and LM Studio run models on your own machine.",
 				aliases: ["openrouter", "anthropic", "openai", "ollama", "lm studio", "local"],
 				render: (setting) => {
 					setting.addDropdown((dropdown) =>
@@ -101,12 +109,12 @@ export class AiSettingsSection {
 				(mode): SettingDefinition => ({
 					name: `${MODEL_MODE_LABELS[mode]} model`,
 					desc: `${preset.label} model id. Default: ${modes[mode]}`,
-					render: (setting) => (preset.id === "openrouter" ? this.modelText(setting, mode, modes[mode]) : this.catalogDropdown(setting, mode, modes[mode])),
+					render: (setting) => this.modelText(setting, mode, modes[mode]),
 				}),
 			),
 			{
 				name: "Advanced",
-				desc: "The server address, for a proxy or a regional endpoint.",
+				desc: "The server address, for a regional endpoint or an OpenAI-compatible proxy.",
 				render: (setting) => {
 					let chevron: ExtraButtonComponent | null = null;
 					const toggle = () => {
@@ -122,7 +130,7 @@ export class AiSettingsSection {
 					setting.infoEl.onclick = toggle;
 				},
 			},
-			{ ...this.urlRow(preset, `Default: ${preset.baseUrl}`), visible: () => this.showAdvanced },
+			{ ...this.urlRow(preset, "A different host is treated as an OpenAI-compatible server. Clear the field to go back to the default."), visible: () => this.showAdvanced },
 		];
 	}
 
@@ -137,6 +145,7 @@ export class AiSettingsSection {
 				render: (setting) => {
 					this.loadServerModels();
 					const models = this.serverModels;
+					const needsUrl = !activeProvider(this.plugin.settings).baseUrl;
 					if (models?.status === "ready" && models.ids.length > 0) {
 						const current = this.config().models.lite;
 						const ids = current && !models.ids.includes(current) ? [current, ...models.ids] : models.ids;
@@ -155,7 +164,7 @@ export class AiSettingsSection {
 								.onChange((value) => void this.setSingleModel(value.trim(), false)),
 						);
 					}
-					setting.addExtraButton((button) => button.setIcon("refresh-cw").setTooltip("Ask the server for its models again").onClick(() => this.reloadServerModels()));
+					if (!needsUrl) setting.addExtraButton((button) => button.setIcon("refresh-cw").setTooltip("Ask the server for its models again").onClick(() => this.reloadServerModels()));
 				},
 			},
 		];
@@ -169,11 +178,13 @@ export class AiSettingsSection {
 			render: (setting) => {
 				setting.addText((text) => {
 					text.inputEl.addClass("vk-settings-url");
+					// Shows the preset's URL as a real value, but stores it as empty so a future default still applies.
 					text
 						.setPlaceholder(preset.baseUrl || "https://…/v1")
-						.setValue(this.config().baseUrl)
+						.setValue(this.config().baseUrl || preset.baseUrl)
 						.onChange(async (value) => {
-							this.config().baseUrl = value.trim();
+							const url = value.trim();
+							this.config().baseUrl = url === preset.baseUrl ? "" : url;
 							await this.plugin.saveSettings();
 						});
 					// Fetch the model list once the writer leaves the field, not on every keystroke.
@@ -183,64 +194,69 @@ export class AiSettingsSection {
 		};
 	}
 
+	/** A model id field. Named providers suggest the models pi-ai knows, but any id can be typed. */
 	private modelText(setting: Setting, mode: ModelMode, fallback: string) {
-		setting.addText((text) =>
+		setting.addText((text) => {
 			text
 				.setPlaceholder(fallback)
 				.setValue(this.config().models[mode])
 				.onChange(async (value) => {
 					this.config().models[mode] = value.trim() || fallback;
 					await this.plugin.saveSettings();
-				}),
-		);
+				});
+			const suggestions = this.catalogIds();
+			if (suggestions.length > 0) {
+				const listId = `vk-models-${mode}`;
+				const list = setting.controlEl.createEl("datalist", { attr: { id: listId } });
+				for (const id of suggestions) list.createEl("option", { attr: { value: id } });
+				text.inputEl.setAttribute("list", listId);
+			}
+		});
 	}
 
-	private catalogDropdown(setting: Setting, mode: ModelMode, fallback: string) {
+	/** The catalog's model ids for the current provider. Empty until loaded; loading rebuilds the tab once. */
+	private catalogIds(): string[] {
 		const provider = this.plugin.settings.provider;
 		if (this.catalog?.provider !== provider) {
 			const catalog: { provider: ProviderId; ids: string[] | null } = { provider, ids: null };
 			this.catalog = catalog;
-			void this.plugin.ai.listModels().then((ids) => {
-				catalog.ids = ids;
-				if (this.catalog === catalog) this.rebuild();
-			});
+			void this.plugin.ai
+				.listModels()
+				.then((ids) => {
+					catalog.ids = ids;
+					if (this.catalog === catalog) this.rebuild();
+				})
+				.catch(() => (catalog.ids = []));
 		}
-		const known = this.catalog?.ids;
-		if (!known) return this.modelText(setting, mode, fallback);
-		const current = this.config().models[mode];
-		const ids = known.includes(current) ? known : [current, ...known];
-		setting.addDropdown((dropdown) =>
-			dropdown
-				.addOptions(Object.fromEntries(ids.map((id) => [id, id])))
-				.setValue(current)
-				.onChange(async (value) => {
-					this.config().models[mode] = value;
-					await this.plugin.saveSettings();
-				}),
-		);
+		return this.catalog?.ids ?? [];
 	}
 
 	private serverModelsStatus(): string {
+		const preset = activeProvider(this.plugin.settings).preset;
 		const models = this.serverModels;
+		if (!activeProvider(this.plugin.settings).baseUrl) return "Type the server's URL first.";
 		if (!models || models.status === "loading") return "Looking for models on the server…";
-		if (models.status === "failed") return `${models.error} You can also type a model id.`;
-		if (models.ids.length === 0) return "The server has no models yet. Download one, then refresh.";
+		if (models.status === "failed") return models.answered ? `${models.error} You can still type a model id.` : (models.error ?? "");
+		if (models.ids.length === 0) return NO_MODELS_HELP[preset.id] ?? "The server lists no models. Type a model id.";
 		return `Connected. ${models.ids.length} ${models.ids.length === 1 ? "model" : "models"} on the server.`;
 	}
 
 	private loadServerModels() {
 		const { baseUrl, apiKey } = activeProvider(this.plugin.settings);
+		if (!baseUrl) return;
 		const source = `${baseUrl}\n${apiKey}`;
 		if (this.serverModels?.source === source) return;
-		const models: ServerModels = { source, status: "loading", ids: [], error: null };
+		const models: ServerModels = { source, status: "loading", ids: [], error: null, answered: false };
 		this.serverModels = models;
 		void this.plugin.ai
 			.listModels()
 			.then(async (ids) => {
-				Object.assign(models, { status: "ready", ids });
+				Object.assign(models, { status: "ready", ids, answered: true });
 				if (!this.config().models.lite && ids[0]) await this.setSingleModel(ids[0], false);
 			})
-			.catch((error: unknown) => Object.assign(models, { status: "failed", error: error instanceof AiError ? error.message : String(error) }))
+			.catch((error: unknown) =>
+				Object.assign(models, { status: "failed", error: error instanceof Error ? error.message : String(error), answered: !(error instanceof AiError && error.unreachable) }),
+			)
 			.finally(() => {
 				if (this.serverModels === models) this.rebuild();
 			});
