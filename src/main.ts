@@ -2,7 +2,8 @@ import type { EditorView } from "@codemirror/view";
 import { MarkdownView, Menu, Notice, Plugin, TFile } from "obsidian";
 import { AiClient, type CostRecord } from "./ai/aiClient";
 import { newId } from "./core/model/ids";
-import { MODEL_MODE_LABELS, mergeSettings, type ModelMode, type VikalpSettings } from "./core/settings";
+import { isLocalUrl, type ProviderId } from "./core/providers";
+import { activeProvider, mergeSettings, modelFor, type ModelMode, type VikalpSettings } from "./core/settings";
 import { vikalpEditorExtension } from "./editor";
 import { noteModeField, setNoteMode } from "./editor/noteFields";
 import { SidecarRepository } from "./persistence/sidecar";
@@ -45,7 +46,7 @@ export default class VikalpPlugin extends Plugin {
 		this.settings = mergeSettings((await this.loadData()) as Partial<VikalpSettings> | null);
 		this.store = createUiStore();
 		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
-		this.store.setState({ modelMode: this.settings.modelMode, aiSetupHint: this.ai.isReady ? null : this.ai.setupHint, lintLayout: this.settings.lintLayout });
+		this.syncStore();
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
 		const repository = new SidecarRepository(this.app.vault.adapter, pluginDir, (notePath, backup) => {
@@ -78,7 +79,7 @@ export default class VikalpPlugin extends Plugin {
 			store: this.store,
 		};
 		const viewContext = this.createViewContext();
-		this.labPopover = new LabPopoverHost(viewContext, () => this.settings);
+		this.labPopover = new LabPopoverHost(viewContext);
 		this.actionMenu = new ActionMenuHost(this);
 
 		this.registerEditorExtension(vikalpEditorExtension(this.controller));
@@ -148,8 +149,24 @@ export default class VikalpPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.store.setState({ modelMode: this.settings.modelMode, aiSetupHint: this.ai.isReady ? null : this.ai.setupHint, lintLayout: this.settings.lintLayout });
+		this.syncStore();
 		this.statusBar?.render();
+	}
+
+	/** Copies the settings the views show into the store. */
+	private syncStore() {
+		const active = activeProvider(this.settings);
+		this.store.setState({
+			modelMode: this.settings.modelMode,
+			aiModel: { hasModes: active.preset.modes !== null, modelId: modelFor(this.settings, this.settings.modelMode), free: isLocalUrl(active.baseUrl) },
+			aiSetupHint: this.ai.isReady ? null : this.ai.setupHint,
+			lintLayout: this.settings.lintLayout,
+		});
+	}
+
+	async setProvider(provider: ProviderId) {
+		this.settings.provider = provider;
+		await this.saveSettings();
 	}
 
 	async setModelMode(mode: ModelMode) {
@@ -287,7 +304,6 @@ export default class VikalpPlugin extends Plugin {
 				},
 				close: () => this.labPopover.close(),
 			},
-			modelLabel: (mode) => MODEL_MODE_LABELS[mode],
 			trimPrimary: () => this.settings.trimPrimaryAction,
 		};
 	}

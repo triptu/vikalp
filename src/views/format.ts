@@ -1,3 +1,5 @@
+import type { SessionCost } from "../store/uiStore";
+
 export function relativeTime(timestamp: number, now: number): string {
 	const seconds = Math.round((now - timestamp) / 1000);
 	if (seconds < 45) return "just now";
@@ -14,6 +16,17 @@ export function formatCost(dollars: number): string {
 	if (dollars === 0) return "$0.00";
 	if (dollars < 0.01) return "<$0.01";
 	return `$${dollars.toFixed(2)}`;
+}
+
+export function formatTokens(tokens: number): string {
+	if (tokens < 1000) return `${tokens} tokens`;
+	return `${(tokens / 1000).toFixed(tokens < 10000 ? 1 : 0)}k tokens`;
+}
+
+export function formatSessionCost(cost: SessionCost): string {
+	if (cost.kind === "free") return "Free";
+	if (cost.kind === "tokens") return formatTokens(cost.tokens);
+	return formatCost(cost.dollars);
 }
 
 export function percentChange(before: number, after: number): string {

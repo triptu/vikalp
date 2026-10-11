@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import type { LintScope, OverflowBlock, Severity, SpanUnit, Version } from "../core/model/types";
-import type { ModelMode } from "../core/settings";
+import { MODEL_MODE_LABELS, type ModelMode } from "../core/settings";
 
 export interface SpanView {
 	id: string;
@@ -95,8 +95,19 @@ export interface CostEntry {
 	inputTokens: number;
 	outputTokens: number;
 	cost: number;
+	/** Whether `cost` is a real price, zero because the model is local, or zero because the price is unknown. */
+	pricing: "priced" | "free" | "unpriced";
 	fallback?: boolean;
 	error?: string;
+}
+
+/** Where AI calls go: a provider with Lite, Medium and Heavy, or one model the writer picked. */
+export interface AiModelState {
+	hasModes: boolean;
+	/** The model the current mode uses. */
+	modelId: string;
+	/** True when the model runs on this computer, so calls cost nothing. */
+	free: boolean;
 }
 
 export interface VikalpUiState {
@@ -111,6 +122,7 @@ export interface VikalpUiState {
 	lab: LabPassState;
 	costs: CostEntry[];
 	modelMode: ModelMode;
+	aiModel: AiModelState;
 	/** Why AI can't run yet, as the start of a sentence. Null once it can. */
 	aiSetupHint: string | null;
 	/** The lint mark the writer last clicked in the text; the Lint panel scrolls to it. */
@@ -141,6 +153,7 @@ export const initialUiState: VikalpUiState = {
 	lab: { runningPass: null, message: null },
 	costs: [],
 	modelMode: "lite",
+	aiModel: { hasModes: true, modelId: "", free: false },
 	aiSetupHint: null,
 	lintFocus: null,
 	lintLayout: "by-rule",
@@ -156,4 +169,21 @@ export type UiStore = ReturnType<typeof createUiStore>;
 
 export function sessionCost(state: VikalpUiState): number {
 	return state.costs.reduce((sum, entry) => sum + entry.cost, 0);
+}
+
+/** What to call the model in the UI: the mode ("Lite") for providers with modes, the model id otherwise. */
+export function modelLabel(state: VikalpUiState): string {
+	return state.aiModel.hasModes ? MODEL_MODE_LABELS[state.modelMode] : state.aiModel.modelId;
+}
+
+/** What this session's AI calls cost, as the Lab shows it: a price, "Free" on a local model, or tokens when the price is unknown. */
+export type SessionCost = { kind: "price"; dollars: number } | { kind: "free" } | { kind: "tokens"; tokens: number };
+
+export function sessionCostSummary(state: VikalpUiState): SessionCost {
+	if (state.costs.some((entry) => entry.pricing === "unpriced")) {
+		return { kind: "tokens", tokens: state.costs.reduce((sum, entry) => sum + entry.inputTokens + entry.outputTokens, 0) };
+	}
+	const dollars = sessionCost(state);
+	if (dollars === 0 && state.aiModel.free) return { kind: "free" };
+	return { kind: "price", dollars };
 }
