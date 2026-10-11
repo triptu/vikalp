@@ -53,15 +53,19 @@ The "active" editor is the last markdown editor the user worked in. Panels keep 
 
 ## AI
 
-`ai/aiClient.ts` wraps pi-ai. Where calls go and how they are authorised lives in a backend (`ai/backend.ts`); today the only one is OpenRouter (`ai/openRouter.ts`). Every call:
+`ai/aiClient.ts` wraps pi-ai. Where calls go and how they are authorised lives in a backend (`ai/backend.ts`), built for each call from settings by `ai/backends.ts`.
+
+The writer picks a provider preset (`core/providers.ts`): OpenRouter, Anthropic, OpenAI, Ollama, LM Studio or Custom. A preset only fills in the server URL, and the URL's host decides the protocol: `openrouter.ai`, `api.anthropic.com` and `api.openai.com` use pi-ai's own provider and price list for each; anything else is treated as an OpenAI-compatible server. OpenRouter calls all go through its OpenAI-style endpoint, since its CORS rules block the Anthropic SDK's headers from Obsidian. Each provider keeps its own key, URL and models in settings. OpenRouter, Anthropic and OpenAI offer Lite, Medium and Heavy; the others run one model, picked from the server's `/models` list.
+
+Every call:
 
 - runs only from a click or command,
 - asks for structured output through a single tool call (with a JSON fallback),
-- records its cost in the store.
+- records its cost in the store, marked as priced, free (a server on this computer) or unpriced (a server whose prices Vikalp doesn't know).
 
 Models never get character offsets. Prompts number the sentences (`[s4] …`) and models answer with a sentence id plus an exact quote. `core/ai/placement.ts` finds each quote with the anchoring code and rejects anything that isn't there verbatim. See [adding-a-lab-pass.md](adding-a-lab-pass.md).
 
-Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. If Jev fails, the linter falls back to the Lite model and says so. A backend without Jev sends judgments to the selected model and skips the grammar check.
+Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. It runs on OpenRouter only. If Jev fails, the linter falls back to the Lite model and says so. Other providers send judgments to the selected model and skip the grammar check.
 
 ## Views
 

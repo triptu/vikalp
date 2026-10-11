@@ -21,7 +21,7 @@ src/
   core/        pure TypeScript: model, anchoring, text segmentation, rules, AI prompts. No obsidian or CodeMirror imports.
   store/       zustand vanilla stores (per-note mirror, session, settings)
   persistence/ sidecar JSON files per note
-  ai/          OpenRouter client over pi-ai
+  ai/          AI client over pi-ai: OpenRouter, Anthropic, OpenAI or any OpenAI-compatible server
   editor/      CodeMirror 6 state fields, decorations, keymaps
   views/       Preact components and hooks (dumb components)
   plugin/      Obsidian wiring: commands, menus, views, settings
