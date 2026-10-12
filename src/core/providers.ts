@@ -34,7 +34,7 @@ export const PROVIDER_PRESETS: Record<ProviderId, ProviderPreset> = {
 		baseUrl: "https://api.anthropic.com",
 		key: "required",
 		keyPlaceholder: "sk-ant-…",
-		modes: { lite: "claude-haiku-4-5", medium: "claude-sonnet-5-5", heavy: "claude-opus-5-5" },
+		modes: { lite: "claude-haiku-5-5", medium: "claude-sonnet-5-5", heavy: "claude-opus-5-5" },
 		serverName: "Anthropic",
 	},
 	openai: {
