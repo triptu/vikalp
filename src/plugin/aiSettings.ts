@@ -215,9 +215,9 @@ export class AiSettingsSection {
 			choices,
 			openModels: preset.id === "openrouter" ? (this.plugin.openModels.picks?.[mode] ?? []) : [],
 			current: this.config().models[mode],
-			onPick: async (id) => {
+			onPick: (id) => {
 				this.config().models[mode] = id;
-				await this.plugin.saveSettings();
+				void this.plugin.saveSettings();
 			},
 			onCustom: () => {
 				this.customModes.add(mode);
