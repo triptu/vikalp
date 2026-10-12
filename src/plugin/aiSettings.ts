@@ -1,8 +1,10 @@
 import type { ExtraButtonComponent, Setting, SettingDefinition } from "obsidian";
 import { AiError } from "../ai/aiClient";
+import { familyChoices, type ModelChoice } from "../core/modelChoices";
 import { PROVIDER_IDS, PROVIDER_PRESETS, type ProviderId, type ProviderPreset } from "../core/providers";
 import { activeProvider, MODEL_MODE_LABELS, type ModelMode, type ProviderSettings } from "../core/settings";
 import type VikalpPlugin from "../main";
+import { addModelPicker } from "./modelPicker";
 
 const MODEL_MODES: ModelMode[] = ["lite", "medium", "heavy"];
 
@@ -35,8 +37,10 @@ interface ServerModels {
  */
 export class AiSettingsSection {
 	private serverModels: ServerModels | null = null;
-	/** Model ids pi-ai knows for the provider, offered as suggestions. Null ids while loading. */
-	private catalog: { provider: ProviderId; ids: string[] | null } | null = null;
+	/** Models pi-ai knows for the provider. Null while loading. */
+	private catalog: { provider: ProviderId; models: ModelChoice[] | null } | null = null;
+	/** Modes where the writer chose "Custom…" and types a model id. */
+	private readonly customModes = new Set<ModelMode>();
 	private showAdvanced = false;
 
 	constructor(
@@ -62,6 +66,7 @@ export class AiSettingsSection {
 							.onChange(async (value) => {
 								await this.plugin.setProvider(value as ProviderId);
 								this.showAdvanced = false;
+								this.customModes.clear();
 								this.rebuild();
 							}),
 					);
@@ -99,6 +104,11 @@ export class AiSettingsSection {
 	/** Providers with Lite, Medium and Heavy. The server URL hides under Advanced since it rarely changes. */
 	private modeRows(preset: ProviderPreset): SettingDefinition[] {
 		const modes = preset.modes!;
+		if (preset.id === "openrouter") {
+			void this.plugin.openModels.refresh(this.config().apiKey).then((changed) => {
+				if (changed) this.rebuild();
+			});
+		}
 		return [
 			{
 				name: "Model mode",
@@ -108,8 +118,8 @@ export class AiSettingsSection {
 			...MODEL_MODES.map(
 				(mode): SettingDefinition => ({
 					name: `${MODEL_MODE_LABELS[mode]} model`,
-					desc: `${preset.label} model id. Default: ${modes[mode]}`,
-					render: (setting) => this.modelText(setting, mode, modes[mode]),
+					desc: this.customModes.has(mode) ? `Any ${preset.label} model id. Default: ${modes[mode]}` : `Default: ${this.nameOf(modes[mode])}`,
+					render: (setting) => (this.customModes.has(mode) ? this.customModelText(setting, mode, modes[mode]) : this.modelPicker(setting, preset, mode)),
 				}),
 			),
 			{
@@ -195,41 +205,67 @@ export class AiSettingsSection {
 		};
 	}
 
-	/** A model id field. Named providers suggest the models pi-ai knows, but any id can be typed. */
-	private modelText(setting: Setting, mode: ModelMode, fallback: string) {
-		setting.addText((text) => {
+	/** Suggested models for the mode: the newest of each family, the provider's default, and on OpenRouter some open models. */
+	private modelPicker(setting: Setting, preset: ProviderPreset, mode: ModelMode) {
+		const available = this.catalogModels();
+		const fallback = preset.modes![mode];
+		const choices = familyChoices(available, mode);
+		if (!choices.some((choice) => choice.id === fallback)) choices.push({ id: fallback, name: this.nameOf(fallback) });
+		addModelPicker(setting, {
+			choices,
+			openModels: preset.id === "openrouter" ? (this.plugin.openModels.picks?.[mode] ?? []) : [],
+			current: this.config().models[mode],
+			onPick: async (id) => {
+				this.config().models[mode] = id;
+				await this.plugin.saveSettings();
+			},
+			onCustom: () => {
+				this.customModes.add(mode);
+				this.rebuild();
+			},
+		});
+	}
+
+	private customModelText(setting: Setting, mode: ModelMode, fallback: string) {
+		setting.addText((text) =>
 			text
 				.setPlaceholder(fallback)
 				.setValue(this.config().models[mode])
 				.onChange(async (value) => {
 					this.config().models[mode] = value.trim() || fallback;
 					await this.plugin.saveSettings();
-				});
-			const suggestions = this.catalogIds();
-			if (suggestions.length > 0) {
-				const listId = `vk-models-${mode}`;
-				const list = setting.controlEl.createEl("datalist", { attr: { id: listId } });
-				for (const id of suggestions) list.createEl("option", { attr: { value: id } });
-				text.inputEl.setAttribute("list", listId);
-			}
-		});
+				}),
+		);
+		setting.addExtraButton((button) =>
+			button
+				.setIcon("list")
+				.setTooltip("Pick from the suggested models")
+				.onClick(() => {
+					this.customModes.delete(mode);
+					this.rebuild();
+				}),
+		);
 	}
 
-	/** The catalog's model ids for the current provider. Empty until loaded; loading rebuilds the tab once. */
-	private catalogIds(): string[] {
+	/** The catalog's models for the current provider. Empty until loaded; loading rebuilds the tab once. */
+	private catalogModels(): ModelChoice[] {
 		const provider = this.plugin.settings.provider;
 		if (this.catalog?.provider !== provider) {
-			const catalog: { provider: ProviderId; ids: string[] | null } = { provider, ids: null };
+			const catalog: { provider: ProviderId; models: ModelChoice[] | null } = { provider, models: null };
 			this.catalog = catalog;
 			void this.plugin.ai
 				.listModels()
-				.then((ids) => {
-					catalog.ids = ids;
+				.then((models) => {
+					catalog.models = models;
 					if (this.catalog === catalog) this.rebuild();
 				})
-				.catch(() => (catalog.ids = []));
+				.catch(() => (catalog.models = []));
 		}
-		return this.catalog?.ids ?? [];
+		return this.catalog?.models ?? [];
+	}
+
+	private nameOf(id: string): string {
+		return this.catalog?.models?.find((model) => model.id === id)?.name ?? id;
 	}
 
 	private serverModelsStatus(): string {
@@ -256,7 +292,8 @@ export class AiSettingsSection {
 		const current = () => this.serverModels === models && this.modelsSource() === source;
 		void this.plugin.ai
 			.listModels(AbortSignal.timeout(10_000))
-			.then(async (ids) => {
+			.then(async (choices) => {
+				const ids = choices.map((choice) => choice.id);
 				Object.assign(models, { status: "ready", ids, answered: true });
 				// Embedding models can't chat, and servers often list them first.
 				const firstChatModel = ids.find((id) => !/embed/i.test(id));

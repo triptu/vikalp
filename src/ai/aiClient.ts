@@ -1,6 +1,7 @@
 import type { AssistantMessage, Context, Tool } from "@earendil-works/pi-ai";
 import { createModels } from "@earendil-works/pi-ai/models";
 import type { TSchema } from "typebox";
+import type { ModelChoice } from "../core/modelChoices";
 import { modelFor, type ModelMode, type VikalpSettings } from "../core/settings";
 import { AiError, type AiBackend, type Pricing } from "./backend";
 import { backendFor, registerProviders } from "./backends";
@@ -79,8 +80,8 @@ export class AiClient {
 		return modelFor(this.getSettings(), mode);
 	}
 
-	/** Model ids the current provider offers. Throws `AiError` with a sentence for the writer when the server can't be reached. */
-	listModels(signal?: AbortSignal): Promise<string[]> {
+	/** Models the current provider offers. Throws `AiError` with a sentence for the writer when the server can't be reached. */
+	listModels(signal?: AbortSignal): Promise<ModelChoice[]> {
 		return this.backend.listModels(signal);
 	}
 

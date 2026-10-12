@@ -15,6 +15,7 @@ import { LabService } from "./plugin/labService";
 import { LinterService } from "./plugin/linterService";
 import { CostLogModal } from "./plugin/modals";
 import { NoteController, editorViewOf } from "./plugin/noteController";
+import { OpenModelPicksCache } from "./plugin/openModelPicks";
 import { LabPopoverHost, TrimBarHost } from "./plugin/overlays";
 import { Panels } from "./plugin/panels";
 import { ReadThrough } from "./plugin/readThrough";
@@ -32,6 +33,7 @@ export default class VikalpPlugin extends Plugin {
 	controller!: NoteController;
 	panels!: Panels;
 	ai!: AiClient;
+	openModels!: OpenModelPicksCache;
 	aiAlternatives!: AiAlternatives;
 	linter!: LinterService;
 	lab!: LabService;
@@ -49,6 +51,7 @@ export default class VikalpPlugin extends Plugin {
 		this.syncStore();
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
+		this.openModels = new OpenModelPicksCache(this.app.vault.adapter, `${pluginDir}/model-picks.json`);
 		const repository = new SidecarRepository(this.app.vault.adapter, pluginDir, (notePath, backup) => {
 			new Notice(`Vikalp couldn't read the saved alternatives for "${notePath}". The file was kept as ${backup.replace(/^.*\//, "")}.`, 10000);
 		});

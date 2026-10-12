@@ -4,6 +4,7 @@ import { createProvider, type MutableModels } from "@earendil-works/pi-ai/models
 import { anthropicProvider } from "@earendil-works/pi-ai/providers/anthropic";
 import { openaiProvider } from "@earendil-works/pi-ai/providers/openai";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
+import { shortModelName } from "../core/modelChoices";
 import { protocolFor, runsLocally, shortServerName, type ProviderPreset } from "../core/providers";
 import { activeProvider, type ActiveProvider, type VikalpSettings } from "../core/settings";
 import { AiError, type AiBackend, type Pricing } from "./backend";
@@ -57,7 +58,7 @@ function openRouterBackend(models: MutableModels, active: ActiveProvider): AiBac
 			return { model: { ...template, id, name: id, api: "openai-completions", baseUrl: active.baseUrl, cost: ZERO_COST } as unknown as Model<never>, pricing: "unpriced" };
 		},
 		jevModel: (id) => models.getModelOfType("classifier", "openrouter", id) as ClassifierModel<never> | undefined,
-		listModels: async () => models.getModels("openrouter").map((model) => model.id),
+		listModels: async () => models.getModels("openrouter").map((model) => ({ id: model.id, name: shortModelName(model.name) })),
 	};
 }
 
@@ -72,7 +73,7 @@ function catalogBackend(models: MutableModels, active: ActiveProvider, provider:
 			if (!template) throw new AiError(`Unknown model "${id}".`);
 			return { model: { ...template, id, name: id, baseUrl: active.baseUrl, cost: ZERO_COST } as unknown as Model<never>, pricing: "unpriced" };
 		},
-		listModels: async () => models.getModels(provider).map((model) => model.id),
+		listModels: async () => models.getModels(provider).map((model) => ({ id: model.id, name: shortModelName(model.name) })),
 	};
 }
 
@@ -111,7 +112,7 @@ function serverBackend(active: ActiveProvider): AiBackend {
 			if (!response.ok) throw new AiError(`The server answered with error ${response.status}.`);
 			const listing = (await response.json().catch(() => null)) as { data?: Array<{ id?: unknown }> } | null;
 			if (!Array.isArray(listing?.data)) throw new AiError("The server's answer wasn't a model list. OpenAI-compatible URLs usually end in /v1.");
-			return listing.data.flatMap((entry) => (typeof entry.id === "string" ? [entry.id] : []));
+			return listing.data.flatMap((entry) => (typeof entry.id === "string" ? [{ id: entry.id, name: entry.id }] : []));
 		},
 	};
 }
