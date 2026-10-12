@@ -37,7 +37,8 @@ export class VikalpSettingTab extends PluginSettingTab {
 			{ type: "group", heading: "AI", items: this.aiSettings() },
 			{ type: "group", heading: "Writing", items: this.writingSettings() },
 			{ type: "group", heading: "Hotkeys", items: this.hotkeySettings() },
-			{ type: "group", heading: "Linter", items: [...this.linterSettings(), ...this.ruleSettings()] },
+			{ type: "group", heading: "Linter", items: this.linterSettings() },
+			{ type: "group", heading: "Lint rules", items: this.ruleSettings() },
 			{ type: "group", heading: "Lab", items: this.labSettings() },
 		];
 	}
@@ -55,7 +56,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			...this.aiSection.definitions(),
 			{
 				name: "AI versions per request",
-				desc: "How many versions Ask AI adds at a time.",
+				desc: "How many versions Ask AI adds each time you use it.",
 				control: { type: "slider", key: "alternativesCount", min: 3, max: 8, step: 1 },
 			},
 		];
@@ -65,17 +66,17 @@ export class VikalpSettingTab extends PluginSettingTab {
 		return [
 			{
 				name: "Show markers in new notes",
-				desc: "Off keeps notes looking plain until you click the word count or add alternatives.",
+				desc: "Markers are the underlines and dots on text that has versions or ghosts. When this is off, a new note shows no markers until you add alternatives or click the word count in the status bar.",
 				control: { type: "toggle", key: "markersOnByDefault" },
 			},
 			{
 				name: "Fix a/an when swapping versions",
-				desc: "“a thumbtack” becomes “an eraser” as part of the same edit.",
+				desc: "When you swap in a version, Vikalp also fixes the “a” or “an” before it. For example, “a thumbtack” becomes “an eraser”.",
 				control: { type: "toggle", key: "articleFix" },
 			},
 			{
 				name: "Cycle with arrow keys while hovering",
-				desc: "Hover a marked word and press the arrow keys. Alt+↑/↓ works from the cursor.",
+				desc: "Hover over text that has versions and press ↑ or ↓ to switch between them. Alt+↑ and Alt+↓ do the same at the cursor, even when this is off.",
 				control: { type: "toggle", key: "hoverCycling" },
 			},
 		];
@@ -86,7 +87,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		return [
 			{
 				name: "Use suggested hotkeys",
-				desc: `${keys.alternatives} for alternatives, ${keys.askAi} to ask AI, and ${keys.actions} for every other action. Off by default so Vikalp never takes keys you or another plugin use.`,
+				desc: `Sets ${keys.alternatives} for alternatives, ${keys.askAi} to ask AI for versions, and ${keys.actions} for a list of every action. Off by default, so Vikalp doesn't take keys that you or another plugin already use.`,
 				aliases: ["shortcuts", "keys", "keyboard"],
 				control: { type: "toggle", key: "suggestedHotkeys" },
 			},
@@ -102,20 +103,41 @@ export class VikalpSettingTab extends PluginSettingTab {
 	private linterSettings(): SettingDefinition[] {
 		return [
 			{
-				name: "Judgment rules use",
-				desc: "Jev is fast, cheap and only answers yes or no. If it's down, Vikalp uses the Lite model and tells you.",
+				name: "AI rules use",
+				desc: "Which model answers the AI rules. Jev is fast and cheap, and only answers yes or no. If Jev is down, Vikalp uses your Lite model and tells you.",
+				aliases: ["judgment rules", "jev"],
 				control: { type: "dropdown", key: "judgmentEngine", options: { jev: "Jev (TypeSafe)", llm: "The selected model" } },
-				// Jev runs on OpenRouter only. Elsewhere judgments always use the selected model.
+				// Jev runs on OpenRouter only. Elsewhere AI rules always use the selected model.
 				visible: () => this.plugin.ai.hasJev,
 			},
 			{
-				name: "Lint as you type",
-				desc: "Re-runs the free local rules a moment after you stop typing. Judgment rules never run live.",
+				name: "Run rules without AI as you type",
+				desc: "Runs the rules that don't use AI again a moment after you stop typing. These rules are free and nothing leaves your machine. AI rules only run when you click Run linter.",
+				aliases: ["lint as you type", "live lint", "local rules"],
 				control: { type: "toggle", key: "liveLocalLint" },
+			},
+		];
+	}
+
+	private ruleSettings(): SettingDefinition[] {
+		const rows: SettingDefinition[] = [
+			{
+				name: "Add a rule",
+				desc: "A rule can flag a word or phrase, a pattern, or a measurement such as sentence length. It can also ask AI a yes or no question about your text.",
+				aliases: ["new rule", "lint rules"],
+				render: (setting) => {
+					setting.addButton((button) =>
+						button
+							.setButtonText("Add rule")
+							.setCta()
+							.onClick(() => this.openEditor(null)),
+					);
+				},
 			},
 			{
 				name: "Rule files",
-				desc: "Each rule is a file in the plugin's rules folder. You can also edit the files in a text editor. Reload them here when you're done.",
+				desc: "Each rule is saved as a file in the plugin's rules folder. You can edit the files in any text editor. Click Reload when you're done.",
+				aliases: ["rules folder"],
 				render: (setting) => {
 					setting
 						.addButton((button) => button.setButtonText("Open folder").onClick(() => this.plugin.linter.openRulesFolder()))
@@ -125,24 +147,6 @@ export class VikalpSettingTab extends PluginSettingTab {
 								this.update();
 							}),
 						);
-				},
-			},
-		];
-	}
-
-	private ruleSettings(): SettingDefinition[] {
-		const rows: SettingDefinition[] = [
-			{
-				name: "Rules",
-				desc: "Each rule can be switched off, opened and edited. Rules with the same name are grouped.",
-				aliases: ["lint rules", "add rule"],
-				render: (setting) => {
-					setting.addButton((button) =>
-						button
-							.setButtonText("Add rule")
-							.setCta()
-							.onClick(() => this.openEditor(null)),
-					);
 				},
 			},
 		];
@@ -208,7 +212,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		return [
 			{
 				name: "Main trim action",
-				desc: "Which button leads in the trim bar. Ghosting keeps the cut words, dimmed, until you delete them.",
+				desc: "Which button comes first in the trim bar. Ghosting dims the words the model would cut and keeps them in the note. Making the cuts deletes them.",
 				control: { type: "dropdown", key: "trimPrimaryAction", options: { ghost: "Ghost the cuts", cut: "Make the cuts" } },
 			},
 			{
