@@ -222,8 +222,9 @@ export class VikalpSettingTab extends PluginSettingTab {
 				control: { type: "dropdown", key: "trimPrimaryAction", options: { ghost: "Ghost the cuts", cut: "Make the cuts" } },
 			},
 			{
-				name: "Voice reference notes",
-				desc: "Notes written in your own voice. Put one note per line, as a path or a note name. Only the Lab pass “Words that don't fit the tone” uses these notes. It sends the first 2,000 characters of each note to the model, together with the open note. The model then marks words in the open note that don't match your voice.",
+				name: "Samples of your writing",
+				aliases: ["voice", "voice reference notes", "tone"],
+				desc: "Files from this vault that show how you write. Put one file per line, as a path or a file name. Only the Lab pass “Words that don't fit the tone” uses them. It sends the first 2,000 characters of each file to the model, together with the text you're working on. The model then marks words in your text that don't sound like you.",
 				control: { type: "textarea", key: "voiceReferenceNotes", placeholder: "Essays/On writing.md", rows: 4 },
 			},
 		];
