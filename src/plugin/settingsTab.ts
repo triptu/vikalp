@@ -223,7 +223,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 			},
 			{
 				name: "Voice reference notes",
-				desc: "Notes that sound like you, one path per line. The tone pass compares against them.",
+				desc: "Notes that sound like you, one per line, as a path or note name. Only the Lab's “Words that don't fit the tone” pass uses them: it sends the first 2,000 characters of each to the model along with the open note, and marks words that don't sound like you.",
 				control: { type: "textarea", key: "voiceReferenceNotes", placeholder: "Essays/On writing.md", rows: 4 },
 			},
 		];
