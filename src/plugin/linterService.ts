@@ -243,7 +243,7 @@ export class LinterService {
 			ranAt: Date.now(),
 			judgmentTotal: canJudge ? tasks.length : 0,
 			judgmentDone: 0,
-			notice: !this.client.isReady && tasks.length > 0 ? `Local rules only. ${this.client.setupHint} to run judgment rules too.` : null,
+			notice: !this.client.isReady && tasks.length > 0 ? `Only the rules without AI ran. ${this.client.setupHint} to run the AI rules too.` : null,
 			ruleErrors: this.ruleErrors,
 			notePath: path,
 			cost: 0,
@@ -380,7 +380,7 @@ export class LinterService {
 				const byId = new Map((value.answers ?? []).map((answer) => [answer.id, Number(answer.probability)]));
 				batch.forEach((task, index) => flag(task, byId.get(`j${index + 1}`) ?? 0, model));
 			} catch (error) {
-				if (stillCurrent()) this.patchRun({ notice: error instanceof AiError ? error.message : `Judgment rules failed: ${String(error)}` });
+				if (stillCurrent()) this.patchRun({ notice: error instanceof AiError ? error.message : `AI rules failed: ${String(error)}` });
 			}
 			done(batch.length);
 		}
