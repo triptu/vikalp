@@ -100,7 +100,6 @@ export class VikalpSettingTab extends PluginSettingTab {
 	}
 
 	private linterSettings(): SettingDefinition[] {
-		const settings = this.plugin.settings;
 		return [
 			{
 				name: "Judgment rules use",
@@ -115,25 +114,16 @@ export class VikalpSettingTab extends PluginSettingTab {
 				control: { type: "toggle", key: "liveLocalLint" },
 			},
 			{
-				name: "Rules folder",
-				desc: "Where rule files live, inside the plugin folder. You can edit them here or in any text editor.",
+				name: "Rule files",
+				desc: "Each rule is a file in the plugin's rules folder. You can also edit the files in a text editor. Reload them here when you're done.",
 				render: (setting) => {
 					setting
-						.addText((text) =>
-							text.setValue(settings.rulesFolder).onChange(async (value) => {
-								settings.rulesFolder = value.trim().replace(/^\/+|\/+$/g, "") || DEFAULT_SETTINGS.rulesFolder;
-								await this.plugin.saveSettings();
+						.addButton((button) => button.setButtonText("Open folder").onClick(() => this.plugin.linter.openRulesFolder()))
+						.addButton((button) =>
+							button.setButtonText("Reload").onClick(async () => {
+								await this.plugin.linter.reloadRules();
+								this.update();
 							}),
-						)
-						.addExtraButton((button) => button.setIcon("folder-open").setTooltip("Open the rules folder").onClick(() => this.plugin.linter.openRulesFolder()))
-						.addExtraButton((button) =>
-							button
-								.setIcon("refresh-cw")
-								.setTooltip("Reload rule files")
-								.onClick(async () => {
-									await this.plugin.linter.reloadRules();
-									this.update();
-								}),
 						);
 				},
 			},

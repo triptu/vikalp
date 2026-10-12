@@ -21,7 +21,6 @@ export interface VikalpSettings {
 	judgmentEngine: JudgmentEngineChoice;
 	/** Rule ids switched off by the user. Everything else runs. */
 	disabledRules: string[];
-	rulesFolder: string;
 	liveLocalLint: boolean;
 	articleFix: boolean;
 	hoverCycling: boolean;
@@ -41,7 +40,6 @@ export const DEFAULT_SETTINGS: VikalpSettings = {
 	modelMode: "lite",
 	judgmentEngine: "jev",
 	disabledRules: [],
-	rulesFolder: "rules",
 	liveLocalLint: false,
 	articleFix: true,
 	hoverCycling: true,
