@@ -1,5 +1,5 @@
 import { Platform, PluginSettingTab, type App, type ExtraButtonComponent, type Setting, type SettingDefinition, type SettingDefinitionItem } from "obsidian";
-import { DEFAULT_SETTINGS, type ModelMode, type VikalpSettings } from "../core/settings";
+import type { ModelMode, VikalpSettings } from "../core/settings";
 import { engineChoice } from "../core/rules/draft";
 import { groupRulesByLabel, usesAi, type RuleFamily } from "../core/rules/groups";
 import type { Rule } from "../core/rules/types";
