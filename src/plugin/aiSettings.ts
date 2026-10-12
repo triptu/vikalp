@@ -112,7 +112,7 @@ export class AiSettingsSection {
 		return [
 			{
 				name: "Model mode",
-				desc: "Applies to every AI action. Lite is fast and cheap for drafting; Heavy is for the final pass.",
+				desc: "Which model AI actions use. Lite is fast and cheap, for drafts. Heavy is slower and costs more, for a final pass.",
 				control: { type: "dropdown", key: "modelMode", options: Object.fromEntries(MODEL_MODES.map((mode) => [mode, MODEL_MODE_LABELS[mode]])) },
 			},
 			...MODEL_MODES.map(
@@ -124,7 +124,7 @@ export class AiSettingsSection {
 			),
 			{
 				name: "Advanced",
-				desc: "The server address, for a regional endpoint or an OpenAI-compatible proxy.",
+				desc: "The server address. Change it only for a regional endpoint or a proxy.",
 				render: (setting) => {
 					let chevron: ExtraButtonComponent | null = null;
 					const toggle = () => {
@@ -140,7 +140,7 @@ export class AiSettingsSection {
 					setting.infoEl.onclick = toggle;
 				},
 			},
-			{ ...this.urlRow(preset, "A different host is treated as an OpenAI-compatible server. Clear the field to go back to the default."), visible: () => this.showAdvanced },
+			{ ...this.urlRow(preset, "Vikalp talks to any other host as an OpenAI-compatible server. Clear the field to go back to the default."), visible: () => this.showAdvanced },
 		];
 	}
 
