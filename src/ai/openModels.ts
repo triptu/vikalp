@@ -31,7 +31,7 @@ function readScores(body: unknown): BenchmarkScore[] {
 
 function readModels(body: unknown): OpenRouterModelInfo[] {
 	return listOf(body).flatMap((entry) => {
-		const { id, canonical_slug: canonicalSlug, name, hugging_face_id: huggingFaceId, supported_parameters: parameters, pricing } = entry as Record<string, unknown>;
+		const { id, canonical_slug: canonicalSlug, name, hugging_face_id: huggingFaceId, supported_parameters: parameters, pricing } = entry;
 		if (typeof id !== "string" || typeof name !== "string") return [];
 		const outputPerToken = Number((pricing as { completion?: unknown } | undefined)?.completion);
 		return [
