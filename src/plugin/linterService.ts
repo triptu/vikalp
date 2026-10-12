@@ -52,7 +52,7 @@ export class LinterService {
 	) {}
 
 	private get rulesDir() {
-		return `${this.pluginDir}/${this.getSettings().rulesFolder}`;
+		return `${this.pluginDir}/rules`;
 	}
 
 	allRules(): Rule[] {
