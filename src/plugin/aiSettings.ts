@@ -76,7 +76,7 @@ export class AiSettingsSection {
 		const optional = preset.key === "optional";
 		return {
 			name: optional ? "API key" : `${preset.label} API key`,
-			desc: optional ? "Only if the server asks for one. Kept in plugin data, not in your notes." : "Kept in plugin data, not in your notes. Used only when you click an AI action.",
+			desc: optional ? "Only if the server asks for one. Kept in plugin config on your machine." : "Kept in plugin config on your machine. Used only when you click an AI action.",
 			aliases: ["key", "token"],
 			render: (setting) => {
 				setting.addText((text) => {
