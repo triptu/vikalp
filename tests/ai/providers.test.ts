@@ -104,7 +104,7 @@ describe("a model running on this computer", () => {
 
 	it("lists the models the server has", async () => {
 		const { client } = clientFor(localSettings(server.baseUrl, ""));
-		expect(await client.listModels()).toEqual(["qwen3:0.6b", "gemma3:1b"]);
+		expect((await client.listModels()).map((model) => model.id)).toEqual(["qwen3:0.6b", "gemma3:1b"]);
 	});
 
 	it("answers a request with the model the writer picked, and costs nothing", async () => {
@@ -135,7 +135,7 @@ describe("a model running on this computer", () => {
 
 	it("works when the URL is typed without http://", async () => {
 		const { client } = clientFor(localSettings(server.baseUrl.replace("http://", ""), "gemma3:1b"));
-		expect(await client.listModels()).toEqual(["qwen3:0.6b", "gemma3:1b"]);
+		expect((await client.listModels()).map((model) => model.id)).toEqual(["qwen3:0.6b", "gemma3:1b"]);
 	});
 
 	it("a crashed model isn't reported as the writer cancelling", async () => {

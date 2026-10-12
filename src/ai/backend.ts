@@ -1,4 +1,5 @@
 import type { ClassifierModel, Model } from "@earendil-works/pi-ai";
+import type { ModelChoice } from "../core/modelChoices";
 
 export class AiError extends Error {
 	constructor(
@@ -27,8 +28,8 @@ export interface AiBackend {
 	chatModel(id: string): ResolvedModel;
 	/** Looks up a Jev classifier. Absent when the provider has no Jev; judgments then use the chat model. */
 	jevModel?(id: string): ClassifierModel<never> | undefined;
-	/** Model ids the writer can pick from. */
-	listModels(signal?: AbortSignal): Promise<string[]>;
+	/** Models the writer can pick from. */
+	listModels(signal?: AbortSignal): Promise<ModelChoice[]>;
 	/** Turns a raw provider error into a sentence for the writer. */
 	friendlyError(raw: string, modelId?: string): string;
 }

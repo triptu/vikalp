@@ -43,7 +43,7 @@ export const PROVIDER_PRESETS: Record<ProviderId, ProviderPreset> = {
 		baseUrl: "https://api.openai.com/v1",
 		key: "required",
 		keyPlaceholder: "sk-…",
-		modes: { lite: "gpt-6-luna", medium: "gpt-6-sol", heavy: "gpt-5.6-sol" },
+		modes: { lite: "gpt-6-luna", medium: "gpt-6.1-sol", heavy: "gpt-5.6-sol" },
 		serverName: "OpenAI",
 	},
 	ollama: {
