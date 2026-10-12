@@ -112,12 +112,12 @@ Pick one in Settings → Vikalp → AI → **Provider**:
 |---|---|---|
 | OpenRouter | An OpenRouter API key | Lite, Medium and Heavy, any model OpenRouter has. The only one with Jev for judgment rules. |
 | Anthropic | An Anthropic API key | Lite, Medium and Heavy: Haiku, Sonnet and Opus by default |
-| OpenAI | An OpenAI API key | Lite, Medium and Heavy: gpt-6-luna, gpt-6-sol and gpt-5.6-sol by default |
+| OpenAI | An OpenAI API key | Lite, Medium and Heavy: gpt-6-luna, gpt-6.1-sol and gpt-5.6-sol by default |
 | Ollama | [Ollama](https://ollama.com) running, with a model downloaded | One, picked from the models Ollama has |
 | LM Studio | LM Studio's server started, with CORS turned on in its Developer tab | One, picked from the models LM Studio has |
 | Custom | The URL of any OpenAI-compatible server, and a key if it asks for one | One |
 
-Ollama and LM Studio run models on your own machine, so the text stays there. Small local models are much weaker at marking and trimming than the hosted ones. Model fields for the named providers suggest the models Vikalp knows, and take any other id you type.
+Ollama and LM Studio run models on your own machine, so the text stays there. Small local models are much weaker at marking and trimming than the hosted ones. For OpenRouter, Anthropic and OpenAI, each mode has a list of suggested models. Lite lists the newest Luna and Haiku. Medium lists the newest Sol and Sonnet. Heavy lists the newest Astra, Opus and Fable. On OpenRouter the lists also suggest two open models for each mode. Vikalp picks them by their Artificial Analysis intelligence score, from open-weight models that cost no more than the other models in that mode. It checks for new ones once a day while settings are open. Choose **Custom…** to type any other model id.
 
 Each provider keeps its own key and models, so you can switch back and forth. Named providers keep their server URL under **Advanced**, for a regional endpoint or an OpenAI-compatible proxy.
 
