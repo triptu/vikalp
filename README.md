@@ -11,7 +11,7 @@ Inspired from [Jason's](https://x.com/jasonfried/status/2105403067793584590) and
 - **Alternatives.** Put the cursor on a word, press ⌘J, type versions. Press ⌘J again for the sentence, again for the paragraph. Hover and press the arrow keys to read each one in place. Whatever is showing is the note.
 - **Ghosting.** Fade a passage instead of deleting it. Revive it later, or copy the note without it.
 - **Overflow.** A per-note side panel for writing you cut but want nearby. Drag it back when it fits.
-- **Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. Judgment rules use Jev, TypeSafe's yes/no model.
+- **Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. AI rules use Jev, TypeSafe's yes/no model, on OpenRouter.
 - **The Lab.** AI passes that mark typos, weak or convoluted sentences, off-tone words and hedges, and trim levels that fade the words a model would cut. You keep or cut each one.
 - **Read-through.** Hide every marker and read like a reader.
 
@@ -21,7 +21,7 @@ Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys
 
 Alternatives, ghosting, Overflow, the local lint rules and read-through work offline.
 
-The AI features (AI versions, judgment lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
+The AI features (AI versions, AI lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
 
 Vikalp has no telemetry and no account.
 
