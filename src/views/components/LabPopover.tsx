@@ -2,7 +2,6 @@ import { LAB_PASSES, SPOTS_PASS, TRIM_LEVELS } from "../../core/ai/passes";
 import type { ModelMode } from "../../core/settings";
 import type { KeyHints, LabPassState, TrimState } from "../../store/uiStore";
 import type { LabActions } from "../context";
-import { formatCost } from "../format";
 import { Icon } from "./Icon";
 
 const MODES: Array<{ mode: ModelMode; label: string }> = [
@@ -13,37 +12,49 @@ const MODES: Array<{ mode: ModelMode; label: string }> = [
 
 export interface LabPopoverProps {
 	modelMode: ModelMode;
+	/** False for providers that run one model; the Lab then names it instead of offering modes. */
+	hasModes: boolean;
 	modelId: string;
+	providerLabel: string;
 	aiSetupHint: string | null;
 	hasNote: boolean;
 	lab: LabPassState;
 	trim: TrimState;
-	sessionCost: number;
+	/** "$0.12", "Free" or "3.2k tokens". */
+	costText: string;
 	markCount: number;
 	keyHints: KeyHints;
 	actions: LabActions;
 }
 
-export function LabPopover({ modelMode, modelId, aiSetupHint, hasNote, lab, trim, sessionCost, markCount, keyHints, actions }: LabPopoverProps) {
+export function LabPopover({ modelMode, hasModes, modelId, providerLabel, aiSetupHint, hasNote, lab, trim, costText, markCount, keyHints, actions }: LabPopoverProps) {
 	const disabled = aiSetupHint !== null || !hasNote;
 	const busy = lab.runningPass !== null;
 	return (
 		<div className="vk-lab" role="dialog" aria-label="The Lab">
 			<header className="vk-lab-header">
 				<span className="vk-lab-title">The Lab</span>
-				<div className="vk-segmented vk-lab-mode" role="radiogroup" aria-label="Model" title={modelId}>
-					{MODES.map(({ mode, label }) => (
-						<button
-							key={mode}
-							role="radio"
-							aria-checked={modelMode === mode}
-							className={`vk-segment${modelMode === mode ? " is-active" : ""}`}
-							onClick={() => actions.setModelMode(mode)}
-						>
-							{label}
+				{hasModes ? (
+					<div className="vk-segmented vk-lab-mode" role="radiogroup" aria-label="Model" title={`${providerLabel} · ${modelId}`}>
+						{MODES.map(({ mode, label }) => (
+							<button
+								key={mode}
+								role="radio"
+								aria-checked={modelMode === mode}
+								className={`vk-segment${modelMode === mode ? " is-active" : ""}`}
+								onClick={() => actions.setModelMode(mode)}
+							>
+								{label}
+							</button>
+						))}
+					</div>
+				) : (
+					modelId && (
+						<button className="vk-lab-model" onClick={actions.openSettings} title={`${providerLabel} · ${modelId}. Change it in Vikalp settings.`}>
+							{modelId}
 						</button>
-					))}
-				</div>
+					)
+				)}
 			</header>
 
 			{aiSetupHint && (
@@ -124,7 +135,7 @@ export function LabPopover({ modelMode, modelId, aiSetupHint, hasNote, lab, trim
 				</span>
 				<span className="vk-lab-footer-end">
 					<button className="vk-inline-action" onClick={actions.showCostLog} title="Show the cost log">
-						{formatCost(sessionCost)}
+						{costText}
 					</button>
 					<button
 						className="clickable-icon"

@@ -1,6 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { sessionCost } from "../store/uiStore";
+import { sessionCostSummary } from "../store/uiStore";
+import { formatSessionCost } from "./format";
 import { AlternativesPanel } from "./components/AlternativesPanel";
 import { IconContext, type IconRenderer } from "./components/Icon";
 import { LabPopover } from "./components/LabPopover";
@@ -50,19 +51,22 @@ export function LintContainer() {
 	return <LintPanel model={useLintPanel()} now={useNow()} />;
 }
 
-export function LabContainer({ modelIdFor }: { modelIdFor: (mode: string) => string }) {
+export function LabContainer() {
 	const { store, lab } = useViewContext();
 	const slice = useStoreSlice(store, (state) => ({
 		modelMode: state.modelMode,
+		hasModes: state.aiModel.hasModes,
+		modelId: state.aiModel.modelId,
+		providerLabel: state.aiModel.providerLabel,
 		aiSetupHint: state.aiSetupHint,
 		hasNote: state.note !== null,
 		lab: state.lab,
 		trim: state.trim,
-		sessionCost: sessionCost(state),
+		costText: formatSessionCost(sessionCostSummary(state)),
 		markCount: state.note?.lintHits.filter((hit) => hit.source === "lab").length ?? 0,
 		keyHints: state.keyHints,
 	}));
-	return <LabPopover {...slice} modelId={modelIdFor(slice.modelMode)} actions={lab} />;
+	return <LabPopover {...slice} actions={lab} />;
 }
 
 export function TrimBarContainer() {

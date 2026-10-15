@@ -21,7 +21,7 @@ Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys
 
 Alternatives, ghosting, Overflow, the local lint rules and read-through work offline.
 
-The AI features (AI versions, judgment lint rules and the Lab) send text to [OpenRouter](https://openrouter.ai) with your own API key. OpenRouter passes it to the model you picked. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something, and nothing is sent without a key. You pay OpenRouter for what you use; the Lab shows the cost of every call.
+The AI features (AI versions, judgment lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
 
 Vikalp has no telemetry and no account.
 
@@ -32,7 +32,7 @@ npm install
 npm run build
 ```
 
-Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and add an OpenRouter API key in Vikalp's settings for the AI features. Turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys. Desktop only.
+Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and pick an AI provider in Vikalp's settings for the AI features. Turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys. Desktop only.
 
 ## Develop
 

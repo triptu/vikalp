@@ -53,7 +53,7 @@ export const LAB_PASSES: LabPass[] = [
 		label: "Mark words that don't fit the tone",
 		short: "Words that don't fit the tone",
 		markLabel: "Off tone",
-		description: "Words that clash with the rest of the note, or with your voice references.",
+		description: "Words that clash with the rest of the note, or with the samples of your writing in settings.",
 	},
 	{
 		id: "hedges",

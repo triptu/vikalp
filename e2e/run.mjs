@@ -9,6 +9,7 @@ import { resolve } from "node:path";
 import { prepareScratchVault } from "./obsidian.mjs";
 import { startSession } from "./driver.mjs";
 import { RECORDINGS_PATH, aiStats, useAiRecordings } from "./aiRecordings.mjs";
+import { startMockModelServer } from "../tests/support/mockModelServer.ts";
 
 const ESSAY = "Essays/The cost of the obvious.md";
 const args = process.argv.slice(2);
@@ -385,6 +386,77 @@ await group("Linter, settings and AI", [
 	}),
 
 ]);
+
+// A stand-in for Ollama, so the renderer's real requests (CORS, the OpenAI client in the browser) are tested without one installed.
+const localServer = await startMockModelServer(["tiny-local:1b", "other:3b"]);
+localServer.toolArguments = { alternatives: [{ text: "pressure" }, { text: "strain" }] };
+
+/** The settings row with exactly this name. */
+const settingRow = (settings, name) => settings.locator(".setting-item", { has: settings.locator(".setting-item-name", { hasText: new RegExp(`^${name}$`) }) }).first();
+
+async function waitForRowText(settings, name, text) {
+	await settings.waitForFunction(
+		({ rowName, expected }) => [...document.querySelectorAll(".setting-item")].some((row) => row.querySelector(".setting-item-name")?.textContent === rowName && row.textContent.includes(expected)),
+		{ rowName: name, expected: text },
+		{ timeout: 10000 },
+	);
+}
+
+await group("AI providers", [
+	flow("a model on this computer: Ollama lists its models, Ask AI uses the one picked, and it costs nothing", async (driver) => {
+		// Recordings are keyed by prompt, not model, so this flow talks to the server for real.
+		await driver.evaluate(() => delete window.app.plugins.plugins.vikalp.ai.structured);
+		await driver.openNote(ESSAY);
+		const settings = await driver.openSettings();
+		await settingRow(settings, "Provider").locator("select:not(.is-measuring)").selectOption("ollama");
+		await settings.waitForTimeout(400);
+		assert((await settingRow(settings, "OpenRouter API key").count()) === 0, "Ollama asks for no key");
+
+		await settingRow(settings, "Server URL").locator("input").fill("http://localhost:9/v1");
+		await settingRow(settings, "Server URL").locator("input").press("Tab");
+		await waitForRowText(settings, "Model", "Can't reach localhost:9. Is Ollama running?");
+
+		await settingRow(settings, "Server URL").locator("input").fill(localServer.baseUrl);
+		await settingRow(settings, "Server URL").locator("input").press("Tab");
+		await waitForRowText(settings, "Model", "Connected. 2 models on the server.");
+		await settingRow(settings, "Model").locator("select:not(.is-measuring)").selectOption("other:3b");
+		await settings.waitForTimeout(400);
+		await driver.evaluate(() => window.app.setting.close());
+
+		const status = await driver.evaluate(() => document.querySelector(".vk-status-lab-mode")?.textContent);
+		assert(status === "other:3b", `the status bar names the model (${status})`);
+		await driver.click(".vk-status-lab");
+		const lab = await driver.evaluate(() => ({ model: document.querySelector(".vk-lab-model")?.textContent, modes: document.querySelectorAll(".vk-lab-mode").length, cost: document.querySelector(".vk-lab-footer-end .vk-inline-action")?.textContent }));
+		assert(lab.model === "other:3b" && lab.modes === 0, `the Lab names the model instead of offering modes (${JSON.stringify(lab)})`);
+		assert(lab.cost === "Free", `the Lab says it's free (${lab.cost})`);
+		await driver.press("Escape");
+
+		await driver.select("obvious");
+		await driver.command("vikalp:ai-alternatives-for-selection");
+		await driver.page.waitForFunction(() => window.app.plugins.plugins.vikalp.store.getState().aiPendingSpans.length === 0, null, { timeout: 30000 });
+		const versions = (await noteState(driver)).spans.flatMap((span) => span.versions.filter((version) => version.source === "ai").map((version) => version.text));
+		assert(versions.includes("pressure") && versions.includes("strain"), `the server's versions were added (${versions.join(", ")})`);
+		const request = localServer.requests.at(-1);
+		assert(request?.model === "other:3b", `the request went to the picked model (${request?.model})`);
+		assert(request?.origin === "app://obsidian.md", `it came from Obsidian's renderer (${request?.origin})`);
+	}),
+
+	flow("switching back to OpenRouter keeps its key and brings back the modes", async (driver) => {
+		const settings = await driver.openSettings();
+		await settingRow(settings, "Provider").locator("select:not(.is-measuring)").selectOption("openrouter");
+		await settings.waitForTimeout(400);
+		const key = await settingRow(settings, "OpenRouter API key").locator("input").inputValue();
+		assert(key.length > 0, "the OpenRouter key is still there");
+		assert((await settingRow(settings, "Lite model").count()) === 1, "Lite, Medium and Heavy are back");
+		await driver.evaluate(() => window.app.setting.close());
+		const state = await driver.evaluate(() => {
+			const store = window.app.plugins.plugins.vikalp.store.getState();
+			return { hint: store.aiSetupHint, label: document.querySelector(".vk-status-lab-mode")?.textContent };
+		});
+		assert(state.hint === null && state.label === "Lite", `AI is ready on Lite (${JSON.stringify(state)})`);
+	}),
+]);
+await localServer.close();
 
 const failed = results.filter((result) => !result.ok);
 const seconds = ((Date.now() - runStarted) / 1000).toFixed(0);

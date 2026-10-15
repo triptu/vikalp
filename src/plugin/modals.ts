@@ -1,6 +1,6 @@
 import { Modal, Setting, type App } from "obsidian";
 import type { CostEntry } from "../store/uiStore";
-import { formatCost } from "../views/format";
+import { formatCost, formatTokens } from "../views/format";
 
 export interface ConfirmOptions {
 	title: string;
@@ -62,9 +62,12 @@ export class CostLogModal extends Modal {
 		this.modalEl.addClass("vk-cost-modal");
 		const total = this.entries.reduce((sum, entry) => sum + entry.cost, 0);
 		const runs = groupCalls(this.entries).length;
+		const unpricedTokens = this.entries.filter((entry) => entry.pricing === "unpriced").reduce((sum, entry) => sum + entry.inputTokens + entry.outputTokens, 0);
+		const allFree = this.entries.length > 0 && this.entries.every((entry) => entry.pricing === "free");
+		const spent = allFree ? "Free" : unpricedTokens === 0 ? preciseCost(total) : total === 0 ? `${formatTokens(unpricedTokens)} at unknown prices` : `${preciseCost(total)}, plus ${formatTokens(unpricedTokens)} at unknown prices,`;
 		this.contentEl.createEl("p", {
 			cls: "vk-cost-total",
-			text: `${preciseCost(total)} across ${this.entries.length} ${this.entries.length === 1 ? "call" : "calls"} in ${runs} ${runs === 1 ? "run" : "runs"}.`,
+			text: `${spent} across ${this.entries.length} ${this.entries.length === 1 ? "call" : "calls"} in ${runs} ${runs === 1 ? "run" : "runs"}.`,
 		});
 		if (this.entries.length === 0) {
 			this.contentEl.createEl("p", { cls: "vk-faint", text: "Nothing yet. AI only runs when you click something." });
@@ -82,7 +85,7 @@ export class CostLogModal extends Modal {
 			if (group.error) purpose.createSpan({ cls: "vk-cost-flag is-error", text: "failed", attr: { title: group.error } });
 			row.createEl("td", { cls: "vk-cost-model", text: group.model });
 			row.createEl("td", { text: `${group.inputTokens.toLocaleString()} / ${group.outputTokens.toLocaleString()}` });
-			row.createEl("td", { text: preciseCost(group.cost) });
+			row.createEl("td", { text: group.pricing === "free" ? "Free" : group.pricing === "unpriced" ? "Unknown" : preciseCost(group.cost) });
 		}
 	}
 
@@ -100,7 +103,7 @@ function groupCalls(entries: CostEntry[]): CallGroup[] {
 	const groups: CallGroup[] = [];
 	for (const entry of entries) {
 		const last = groups[groups.length - 1];
-		if (last && last.purpose === entry.purpose && last.model === entry.model && entry.at - last.at < 60_000) {
+		if (last && last.purpose === entry.purpose && last.model === entry.model && last.pricing === entry.pricing && entry.at - last.at < 60_000) {
 			last.calls++;
 			last.inputTokens += entry.inputTokens;
 			last.outputTokens += entry.outputTokens;

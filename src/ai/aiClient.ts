@@ -1,11 +1,13 @@
 import type { AssistantMessage, Context, Tool } from "@earendil-works/pi-ai";
 import { createModels } from "@earendil-works/pi-ai/models";
 import type { TSchema } from "typebox";
-import type { ModelMode, VikalpSettings } from "../core/settings";
-import { AiError, type AiBackend } from "./backend";
-import { openRouterBackend } from "./openRouter";
+import type { ModelChoice } from "../core/modelChoices";
+import { modelFor, type ModelMode, type VikalpSettings } from "../core/settings";
+import { AiError, type AiBackend, type Pricing } from "./backend";
+import { backendFor, registerProviders } from "./backends";
 
 export { AiError };
+export type { Pricing };
 
 export interface CostRecord {
 	purpose: string;
@@ -13,6 +15,7 @@ export interface CostRecord {
 	inputTokens: number;
 	outputTokens: number;
 	cost: number;
+	pricing: Pricing;
 	fallback?: boolean;
 	error?: string;
 }
@@ -42,25 +45,30 @@ export interface ClassifyResult {
 }
 
 /**
- * Talks to the model backend through pi-ai. Every call records its cost. Auth
- * comes from settings on each call, since the renderer has no environment.
+ * Talks to the provider picked in settings through pi-ai. Every call records its
+ * cost. Auth comes from settings on each call, since the renderer has no environment.
  */
 export class AiClient {
 	private readonly models = createModels();
-	private readonly backend: AiBackend = openRouterBackend(this.models);
 
 	constructor(
 		private readonly getSettings: () => VikalpSettings,
 		private readonly recordCost: (record: CostRecord) => void,
-	) {}
+	) {
+		registerProviders(this.models);
+	}
+
+	private get backend(): AiBackend {
+		return backendFor(this.models, this.getSettings());
+	}
 
 	get isReady(): boolean {
-		return this.backend.isReady(this.getSettings());
+		return this.backend.setupHint === null;
 	}
 
 	/** Start of the sentence that tells the writer how to set AI up, e.g. "Add an OpenRouter API key in Vikalp settings". */
 	get setupHint(): string {
-		return this.backend.setupHint;
+		return this.backend.setupHint ?? "";
 	}
 
 	/** Whether yes/no judgments can go to Jev. Without it they go to the chat model. */
@@ -69,13 +77,20 @@ export class AiClient {
 	}
 
 	modelId(mode: ModelMode): string {
-		return this.getSettings().models[mode];
+		return modelFor(this.getSettings(), mode);
+	}
+
+	/** Models the current provider offers. Throws `AiError` with a sentence for the writer when the server can't be reached. */
+	listModels(signal?: AbortSignal): Promise<ModelChoice[]> {
+		return this.backend.listModels(signal);
 	}
 
 	/** Asks a chat model for output shaped by `schema`, via a single tool call. */
 	async structured<Output>(request: StructuredRequest<Output>): Promise<{ value: Output; model: string }> {
-		const auth = this.backend.requestOptions(this.getSettings());
-		const model = this.backend.chatModel(this.modelId(request.mode));
+		const backend = this.backend;
+		if (backend.setupHint) throw new AiError(`${backend.setupHint} first.`);
+		const modelId = this.modelId(request.mode);
+		const { model, pricing } = backend.chatModel(modelId);
 		const tool: Tool = {
 			name: request.toolName,
 			description: request.toolDescription,
@@ -87,7 +102,7 @@ export class AiClient {
 			messages: [{ role: "user", content: request.user, timestamp: Date.now() }],
 			tools: [tool],
 		};
-		const stream = this.models.streamSimple(model, context, { ...auth, signal: request.signal, reasoning: "low", maxTokens: 8000 });
+		const stream = this.models.streamSimple(model, context, { apiKey: backend.apiKey, signal: request.signal, reasoning: "low", maxTokens: 8000 });
 		let streamError: string | null = null;
 		for await (const event of stream) {
 			if (event.type === "toolcall_delta" && request.onPartial) {
@@ -98,18 +113,19 @@ export class AiClient {
 			}
 		}
 		const message = await stream.result();
-		this.record(request.purpose, model.id, message, streamError ?? undefined);
-		if (streamError) throw new AiError(this.backend.friendlyError(streamError));
+		this.record(request.purpose, model.id, pricing, message, streamError ?? undefined);
+		if (streamError) throw new AiError(backend.friendlyError(streamError, modelId));
 		return { value: extractToolArguments<Output>(message, request.toolName), model: model.id };
 	}
 
 	/** Yes/no judgments from Jev, TypeSafe's decision model. Returns a probability per question. */
 	async classify(purpose: string, state: Record<string, unknown>, questions: Record<string, ClassifyQuestion>, signal?: AbortSignal): Promise<ClassifyResult> {
-		const auth = this.backend.requestOptions(this.getSettings());
+		const backend = this.backend;
+		if (backend.setupHint) throw new AiError(`${backend.setupHint} first.`);
 		const modelId = this.getSettings().jevModel;
-		const model = this.backend.jevModel?.(modelId);
+		const model = backend.jevModel?.(modelId);
 		if (!model) throw new AiError(`Jev model "${modelId}" is not available.`);
-		const result = await this.models.classify(model, { state: state as never, questions }, { ...auth, signal });
+		const result = await this.models.classify(model, { state: state as never, questions }, { apiKey: backend.apiKey, signal });
 		const usage = result.usage;
 		const failed = result.stopReason === "error";
 		this.recordCost({
@@ -118,6 +134,7 @@ export class AiClient {
 			inputTokens: usage?.input ?? 0,
 			outputTokens: usage?.output ?? 0,
 			cost: usage?.cost.total ?? 0,
+			pricing: "priced",
 			...(failed ? { error: result.errorMessage ?? "failed" } : {}),
 		});
 		if (failed) throw new AiError(result.errorMessage ?? "Jev could not answer.");
@@ -128,10 +145,11 @@ export class AiClient {
 		return { answers, model: modelId };
 	}
 
-	private record(purpose: string, model: string, message: AssistantMessage, error?: string) {
+	private record(purpose: string, model: string, pricing: Pricing, message: AssistantMessage, error?: string) {
 		this.recordCost({
 			purpose,
 			model,
+			pricing,
 			inputTokens: message.usage?.input ?? 0,
 			outputTokens: message.usage?.output ?? 0,
 			cost: message.usage?.cost?.total ?? 0,

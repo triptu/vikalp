@@ -1,12 +1,11 @@
 import { Platform, PluginSettingTab, type App, type ExtraButtonComponent, type Setting, type SettingDefinition, type SettingDefinitionItem } from "obsidian";
-import { DEFAULT_SETTINGS, MODEL_MODE_LABELS, type ModelMode, type VikalpSettings } from "../core/settings";
+import { DEFAULT_SETTINGS, type ModelMode, type VikalpSettings } from "../core/settings";
 import { engineChoice } from "../core/rules/draft";
 import { groupRulesByLabel, usesAi, type RuleFamily } from "../core/rules/groups";
 import type { Rule } from "../core/rules/types";
 import type VikalpPlugin from "../main";
+import { AiSettingsSection } from "./aiSettings";
 import { RuleEditorModal } from "./ruleEditor";
-
-const MODEL_MODES: ModelMode[] = ["lite", "medium", "heavy"];
 
 type PlainKey = "alternativesCount" | "markersOnByDefault" | "articleFix" | "hoverCycling" | "judgmentEngine" | "liveLocalLint" | "trimPrimaryAction";
 
@@ -18,6 +17,7 @@ interface ControlBinding {
 export class VikalpSettingTab extends PluginSettingTab {
 	/** Rule families the user has expanded, kept while settings stay open. */
 	private readonly expandedFamilies = new Set<string>();
+	private readonly aiSection: AiSettingsSection;
 
 	constructor(
 		app: App,
@@ -25,6 +25,11 @@ export class VikalpSettingTab extends PluginSettingTab {
 	) {
 		super(app, plugin);
 		this.containerEl.addClass("vk-settings");
+		this.aiSection = new AiSettingsSection(
+			plugin,
+			() => this.update(),
+			() => this.refreshDomState(),
+		);
 	}
 
 	override getSettingDefinitions(): SettingDefinitionItem[] {
@@ -46,38 +51,8 @@ export class VikalpSettingTab extends PluginSettingTab {
 	}
 
 	private aiSettings(): SettingDefinition[] {
-		const settings = this.plugin.settings;
 		return [
-			{
-				name: "OpenRouter API key",
-				desc: "Kept in plugin data, not in your notes. Used only when you click an AI action.",
-				aliases: ["key", "token"],
-				render: (setting) => {
-					setting.addText((text) => {
-						text.inputEl.type = "password";
-						text.inputEl.addClass("vk-settings-key");
-						text
-							.setPlaceholder("sk-or-…")
-							.setValue(settings.openRouterApiKey)
-							.onChange(async (value) => {
-								settings.openRouterApiKey = value.trim();
-								await this.plugin.saveSettings();
-							});
-					});
-				},
-			},
-			{
-				name: "Model mode",
-				desc: "Applies to every AI action. Lite is fast and cheap for drafting; Heavy is for the final pass.",
-				control: { type: "dropdown", key: "modelMode", options: Object.fromEntries(MODEL_MODES.map((mode) => [mode, MODEL_MODE_LABELS[mode]])) },
-			},
-			...MODEL_MODES.map(
-				(mode): SettingDefinition => ({
-					name: `${MODEL_MODE_LABELS[mode]} model`,
-					desc: `OpenRouter model id. Default: ${DEFAULT_SETTINGS.models[mode]}`,
-					control: { type: "text", key: `models.${mode}`, placeholder: DEFAULT_SETTINGS.models[mode] },
-				}),
-			),
+			...this.aiSection.definitions(),
 			{
 				name: "AI versions per request",
 				desc: "How many versions Ask AI adds at a time.",
@@ -131,6 +106,8 @@ export class VikalpSettingTab extends PluginSettingTab {
 				name: "Judgment rules use",
 				desc: "Jev is fast, cheap and only answers yes or no. If it's down, Vikalp uses the Lite model and tells you.",
 				control: { type: "dropdown", key: "judgmentEngine", options: { jev: "Jev (TypeSafe)", llm: "The selected model" } },
+				// Jev runs on OpenRouter only. Elsewhere judgments always use the selected model.
+				visible: () => this.plugin.ai.hasJev,
 			},
 			{
 				name: "Lint as you type",
@@ -245,8 +222,9 @@ export class VikalpSettingTab extends PluginSettingTab {
 				control: { type: "dropdown", key: "trimPrimaryAction", options: { ghost: "Ghost the cuts", cut: "Make the cuts" } },
 			},
 			{
-				name: "Voice reference notes",
-				desc: "Notes that sound like you, one path per line. The tone pass compares against them.",
+				name: "Samples of your writing",
+				aliases: ["voice", "voice reference notes", "tone"],
+				desc: "Files from this vault that show how you write. Put one file per line, as a path or a file name. Only the Lab pass “Words that don't fit the tone” uses them. It sends the first 2,000 characters of each file to the model, together with the text you're working on. The model then marks words in your text that don't sound like you.",
 				control: { type: "textarea", key: "voiceReferenceNotes", placeholder: "Essays/On writing.md", rows: 4 },
 			},
 		];
@@ -264,16 +242,6 @@ export class VikalpSettingTab extends PluginSettingTab {
 						.split("\n")
 						.map((line) => line.trim())
 						.filter(Boolean);
-					return this.plugin.saveSettings();
-				},
-			};
-		}
-		const mode = MODEL_MODES.find((candidate) => key === `models.${candidate}`);
-		if (mode) {
-			return {
-				get: () => settings.models[mode],
-				set: (value) => {
-					settings.models[mode] = String(value).trim() || DEFAULT_SETTINGS.models[mode];
 					return this.plugin.saveSettings();
 				},
 			};

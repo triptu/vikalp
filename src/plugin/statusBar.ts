@@ -1,6 +1,5 @@
 import { setIcon, setTooltip, type Plugin } from "obsidian";
-import { MODEL_MODE_LABELS } from "../core/settings";
-import type { UiStore, VikalpUiState } from "../store/uiStore";
+import { modelLabel, type UiStore, type VikalpUiState } from "../store/uiStore";
 
 export interface StatusBarActions {
 	toggleMarkers: () => void;
@@ -48,7 +47,8 @@ export class StatusBar {
 			note?.ghostWords,
 			note?.markersOn,
 			note?.lintHits.length,
-			state.modelMode,
+			modelLabel(state),
+			state.aiModel.providerLabel,
 			state.lab.runningPass,
 			state.trim.status,
 			state.aiPendingSpans.length,
@@ -86,9 +86,10 @@ export class StatusBar {
 		const running = state.lab.runningPass !== null || state.trim.status === "reading" || state.aiPendingSpans.length > 0;
 		if (running) this.lab.createSpan({ cls: "vk-spinner" });
 		this.lab.createSpan({ cls: "vk-status-lab-label", text: "Lab" });
-		this.lab.createSpan({ cls: "vk-status-lab-mode", text: MODEL_MODE_LABELS[state.modelMode] });
+		this.lab.createSpan({ cls: "vk-status-lab-mode", text: modelLabel(state) });
 
-		setTooltip(this.lab, "The Lab: AI marks, trim and model mode", { placement: "top" });
+		const { providerLabel, modelId, hasModes } = state.aiModel;
+		setTooltip(this.lab, `The Lab: AI marks${hasModes ? ", trim and model mode" : " and trim"}. ${providerLabel} · ${modelId || "no model yet"}`, { placement: "top" });
 	}
 
 	dispose() {
