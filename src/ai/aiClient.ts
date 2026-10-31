@@ -5,6 +5,7 @@ import type { ModelChoice } from "../core/modelChoices";
 import { modelFor, type ModelMode, type VikalpSettings } from "../core/settings";
 import { AiError, type AiBackend, type Pricing } from "./backend";
 import { backendFor, registerProviders } from "./backends";
+import type { GetJson } from "./http";
 
 export { AiError };
 export type { Pricing };
@@ -54,12 +55,14 @@ export class AiClient {
 	constructor(
 		private readonly getSettings: () => VikalpSettings,
 		private readonly recordCost: (record: CostRecord) => void,
+		/** How model lists are fetched. Model calls themselves go through pi-ai. */
+		private readonly getJson: GetJson,
 	) {
 		registerProviders(this.models);
 	}
 
 	private get backend(): AiBackend {
-		return backendFor(this.models, this.getSettings());
+		return backendFor(this.models, this.getSettings(), this.getJson);
 	}
 
 	get isReady(): boolean {

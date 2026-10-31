@@ -2,6 +2,7 @@ import { Type } from "typebox";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { AiClient } from "../../src/ai/aiClient";
 import { loadSettings, mergeSettings, stashApiKeys, type ApiKeyStore } from "../../src/core/settings";
+import { fetchJson } from "../support/fetchJson";
 import { startMockModelServer, type MockModelServer } from "../support/mockModelServer";
 
 /** Stands in for Obsidian's secret storage. */
@@ -46,7 +47,7 @@ describe("where API keys live", () => {
 		expect(JSON.stringify(dataJson)).not.toContain("secret-1");
 		expect(dataJson.providers.custom?.baseUrl).toBe(server.baseUrl);
 
-		await new AiClient(() => settings, () => {}).structured(alternativesRequest);
+		await new AiClient(() => settings, () => {}, fetchJson).structured(alternativesRequest);
 		expect(server.requests.at(-1)?.authorization).toBe("Bearer secret-1");
 
 		const nextSession = loadSettings(JSON.parse(JSON.stringify(dataJson)), store);

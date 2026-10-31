@@ -20,6 +20,7 @@ import { OpenModelPicksCache } from "./plugin/openModelPicks";
 import { LabPopoverHost, TrimBarHost } from "./plugin/overlays";
 import { Panels } from "./plugin/panels";
 import { ReadThrough } from "./plugin/readThrough";
+import { requestJson } from "./plugin/requestJson";
 import { VikalpSettingTab } from "./plugin/settingsTab";
 import { StatusBar } from "./plugin/statusBar";
 import { createAlternativesActions, createOverflowActions, type AlternativesDeps } from "./plugin/viewActions";
@@ -53,11 +54,11 @@ export default class VikalpPlugin extends Plugin {
 		// Keys saved by earlier versions sit in data.json; they leave it once secret storage has them.
 		if (moved) await this.saveData(moved);
 		this.store = createUiStore();
-		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
+		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record), requestJson);
 		this.syncStore();
 
 		const pluginDir = this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`;
-		this.openModels = new OpenModelPicksCache(this.app.vault.adapter, `${pluginDir}/model-picks.json`);
+		this.openModels = new OpenModelPicksCache(this.app.vault.adapter, `${pluginDir}/model-picks.json`, requestJson);
 		const repository = new SidecarRepository(this.app.vault.adapter, pluginDir, (notePath, backup) => {
 			new Notice(`Vikalp couldn't read the saved alternatives for "${notePath}". The file was kept as ${backup.replace(/^.*\//, "")}.`, 10000);
 		});

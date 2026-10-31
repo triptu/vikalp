@@ -1,5 +1,6 @@
 import { pickOpenModels, type BenchmarkScore, type OpenModelPicks, type OpenRouterModelInfo } from "../core/modelChoices";
 import { AiError } from "./backend";
+import { isSuccess, type GetJson } from "./http";
 
 const OPENROUTER_API = "https://openrouter.ai/api/v1";
 
@@ -7,18 +8,11 @@ const OPENROUTER_API = "https://openrouter.ai/api/v1";
  * Asks OpenRouter for Artificial Analysis intelligence scores and its model
  * list, and picks open models for each mode. The benchmarks need an OpenRouter key.
  */
-export async function fetchOpenModelPicks(apiKey: string, signal?: AbortSignal): Promise<OpenModelPicks> {
-	const [benchmarks, catalog] = await Promise.all([
-		getJson(`${OPENROUTER_API}/benchmarks?source=artificial-analysis&task_type=intelligence&max_results=100`, apiKey, signal),
-		getJson(`${OPENROUTER_API}/models`, apiKey, signal),
-	]);
-	return pickOpenModels(readScores(benchmarks), readModels(catalog));
-}
-
-async function getJson(url: string, apiKey: string, signal?: AbortSignal): Promise<unknown> {
-	const response = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal });
-	if (!response.ok) throw new AiError(`OpenRouter answered with error ${response.status}.`);
-	return response.json();
+export async function fetchOpenModelPicks(apiKey: string, getJson: GetJson, signal?: AbortSignal): Promise<OpenModelPicks> {
+	const get = (path: string) => getJson(`${OPENROUTER_API}${path}`, { Authorization: `Bearer ${apiKey}` }, signal);
+	const [benchmarks, catalog] = await Promise.all([get("/benchmarks?source=artificial-analysis&task_type=intelligence&max_results=100"), get("/models")]);
+	for (const answer of [benchmarks, catalog]) if (!isSuccess(answer.status)) throw new AiError(`OpenRouter answered with error ${answer.status}.`);
+	return pickOpenModels(readScores(benchmarks.body), readModels(catalog.body));
 }
 
 function readScores(body: unknown): BenchmarkScore[] {

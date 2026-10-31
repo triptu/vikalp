@@ -5,11 +5,12 @@ import { protocolFor } from "../../src/core/providers";
 import { mergeSettings, type VikalpSettings } from "../../src/core/settings";
 import { initialUiState, sessionCostSummary, type CostEntry, type VikalpUiState } from "../../src/store/uiStore";
 import { formatSessionCost } from "../../src/views/format";
+import { fetchJson } from "../support/fetchJson";
 import { startMockModelServer, type MockModelServer } from "../support/mockModelServer";
 
 function clientFor(settings: VikalpSettings) {
 	const costs: CostRecord[] = [];
-	return { client: new AiClient(() => settings, (record) => costs.push(record)), costs };
+	return { client: new AiClient(() => settings, (record) => costs.push(record), fetchJson), costs };
 }
 
 function localSettings(baseUrl: string, model: string): VikalpSettings {

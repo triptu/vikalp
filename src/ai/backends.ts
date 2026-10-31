@@ -8,6 +8,7 @@ import { shortModelName } from "../core/modelChoices";
 import { protocolFor, runsLocally, shortServerName, type ProviderPreset } from "../core/providers";
 import { activeProvider, type ActiveProvider, type VikalpSettings } from "../core/settings";
 import { AiError, type AiBackend, type Pricing } from "./backend";
+import { isSuccess, type GetJson, type JsonAnswer } from "./http";
 
 /** pi-ai provider id for servers Vikalp only knows by URL. */
 const SERVER_PROVIDER = "vikalp-server";
@@ -30,7 +31,7 @@ export function registerProviders(models: MutableModels) {
 }
 
 /** The backend for the provider picked in settings. The server URL decides the protocol. */
-export function backendFor(models: MutableModels, settings: VikalpSettings): AiBackend {
+export function backendFor(models: MutableModels, settings: VikalpSettings, getJson: GetJson): AiBackend {
 	const active = activeProvider(settings);
 	switch (protocolFor(active.baseUrl)) {
 		case "openrouter":
@@ -40,7 +41,7 @@ export function backendFor(models: MutableModels, settings: VikalpSettings): AiB
 		case "openai":
 			return catalogBackend(models, active, "openai");
 		case "openai-compatible":
-			return serverBackend(active);
+			return serverBackend(active, getJson);
 	}
 }
 
@@ -78,7 +79,7 @@ function catalogBackend(models: MutableModels, active: ActiveProvider, provider:
 }
 
 /** Any OpenAI-compatible server: Ollama, LM Studio, or a URL the writer typed. */
-function serverBackend(active: ActiveProvider): AiBackend {
+function serverBackend(active: ActiveProvider, getJson: GetJson): AiBackend {
 	const pricing: Pricing = runsLocally(active.preset.id, active.baseUrl) ? "free" : "unpriced";
 	return {
 		...commonParts(active),
@@ -100,17 +101,17 @@ function serverBackend(active: ActiveProvider): AiBackend {
 			return { model: model as unknown as Model<never>, pricing };
 		},
 		listModels: async (signal) => {
-			let response: Response;
+			let answer: JsonAnswer;
 			try {
-				response = await fetch(`${active.baseUrl.replace(/\/+$/, "")}/models`, { headers: active.apiKey ? { Authorization: `Bearer ${active.apiKey}` } : {}, signal });
+				answer = await getJson(`${active.baseUrl.replace(/\/+$/, "")}/models`, active.apiKey ? { Authorization: `Bearer ${active.apiKey}` } : {}, signal);
 			} catch {
 				// A timeout means the same to the writer as a server that isn't there.
 				throw new AiError(unreachable(active.preset, active.baseUrl), true);
 			}
-			if (response.status === 401 || response.status === 403) throw new AiError(`${displayName(active.preset)} rejected the API key.`);
-			if (response.status === 404) throw new AiError("No model list at this URL. OpenAI-compatible URLs usually end in /v1.");
-			if (!response.ok) throw new AiError(`The server answered with error ${response.status}.`);
-			const listing = (await response.json().catch(() => null)) as { data?: Array<{ id?: unknown }> } | null;
+			if (answer.status === 401 || answer.status === 403) throw new AiError(`${displayName(active.preset)} rejected the API key.`);
+			if (answer.status === 404) throw new AiError("No model list at this URL. OpenAI-compatible URLs usually end in /v1.");
+			if (!isSuccess(answer.status)) throw new AiError(`The server answered with error ${answer.status}.`);
+			const listing = answer.body as { data?: Array<{ id?: unknown }> } | null;
 			if (!Array.isArray(listing?.data)) throw new AiError("The server's answer wasn't a model list. OpenAI-compatible URLs usually end in /v1.");
 			return listing.data.flatMap((entry) => (typeof entry.id === "string" ? [{ id: entry.id, name: entry.id }] : []));
 		},

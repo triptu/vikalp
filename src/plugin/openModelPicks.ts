@@ -1,4 +1,5 @@
 import type { DataAdapter } from "obsidian";
+import type { GetJson } from "../ai/http";
 import { fetchOpenModelPicks } from "../ai/openModels";
 import type { OpenModelPicks } from "../core/modelChoices";
 
@@ -22,6 +23,7 @@ export class OpenModelPicksCache {
 	constructor(
 		private readonly adapter: Pick<DataAdapter, "exists" | "read" | "write">,
 		private readonly path: string,
+		private readonly getJson: GetJson,
 	) {}
 
 	get picks(): OpenModelPicks | null {
@@ -39,7 +41,7 @@ export class OpenModelPicksCache {
 		if (!apiKey || this.fetched || (this.saved && Date.now() - this.saved.fetchedAt < ONE_DAY_MS)) return loaded;
 		this.fetched = true;
 		try {
-			this.saved = { fetchedAt: Date.now(), picks: await fetchOpenModelPicks(apiKey) };
+			this.saved = { fetchedAt: Date.now(), picks: await fetchOpenModelPicks(apiKey, this.getJson) };
 			await this.adapter.write(this.path, JSON.stringify(this.saved, null, "\t"));
 			return true;
 		} catch {
