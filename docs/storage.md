@@ -46,6 +46,10 @@ Rules:
 - Saves happen half a second after the last change. Unchanged content is not rewritten.
 - `schema` goes up on any breaking change, with a migration step in `src/persistence/migrations.ts`.
 
+## API keys
+
+AI provider keys are not in `data.json`. They go in Obsidian's secret storage on the device, under `vikalp-api-key-<provider>`, so syncing `.obsidian/` never carries them. A key saved by a version before 0.1.4 is moved out of `data.json` the first time the plugin loads. Keys don't sync between devices; each device needs its own.
+
 ## Finding text again
 
 When a note opens, each anchor is placed in this order:

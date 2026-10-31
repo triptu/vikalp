@@ -1,4 +1,4 @@
-import type { ExtraButtonComponent, Setting, SettingDefinition } from "obsidian";
+import { debounce, type ExtraButtonComponent, type Setting, type SettingDefinition } from "obsidian";
 import { AiError } from "../ai/aiClient";
 import { familyChoices, type ModelChoice } from "../core/modelChoices";
 import { PROVIDER_IDS, PROVIDER_PRESETS, type ProviderId, type ProviderPreset } from "../core/providers";
@@ -79,26 +79,51 @@ export class AiSettingsSection {
 
 	private keyRow(preset: ProviderPreset): SettingDefinition {
 		const optional = preset.key === "optional";
+		const saved = this.plugin.hasApiKey();
+		const where = "Kept in Obsidian's secret storage on this device, not in your vault.";
 		return {
 			name: optional ? "API key" : `${preset.label} API key`,
-			desc: optional ? "Only if the server asks for one. Kept in plugin config on your machine." : "Kept in plugin config on your machine. Used only when you click an AI action.",
+			desc: optional ? `Only if the server asks for one. ${where}` : `${where} Used only when you click an AI action.`,
 			aliases: ["key", "token"],
 			render: (setting) => {
 				setting.addText((text) => {
-					text.inputEl.type = "password";
-					text.inputEl.addClass("vk-settings-key");
-					text
-						.setPlaceholder(preset.keyPlaceholder)
-						.setValue(this.config().apiKey)
-						.onChange(async (value) => {
-							this.config().apiKey = value.trim();
-							await this.plugin.saveSettings();
-						});
-					// Servers list their models with the key, so ask again once it's typed.
-					if (!preset.modes) text.inputEl.addEventListener("change", () => this.reloadServerModels());
+					const input = text.inputEl;
+					input.type = "password";
+					input.autocomplete = "off";
+					input.addClass("vk-settings-key");
+					text.setPlaceholder(saved ? "Key saved" : preset.keyPlaceholder);
+					// The saved key never comes back to the page. Blank keeps it; a new one is saved after a pause, and
+					// the row redraws once the writer leaves the field (servers list their models with the key).
+					const save = () => {
+						pause.cancel();
+						const key = input.value.trim();
+						if (key) void this.plugin.setApiKey(key);
+					};
+					const pause = debounce(save, 800, true);
+					input.addEventListener("input", pause);
+					input.addEventListener("change", () => {
+						save();
+						this.keyChanged(preset);
+					});
 				});
+				if (saved) {
+					setting.addExtraButton((button) =>
+						button
+							.setIcon("x")
+							.setTooltip("Remove the saved key")
+							.onClick(async () => {
+								await this.plugin.setApiKey("");
+								this.keyChanged(preset);
+							}),
+					);
+				}
 			},
 		};
+	}
+
+	private keyChanged(preset: ProviderPreset) {
+		if (preset.modes) this.rebuild();
+		else this.reloadServerModels();
 	}
 
 	/** Providers with Lite, Medium and Heavy. The server URL hides under Advanced since it rarely changes. */

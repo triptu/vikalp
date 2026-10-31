@@ -3,12 +3,13 @@ import { MarkdownView, Menu, Notice, Plugin, TFile } from "obsidian";
 import { AiClient, type CostRecord } from "./ai/aiClient";
 import { newId } from "./core/model/ids";
 import { runsLocally, type ProviderId } from "./core/providers";
-import { activeProvider, mergeSettings, modelFor, type ModelMode, type VikalpSettings } from "./core/settings";
+import { activeProvider, loadSettings, modelFor, stashApiKeys, type ApiKeyStore, type ModelMode, type SavedSettings, type VikalpSettings } from "./core/settings";
 import { vikalpEditorExtension } from "./editor";
 import { noteModeField, setNoteMode } from "./editor/noteFields";
 import { SidecarRepository } from "./persistence/sidecar";
 import { ActionMenuHost } from "./plugin/actionMenu";
 import { AiAlternatives } from "./plugin/aiAlternatives";
+import { secretApiKeyStore } from "./plugin/apiKeyStore";
 import { HOTKEY_COMMANDS, registerCommands, registerHotkeyCommands } from "./plugin/commands";
 import { fillEditorMenu } from "./plugin/editorMenu";
 import { LabService } from "./plugin/labService";
@@ -43,9 +44,14 @@ export default class VikalpPlugin extends Plugin {
 	alternativesDeps!: AlternativesDeps;
 	private statusBar: StatusBar | null = null;
 	private trimBar: TrimBarHost | null = null;
+	private apiKeys: ApiKeyStore | null = null;
 
 	override async onload() {
-		this.settings = mergeSettings((await this.loadData()) as Partial<VikalpSettings> | null);
+		this.apiKeys = secretApiKeyStore(this.app);
+		const { settings, moved } = loadSettings((await this.loadData()) as Partial<SavedSettings> | null, this.apiKeys);
+		this.settings = settings;
+		// Keys saved by earlier versions sit in data.json; they leave it once secret storage has them.
+		if (moved) await this.saveData(moved);
 		this.store = createUiStore();
 		this.ai = new AiClient(() => this.settings, (record) => this.recordCost(record));
 		this.syncStore();
@@ -151,7 +157,7 @@ export default class VikalpPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(stashApiKeys(this.settings, this.apiKeys));
 		this.syncStore();
 		this.statusBar?.render();
 	}
@@ -174,6 +180,16 @@ export default class VikalpPlugin extends Plugin {
 
 	async setProvider(provider: ProviderId) {
 		this.settings.provider = provider;
+		await this.saveSettings();
+	}
+
+	/** Whether the provider in use has a key. The key itself never goes back to the settings page. */
+	hasApiKey(): boolean {
+		return activeProvider(this.settings).apiKey !== "";
+	}
+
+	async setApiKey(key: string) {
+		this.settings.providers[this.settings.provider].apiKey = key.trim();
 		await this.saveSettings();
 	}
 

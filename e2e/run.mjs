@@ -445,8 +445,11 @@ await group("AI providers", [
 		const settings = await driver.openSettings();
 		await settingRow(settings, "Provider").locator("select:not(.is-measuring)").selectOption("openrouter");
 		await settings.waitForTimeout(400);
-		const key = await settingRow(settings, "OpenRouter API key").locator("input").inputValue();
-		assert(key.length > 0, "the OpenRouter key is still there");
+		const keyField = settingRow(settings, "OpenRouter API key").locator("input");
+		assert((await keyField.getAttribute("placeholder")) === "Key saved", "the OpenRouter key is still there");
+		assert((await keyField.inputValue()) === "", "and the page never shows it");
+		const dataJson = await driver.evaluate(async () => JSON.stringify(await window.app.plugins.plugins.vikalp.loadData()));
+		assert(!dataJson.includes("apiKey"), "data.json holds no key");
 		assert((await settingRow(settings, "Lite model").count()) === 1, "Lite, Medium and Heavy are back");
 		await driver.evaluate(() => window.app.setting.close());
 		const state = await driver.evaluate(() => {

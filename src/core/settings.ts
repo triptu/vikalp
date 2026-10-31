@@ -61,7 +61,16 @@ interface LegacySettings {
 	models?: Partial<Record<ModelMode, string>>;
 }
 
-export function mergeSettings(saved: (Partial<VikalpSettings> & LegacySettings) | null | undefined): VikalpSettings {
+/** What data.json holds: the settings with each provider's key left out once secret storage has it. */
+export type SavedSettings = Omit<VikalpSettings, "providers"> & { providers: Partial<Record<ProviderId, Partial<ProviderSettings>>> };
+
+/** Where API keys live outside data.json. Backed by Obsidian's secret storage in the plugin. */
+export interface ApiKeyStore {
+	read(provider: ProviderId): string | null;
+	write(provider: ProviderId, key: string): void;
+}
+
+export function mergeSettings(saved: (Partial<SavedSettings> & LegacySettings) | null | undefined): VikalpSettings {
 	const { openRouterApiKey, models: legacyModels, providers: savedProviders, ...rest } = saved ?? {};
 	const providers = Object.fromEntries(
 		PROVIDER_IDS.map((id) => {
@@ -72,6 +81,47 @@ export function mergeSettings(saved: (Partial<VikalpSettings> & LegacySettings) 
 	) as Record<ProviderId, ProviderSettings>;
 	const provider = rest.provider && rest.provider in PROVIDER_PRESETS ? rest.provider : DEFAULT_SETTINGS.provider;
 	return { ...DEFAULT_SETTINGS, ...rest, provider, providers };
+}
+
+/**
+ * The settings for a session: data.json plus the keys the store holds. A key still in
+ * data.json wins and comes back as `moved`, the file to write once the store has it.
+ */
+export function loadSettings(saved: (Partial<SavedSettings> & LegacySettings) | null | undefined, store: ApiKeyStore | null): { settings: VikalpSettings; moved: SavedSettings | null } {
+	const settings = mergeSettings(saved);
+	if (!store) return { settings, moved: null };
+	for (const id of PROVIDER_IDS) {
+		const config = settings.providers[id];
+		if (!config.apiKey) config.apiKey = store.read(id) ?? "";
+	}
+	const plaintext = PROVIDER_IDS.some((id) => Boolean(saved?.providers?.[id]?.apiKey)) || Boolean(saved?.openRouterApiKey);
+	return { settings, moved: plaintext ? stashApiKeys(settings, store) : null };
+}
+
+/**
+ * What to write to data.json. Each key goes to the store and leaves the file only once the
+ * store reads it back; a key the store won't take, or every key without a store, stays in the file.
+ */
+export function stashApiKeys(settings: VikalpSettings, store: ApiKeyStore | null): SavedSettings {
+	const providers = Object.fromEntries(
+		PROVIDER_IDS.map((id) => {
+			const { apiKey, ...rest } = settings.providers[id];
+			const stored = store ? storeHolds(store, id, apiKey) : false;
+			return [id, stored || !apiKey ? rest : { ...rest, apiKey }];
+		}),
+	) as SavedSettings["providers"];
+	return { ...settings, providers };
+}
+
+function storeHolds(store: ApiKeyStore, id: ProviderId, key: string): boolean {
+	const held = () => (store.read(id) ?? "") === key;
+	if (held()) return true;
+	try {
+		store.write(id, key);
+	} catch {
+		return false;
+	}
+	return held();
 }
 
 /** The provider in use, with its URL and key resolved. */

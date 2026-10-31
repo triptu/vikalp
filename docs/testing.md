@@ -21,7 +21,7 @@ Flows are grouped so a whole group shares one Obsidian and one scratch vault. Th
 
 Run one group by naming any of its flows: `npm run e2e -- ghost`.
 
-AI answers come from `e2e/ai-recordings.json`, so most runs never wait on the model. A request with no recording (new prompt, changed note) goes to the model once and its answer is saved; commit the file with it. `npm run e2e -- --live` asks the model for everything again and rewrites the recordings. Recording needs an OpenRouter key in `dev-vault/.obsidian/plugins/vikalp/data.json` (that folder is gitignored), and replay still needs it, since without a key the judgment rules are skipped.
+AI answers come from `e2e/ai-recordings.json`, so most runs never wait on the model. A request with no recording (new prompt, changed note) goes to the model once and its answer is saved; commit the file with it. `npm run e2e -- --live` asks the model for everything again and rewrites the recordings. Recording needs an OpenRouter key in `dev-vault/.obsidian/plugins/vikalp/data.json` (that folder is gitignored; the plugin moves the key into the test profile's secret storage on load), and replay still needs it, since without a key the judgment rules are skipped.
 
 ## Screenshots
 

@@ -56,7 +56,7 @@ The AI features (AI versions, judgment lint rules and the Lab) send text to the 
 
 - The plugin connects only to the provider you chose: `openrouter.ai`, `api.anthropic.com`, `api.openai.com`, `localhost` for Ollama and LM Studio, or the URL you typed for a custom server.
 - Asking for versions, running a Lab pass or picking a trim level is one request each. A linter run with judgment rules on makes one request per paragraph. The Ollama, LM Studio and custom settings fetch the server's model list when you open them, and the OpenRouter settings fetch its model list and benchmark scores to suggest open models.
-- Your API keys are saved in the plugin's settings file in your vault, `.obsidian/plugins/vikalp/data.json`, and sent only to that provider.
+- Your API keys are kept in Obsidian's secret storage on this device and sent only to that provider.
 - Vikalp's own code uses no base64. The bundled AI and YAML libraries contain base64 helpers for binary data that Vikalp never sends. Nothing is hidden or obfuscated; the code is open source.
 - It writes to the clipboard only for **Copy clean text**, and never reads it.
 - Vikalp has no telemetry and no account.
