@@ -3,11 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vikalp: alternatives for writing in Obsidian</title>
-<meta name="description" content="An Obsidian plugin to keep versions of words, sentences and paragraphs in place, ghost text instead of deleting it, lint on demand, and use AI that never writes for you.">
-<meta property="og:title" content="Vikalp: alternatives for writing in Obsidian">
-<meta property="og:description" content="Keep versions of words, sentences and paragraphs in place, ghost text instead of deleting it, lint on demand, and use AI that never writes for you.">
+<title>Vikalp: settle on the right way to say something</title>
+<meta name="description" content="An Obsidian plugin that keeps versions of a word, sentence or paragraph in place, fades text instead of deleting it, lints on demand, and uses AI that never writes for you.">
+<meta property="og:title" content="Vikalp: settle on the right way to say something">
+<meta property="og:description" content="Keep versions of a word, sentence or paragraph in place. Fade text instead of deleting it. AI offers, you pick.">
 <meta property="og:url" content="https://vikalp.tushar.ai/">
+<meta property="og:image" content="https://vikalp.tushar.ai/media/trailer-poster-plain-v1.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -16,91 +18,116 @@
 
 <header>
   <h1>Vikalp</h1>
-  <p class="lede">Settle on the right way to say something. Keep several versions of a word, sentence or paragraph in place. Fade text instead of deleting it. Keep spare writing nearby. Lint on demand. Ask AI for options, marks and cuts, never for prose.</p>
-  <p class="meta"><i>Vikalp</i> is Hindi for "alternative". An Obsidian plugin for desktop. Free and open source.</p>
-  <nav>
-    <a href="#install">Install</a>
-    <a href="#use">What it does</a>
-    <a href="#keys">Keys</a>
-    <a href="#ai">AI and privacy</a>
-    <a href="https://github.com/triptu/vikalp">GitHub</a>
-  </nav>
+  <p class="lede">Settle on the right way to say something.</p>
+  <p class="sub">Keep several versions of a word, sentence or paragraph in the note and read each one in place. Fade text instead of deleting it. Ask AI for options, never for prose. <i>Vikalp</i> is Hindi for "alternative".</p>
+  <p class="actions">
+    <a class="button primary" href="https://community.obsidian.md/plugins/vikalp">Install</a>
+    <a class="button" href="https://github.com/triptu/vikalp">GitHub</a>
+    <a class="open" href="obsidian://show-plugin?id=vikalp">Open in Obsidian</a>
+  </p>
+  <p class="meta">An Obsidian plugin for desktop. Free and open source.</p>
 </header>
 
-<picture class="hero">
-  <source srcset="screenshots/light-02-markers-ghost-overflow.png" media="(prefers-color-scheme: light)">
-  <img src="screenshots/dark-02-markers-ghost-overflow.png" alt="A note with versions of two words, a faded sentence, the Alternatives panel on the left and Overflow on the right" width="2880" height="1666">
-</picture>
+<figure class="trailer">
+  <video controls playsinline preload="metadata" poster="media/trailer-poster-plain-v1.jpg" width="1920" height="1080">
+    <source src="media/vikalp-trailer-v1.mp4" type="video/mp4">
+  </video>
+</figure>
 
-<section id="install">
-  <h2>Install</h2>
-  <p>In Obsidian, open Settings → Community plugins → Browse and search for <b>Vikalp</b>. You can also open it from the <a href="https://community.obsidian.md/plugins/vikalp">plugin directory</a> or with the link <code>obsidian://show-plugin?id=vikalp</code>.</p>
-  <p>To install by hand, download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/triptu/vikalp/releases/latest">latest release</a> into <code>&lt;your vault&gt;/.obsidian/plugins/vikalp/</code> and turn on Vikalp in Settings → Community plugins.</p>
-  <p>Then, in Settings → Vikalp, pick an AI provider for the AI features (everything else works without one) and turn on <b>Use suggested hotkeys</b> for <kbd>⌘J</kbd>, <kbd>⌘⇧J</kbd> and <kbd>⌘.</kbd>. Vikalp takes no keys until you do. You can also set your own in Settings → Hotkeys.</p>
+<section class="compare">
+  <h2>You don't have to delete</h2>
+  <figure>
+    <figcaption><b>Before.</b> You change a word and the old one is gone.</figcaption>
+    <img src="media/delete-before-v1.png" alt="A note where 'glad' has replaced the old word and nothing marks the change" width="1600" height="440" loading="lazy">
+  </figure>
+  <figure>
+    <figcaption><b>After.</b> The dots under <i>glad</i> are its other versions. The faded sentence is still there, out of the way.</figcaption>
+    <img src="media/keep-after-v1.png" alt="The same note with a row of dots under 'glad' and the first sentence of the second paragraph faded" width="1600" height="440" loading="lazy">
+  </figure>
 </section>
 
-<section id="use">
+<section class="points">
   <h2>What it does</h2>
 
-  <h3>Alternatives</h3>
-  <p>Put the cursor on a word and press <kbd>⌘J</kbd>. Type a version and press <kbd>Return</kbd>. Add as many as you like. Press <kbd>⌘J</kbd> again for the sentence, again for the paragraph.</p>
-  <p>Hover the word and press the arrow keys to read each version in the note. There is no accept step. Whatever is showing is the note, and <kbd>⌘Z</kbd> undoes any swap.</p>
-  <img src="screenshots/guide/alternatives-panel.png" alt="The Alternatives panel with three versions of a word, the showing one marked" width="599" height="518" class="narrow">
+  <article>
+    <h3>Versions, in place</h3>
+    <p>Press <kbd>⌘J</kbd> on a word and type a version. Hover the word and press the arrow keys to read each one in the sentence. Whatever is showing is the note. Press <kbd>⌘J</kbd> again for the sentence, again for the paragraph.</p>
+    <video autoplay muted loop playsinline preload="metadata" poster="media/alternatives-v2.jpg" width="1600" height="720" aria-label="Typing versions of a word in the Alternatives panel, then swapping them in the note with the arrow keys">
+      <source src="media/alternatives-v2.mp4" type="video/mp4">
+    </video>
+  </article>
 
-  <h3>AI versions</h3>
-  <p>Press <kbd>⌘⇧J</kbd> and options stream in, marked with a small robot. Your showing version never changes. You pick.</p>
-  <img src="screenshots/guide/ai-alternatives.png" alt="AI versions, marked with a robot, listed below the ones you wrote" width="599" height="806" class="narrow">
+  <article>
+    <h3>AI offers. You pick.</h3>
+    <p>Press <kbd>⌘⇧J</kbd> and options stream in, marked with a small robot. Your text doesn't change until you choose one. AI never writes into your note. It can add versions, mark text or suggest cutting your own words, and nothing runs until you click.</p>
+    <video autoplay muted loop playsinline preload="metadata" poster="media/ai-v2.jpg" width="1600" height="720" aria-label="AI versions streaming into the Alternatives panel below the ones you wrote">
+      <source src="media/ai-v2.mp4" type="video/mp4">
+    </video>
+  </article>
 
-  <h3>Ghosting</h3>
-  <p>Select text, press <kbd>⌘.</kbd> then <kbd>G</kbd>. It fades but stays in the note and out of the word count. Right-click → <i>Revive</i> brings it back. <i>Copy clean text</i> copies the note without it.</p>
-  <img src="screenshots/guide/ghost.png" alt="A ghosted sentence, still in the paragraph at about a third" width="1455" height="159">
+  <article>
+    <h3>Fade it. Don't delete it.</h3>
+    <p>Select text and press <kbd>⌘.</kbd> then <kbd>G</kbd>. It fades, stays in the note and leaves the word count. Revive it later, or copy the note without it.</p>
+    <video autoplay muted loop playsinline preload="metadata" poster="media/ghost-v2.jpg" width="1600" height="720" aria-label="A selected sentence fading to a ghost while staying in the paragraph">
+      <source src="media/ghost-v2.mp4" type="video/mp4">
+    </video>
+  </article>
 
-  <h3>Overflow</h3>
-  <p>Select text, press <kbd>⌘.</kbd> then <kbd>S</kbd>. It moves to a side panel kept with the note. Drag it back when it fits.</p>
-  <img src="screenshots/guide/overflow.png" alt="The Overflow panel with one stashed sentence" width="591" height="302" class="narrow">
+  <article>
+    <h3>Keep spare writing nearby</h3>
+    <p><kbd>⌘.</kbd> then <kbd>S</kbd> moves a passage to Overflow, a side panel kept with the note. Drag it back when it fits.</p>
+    <video autoplay muted loop playsinline preload="metadata" poster="media/overflow-v2.jpg" width="1600" height="720" aria-label="A selected sentence leaving the note and appearing in the Overflow panel">
+      <source src="media/overflow-v2.mp4" type="video/mp4">
+    </video>
+  </article>
 
-  <h3>Linter</h3>
-  <p>Press <kbd>⌘.</kbd> then <kbd>L</kbd>. Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. It runs only when you ask. Edit the rules or add your own in settings.</p>
-  <img src="screenshots/guide/linter.png" alt="Lint marks in a note, a hover card with the rules a phrase hit, and the Lint panel grouped by rule" width="1600" height="648">
+  <article>
+    <h3>Lint when you ask</h3>
+    <p><kbd>⌘.</kbd> then <kbd>L</kbd> runs rules for hedging, wordiness, passive voice, repetition and AI-sounding phrases. It never runs on its own. Edit the rules or add your own.</p>
+    <video autoplay muted loop playsinline preload="metadata" poster="media/lint-v2.jpg" width="1600" height="720" aria-label="Running the linter: hedges and wordy phrases get marked in the note and listed by rule in the Lint panel">
+      <source src="media/lint-v2.mp4" type="video/mp4">
+    </video>
+  </article>
 
-  <h3>The Lab</h3>
-  <p>Click <b>Lab</b> in the status bar. Mark passes point at typos, weak or convoluted sentences, off-tone words and hedges. Trim levels strike through the words a model would cut, from 10% to 50%. You keep or cut each one. Nothing is deleted unless you choose to.</p>
-  <img src="screenshots/guide/typo-pass.png" alt="The typo pass: each fix shows on hover with Apply and Ignore" width="1600" height="529">
-  <img src="screenshots/guide/trim.png" alt="A slight trim: struck words would go, and the trim bar shows the word count change" width="1455" height="1282">
+  <article>
+    <h3>The Lab</h3>
+    <p>AI passes mark typos, weak sentences, off-tone words and hedges. Trim levels strike through what a model would cut, from 10% to 50%. You keep or cut each one.</p>
+    <img class="lab" src="screenshots/guide/trim.png" alt="A slight trim: struck sentences would go, and the trim bar shows 305 words becoming 274" width="1455" height="1282" loading="lazy">
+  </article>
 
-  <h3>Read-through</h3>
-  <p>Press <kbd>⌘.</kbd> then <kbd>R</kbd> to hide every marker and read like a reader. <kbd>Esc</kbd> returns.</p>
-  <img src="screenshots/guide/read-through.png" alt="Read-through mode: the note alone, with no markers or sidebars" width="1440" height="833">
-
-  <p>The <a href="https://github.com/triptu/vikalp/blob/main/docs/using-vikalp.md">guide</a> covers every feature.</p>
+  <article>
+    <h3>Read it like a reader</h3>
+    <p><kbd>⌘.</kbd> then <kbd>R</kbd> hides every marker and panel. <kbd>Esc</kbd> brings them back.</p>
+    <video autoplay muted loop playsinline preload="metadata" poster="media/read-v2.jpg" width="1600" height="720" aria-label="Read-through: the panels and markers disappear, leaving the note alone">
+      <source src="media/read-v2.mp4" type="video/mp4">
+    </video>
+  </article>
 </section>
 
-<section id="keys">
-  <h2>Keys</h2>
-  <p>These are the suggested hotkeys. Turn them on in Settings → Vikalp → Hotkeys.</p>
-  <table>
-    <tr><td><kbd>⌘J</kbd></td><td>Versions for the word or selection. Again: sentence. Again: paragraph.</td></tr>
-    <tr><td><kbd>⌘⇧J</kbd></td><td>Ask AI for versions</td></tr>
-    <tr><td><kbd>⌥↑</kbd> <kbd>⌥↓</kbd></td><td>Switch versions from the cursor</td></tr>
-    <tr><td><kbd>⌘.</kbd></td><td>Every other action, one letter away</td></tr>
-  </table>
-  <p>Every action is also a command. Change any key in Settings → Hotkeys.</p>
-</section>
-
-<section id="ai">
-  <h2>AI and privacy</h2>
-  <ul>
-    <li>AI never writes into your note. It can add labelled versions, mark text, or suggest cutting your own words.</li>
-    <li>Nothing runs without a click. There is no background AI, no telemetry and no account.</li>
-    <li>When you run an AI action, the text it needs goes to the provider you picked in settings: <a href="https://openrouter.ai">OpenRouter</a>, Anthropic or OpenAI with your own key, or a model on your own computer through <a href="https://ollama.com">Ollama</a> or <a href="https://lmstudio.ai">LM Studio</a>. Any other OpenAI-compatible server works too.</li>
-    <li>You pay the provider directly. The Lab shows what each call cost. With Ollama or LM Studio the text stays on your machine and costs nothing.</li>
-    <li>Vikalp's data for a note stays in your vault, in <code>.obsidian/plugins/vikalp/notes/</code>.</li>
-  </ul>
+<section class="start">
+  <h2>Quick start</h2>
+  <ol>
+    <li>Install Vikalp from <a href="https://community.obsidian.md/plugins/vikalp">Community plugins</a> and turn it on.</li>
+    <li>In Settings → Vikalp, turn on <b>Use suggested hotkeys</b> for <kbd>⌘J</kbd>, <kbd>⌘⇧J</kbd> and <kbd>⌘.</kbd>. Vikalp takes no keys until you do.</li>
+    <li>Open a note, put the cursor on a word and press <kbd>⌘J</kbd>.</li>
+    <li>For AI versions and the Lab, pick a provider in the same settings: OpenRouter, Anthropic or OpenAI with your own key, or Ollama or LM Studio on your own computer. Everything else works offline.</li>
+  </ol>
+  <p>The <a href="https://github.com/triptu/vikalp#readme">README</a> covers the rest: every command, the linter rules, and what the AI features send and where.</p>
 </section>
 
 </main>
 <footer>
-  <a href="https://github.com/triptu/vikalp">Source</a> · Made by <a href="https://tushar.ai">Tushar Tripathi</a>
+  <p>Inspired by <a href="https://x.com/jasonfried/status/2105403067793584590">Jason's</a> and <a href="https://x.com/jh3yy/status/2102885700979048558">Jhey's</a> tweets.</p>
+  <p><a href="https://github.com/triptu/vikalp">Source</a> · Made by <a href="https://tushar.ai">Tushar Tripathi</a></p>
 </footer>
+<script>
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  for (const video of document.querySelectorAll("video[autoplay]")) {
+    video.removeAttribute("autoplay");
+    video.pause();
+    video.load();
+  }
+}
+</script>
 </body>
 </html>
