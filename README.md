@@ -4,7 +4,7 @@ Settle on the right way to say something. Keep several versions of a word, sente
 
 [Website](https://vikalp.tushar.ai/) · [Install in Obsidian](https://community.obsidian.md/plugins/vikalp) · [Latest release](https://github.com/triptu/vikalp/releases/latest) · [Guide](docs/using-vikalp.md)
 
-![A note with versions of two words, a faded sentence, the Alternatives panel on the left and Overflow on the right](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/dark-02-markers-ghost-overflow.png)
+[![Watch the trailer: a word with its versions kept underneath](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/trailer-poster-v1.jpg)](https://vikalp.tushar.ai/)
 
 ## What it does
 
