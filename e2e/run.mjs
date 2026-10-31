@@ -351,7 +351,7 @@ await group("Linter, settings and AI", [
 		assert(labels.filter((label) => label === "Corporate speak").length === 2, "the new rule marks both phrases");
 	}),
 
-	flow("editing while judgment rules run never breaks the editor", async (driver) => {
+	flow("editing while AI rules run never breaks the editor", async (driver) => {
 		await driver.openNote("Essays/LinkedIn draft.md");
 		await driver.command("vikalp:run-linter");
 		await driver.wait(300);

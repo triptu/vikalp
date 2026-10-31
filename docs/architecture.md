@@ -65,7 +65,7 @@ Every call:
 
 Models never get character offsets. Prompts number the sentences (`[s4] …`) and models answer with a sentence id plus an exact quote. `core/ai/placement.ts` finds each quote with the anchoring code and rejects anything that isn't there verbatim. See [adding-a-lab-pass.md](adding-a-lab-pass.md).
 
-Jev (TypeSafe's yes/no model) handles judgment rules in the linter and the grammar check after a trim. It runs on OpenRouter only. If Jev fails, the linter falls back to the Lite model and says so. Other providers send judgments to the selected model and skip the grammar check.
+Jev (TypeSafe's yes/no model) handles the linter's AI rules and the grammar check after a trim. It runs on OpenRouter only. If Jev fails, the linter falls back to the Lite model and says so. Other providers send judgments to the selected model and skip the grammar check.
 
 ## Views
 
