@@ -24,7 +24,7 @@ Settle on the right way to say something. Keep several versions of a word, sente
 
 ![The Overflow panel with one stashed sentence](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/overflow.png)
 
-**Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. Judgment rules use Jev, TypeSafe's yes/no model.
+**Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. On OpenRouter, AI rules use Jev, TypeSafe's yes/no model. On other providers they use the model you picked.
 
 ![Lint marks in a note, a hover card with the rules a phrase hit, and the Lint panel grouped by rule](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/linter.png)
 
@@ -50,12 +50,12 @@ Then pick an AI provider in Vikalp's settings for the AI features, and turn on *
 
 ## Network use
 
-Alternatives, ghosting, Overflow, the local lint rules and read-through work offline.
+Alternatives, ghosting, Overflow, the lint rules without AI and read-through work offline.
 
-The AI features (AI versions, judgment lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
+The AI features (AI versions, AI rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and AI rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
 
 - The plugin connects only to the provider you chose: `openrouter.ai`, `api.anthropic.com`, `api.openai.com`, `localhost` for Ollama and LM Studio, or the URL you typed for a custom server.
-- Asking for versions, running a Lab pass or picking a trim level is one request each. A linter run with judgment rules on makes one request per paragraph. The Ollama, LM Studio and custom settings fetch the server's model list when you open them, and the OpenRouter settings fetch its model list and benchmark scores to suggest open models.
+- Asking for versions, running a Lab pass or picking a trim level is one request each. A linter run with AI rules on makes one request per paragraph. The Ollama, LM Studio and custom settings fetch the server's model list when you open them, and the OpenRouter settings fetch its model list and benchmark scores to suggest open models.
 - Your API keys are kept in Obsidian's secret storage on this device and sent only to that provider.
 - Model lists and benchmark scores are fetched through Obsidian's own request API. Model calls stream their answer through the browser's fetch, because Obsidian's request API can't stream.
 - Vikalp's own code uses no base64. The bundled AI and YAML libraries contain base64 helpers for binary data that Vikalp never sends. Nothing is hidden or obfuscated; the code is open source.
