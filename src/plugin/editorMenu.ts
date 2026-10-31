@@ -41,7 +41,7 @@ export function fillEditorMenu(plugin: VikalpPlugin, menu: Menu, view: EditorVie
 	if (span) {
 		add(span.note ? "Edit note" : "Add a note", "sticky-note", "edit-span-note", () => editSpanNote(plugin, view));
 		if (span.versions.length > 1) {
-			add("Settle: keep the showing version", "check", "settle-span", () => runAction(view, settleSpans(view.state, [span.id])));
+			add("Settle: keep the showing version", "check", HOTKEY_COMMANDS.settle, () => runAction(view, settleSpans(view.state, [span.id])));
 		}
 	}
 	if (listSpans(view.state).some((candidate) => candidate.range && !candidate.meta.hiddenIn)) {

@@ -1,9 +1,10 @@
 import type { EditorView } from "@codemirror/view";
 import { h, render } from "preact";
-import { ghostRange, reviveRange } from "../editor/actions";
+import { ghostRange, reviveRange, settleSpans } from "../editor/actions";
 import { ghosts } from "../editor/collections";
 import { runAction } from "../editor/interaction";
 import { noteModeField } from "../editor/noteFields";
+import { spanAt, spanMeta } from "../editor/spansField";
 import type VikalpPlugin from "../main";
 import { ActionMenu, type ActionMenuItem } from "../views/components/ActionMenu";
 import { IconContext } from "../views/components/Icon";
@@ -48,9 +49,12 @@ export class ActionMenuHost {
 		const hasSelection = !selection.empty;
 		const onGhost = (selection.empty ? ghosts.at(view.state, selection.head) : ghosts.overlapping(view.state, selection)).length > 0;
 		const needsSelection = hasSelection ? undefined : "Select some text first";
+		const spanId = spanAt(view.state, selection.head);
+		const keepId = spanId && (spanMeta(view.state, spanId)?.versions.length ?? 0) > 1 ? spanId : null;
 		const items: (ActionMenuItem & { commandId: string })[] = [
 			{ key: "A", label: "Alternatives", icon: "split", commandId: HOTKEY_COMMANDS.alternatives, run: () => startAlternatives(plugin.alternativesDeps, view) },
 			{ key: "I", label: "Ask AI for versions", icon: "sparkles", commandId: HOTKEY_COMMANDS.askAi, run: () => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }) },
+			...(keepId ? [{ key: "K", label: "Keep this version", icon: "check", commandId: HOTKEY_COMMANDS.settle, run: () => runAction(view, settleSpans(view.state, [keepId])) }] : []),
 			{ key: "F", label: "Find words worth playing with", icon: "wand-sparkles", commandId: "find-spots", run: () => plugin.findSpots() },
 			onGhost
 				? { key: "G", label: "Revive", icon: "eye", commandId: "revive", run: () => runAction(view, reviveRange(view.state, { from: selection.from, to: selection.to })) }

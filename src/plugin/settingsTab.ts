@@ -83,11 +83,11 @@ export class VikalpSettingTab extends PluginSettingTab {
 	}
 
 	private hotkeySettings(): SettingDefinition[] {
-		const keys = Platform.isMacOS ? { alternatives: "⌘J", askAi: "⌘⇧J", actions: "⌘." } : { alternatives: "Ctrl+J", askAi: "Ctrl+Shift+J", actions: "Ctrl+." };
+		const keys = Platform.isMacOS ? { alternatives: "⌘J", askAi: "⌘⇧J", settle: "⌘⇧↵", actions: "⌘." } : { alternatives: "Ctrl+J", askAi: "Ctrl+Shift+J", settle: "Ctrl+Shift+Enter", actions: "Ctrl+." };
 		return [
 			{
 				name: "Use suggested hotkeys",
-				desc: `Sets ${keys.alternatives} for alternatives, ${keys.askAi} to ask AI for versions, and ${keys.actions} for a list of every action. Turn this off if you or another plugin already use those keys.`,
+				desc: `Sets ${keys.alternatives} for alternatives, ${keys.askAi} to ask AI for versions, ${keys.settle} to keep the showing version, and ${keys.actions} for a list of every action. Turn this off if you or another plugin already use those keys.`,
 				aliases: ["shortcuts", "keys", "keyboard"],
 				control: { type: "toggle", key: "suggestedHotkeys" },
 			},

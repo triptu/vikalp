@@ -4,7 +4,7 @@ Vikalp helps you settle on the right way to say something. Keep several versions
 
 Nothing runs or costs money until you click something.
 
-The keys in this guide (⌘J, ⌘⇧J, ⌘.) are Vikalp's suggested hotkeys, on from the start. If they clash with keys you already use, turn off **Use suggested hotkeys** in Settings → Vikalp → Hotkeys, or change any of them in Settings → Hotkeys.
+The keys in this guide (⌘J, ⌘⇧J, ⌘⇧↵, ⌘.) are Vikalp's suggested hotkeys, on from the start. If they clash with keys you already use, turn off **Use suggested hotkeys** in Settings → Vikalp → Hotkeys, or change any of them in Settings → Hotkeys.
 
 ## Markers
 
@@ -41,7 +41,7 @@ The **Word · Sentence · Paragraph** tabs grow the current span or selection to
 
 A paragraph span can contain word spans. If you switch to a paragraph version that doesn't contain one of them, it hides until a version that does comes back.
 
-The **⋯** under the list has **Settle** (keep the showing version and drop the rest), **Remove AI versions** and **Add a note**. *Settle all alternatives in note* does it for every span, after asking.
+The **⋯** under the list has **Settle** (keep the showing version and drop the rest, also **⌘⇧↵** with the cursor on the text), **Remove AI versions** and **Add a note**. *Settle all alternatives in note* does it for every span, after asking.
 
 ### AI alternatives
 
@@ -129,13 +129,14 @@ The Lab popover shows this session's AI spend and links to a log of every call: 
 
 ## Keys
 
-Four keys cover almost everything. The right-click menu, the ⌘. menu, the Alternatives panel and the Lab popover show whichever keys you have, including any you set yourself.
+Five keys cover almost everything. The right-click menu, the ⌘. menu, the Alternatives panel and the Lab popover show whichever keys you have, including any you set yourself.
 
 | Key | What it does |
 |---|---|
 | **⌘J** | Alternatives for the word at the cursor or the selection. Again: the sentence. Again: the paragraph. |
 | **⌘⇧J** | Ask AI for versions |
 | **⌥↑ / ⌥↓** | Try versions from the note (or hover a marked word and use the arrow keys) |
+| **⌘⇧↵** | Keep the showing version and drop the rest |
 | **⌘.** | Every other action, one letter away |
 
 The **⌘.** menu:
@@ -144,6 +145,7 @@ The **⌘.** menu:
 |---|---|
 | A | Alternatives |
 | I | Ask AI for versions |
+| K | Keep this version (on text with versions) |
 | F | Find words worth playing with |
 | G | Ghost it (or Revive on ghosted text) |
 | S | Stash in Overflow |

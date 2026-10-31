@@ -46,7 +46,7 @@ In Obsidian, open Settings → Community plugins → Browse and search for **Vik
 
 To install by hand, download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/triptu/vikalp/releases/latest) into `<your vault>/.obsidian/plugins/vikalp/` and enable Vikalp in Settings → Community plugins.
 
-Then pick an AI provider in Vikalp's settings for the AI features, ⌘J, ⌘⇧J and ⌘. work from the start, and the right-click menu and the ⌘. menu show each action's key. Change them in Settings → Hotkeys, or turn off **Use suggested hotkeys** if they clash with keys you already use.
+Then pick an AI provider in Vikalp's settings for the AI features, ⌘J, ⌘⇧J, ⌘⇧↵ and ⌘. work from the start, and the right-click menu and the ⌘. menu show each action's key. Change them in Settings → Hotkeys, or turn off **Use suggested hotkeys** if they clash with keys you already use.
 
 ## Network use
 

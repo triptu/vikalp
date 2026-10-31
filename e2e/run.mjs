@@ -209,6 +209,32 @@ await group("Writing, then a restart", [
 		assert((await driver.evaluate(() => document.querySelectorAll(".vk-ghost").length)) === 1, "G ghosts the selection");
 	}),
 
+	flow("settle: ⌘⇧↵ keeps the showing version, and so does K in the ⌘. menu", async (driver) => {
+		await driver.openNote(ESSAY);
+		const hasEffortlessSpan = async () => JSON.stringify((await noteState(driver)).spans).includes("effortless");
+		await driver.select("effortless");
+		await driver.command("vikalp:alternatives-for-selection");
+		await driver.type("easy");
+		await driver.press("Enter");
+		await driver.press("Escape");
+		await driver.cursorAt("should be easy", 11);
+		await driver.press("Meta+Shift+Enter");
+		await driver.wait(200);
+		assert((await driver.docText()).includes("The common path should be easy."), "⌘⇧↵ keeps the showing version in the text");
+		assert(!(await hasEffortlessSpan()), "⌘⇧↵ drops the other versions");
+		await driver.press("Meta+z");
+		await driver.wait(200);
+		assert(await hasEffortlessSpan(), "undo brings the versions back");
+		await driver.cursorAt("should be easy", 11);
+		await driver.press("Meta+.");
+		await driver.wait(200);
+		const keepHint = await driver.evaluate(() => [...document.querySelectorAll(".vk-action-item")].find((item) => item.textContent?.startsWith("Keep this version"))?.querySelector(".vk-action-hotkey")?.textContent);
+		assert(keepHint === "⌘⇧↵", `the ⌘. menu shows ⌘⇧↵ next to Keep this version (got ${keepHint})`);
+		await driver.press("k");
+		await driver.wait(200);
+		assert(!(await hasEffortlessSpan()) && (await driver.docText()).includes("should be easy."), "K keeps the showing version");
+	}),
+
 	flow("span notes: add a note to a span", async (driver) => {
 		await driver.openNote(ESSAY);
 		await driver.select("ranking");
