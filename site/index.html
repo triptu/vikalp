@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vikalp: alternatives for writing in Obsidian</title>
 <meta name="description" content="An Obsidian plugin to keep versions of words, sentences and paragraphs in place, ghost text instead of deleting it, lint on demand, and use AI that never writes for you.">
+<meta property="og:title" content="Vikalp: alternatives for writing in Obsidian">
+<meta property="og:description" content="Keep versions of words, sentences and paragraphs in place, ghost text instead of deleting it, lint on demand, and use AI that never writes for you.">
+<meta property="og:url" content="https://vikalp.tushar.ai/">
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -13,11 +16,11 @@
 
 <header>
   <h1>Vikalp</h1>
-  <p class="lede">An Obsidian plugin for settling on the right way to say something. Keep several versions of a word, sentence or paragraph in place. Fade text instead of deleting it. Lint on demand. Ask AI for options and cuts, never for prose.</p>
-  <p class="meta"><i>Vikalp</i> is Hindi for "alternative". Desktop only. Free and open source.</p>
+  <p class="lede">Settle on the right way to say something. Keep several versions of a word, sentence or paragraph in place. Fade text instead of deleting it. Keep spare writing nearby. Lint on demand. Ask AI for options, marks and cuts, never for prose.</p>
+  <p class="meta"><i>Vikalp</i> is Hindi for "alternative". An Obsidian plugin for desktop. Free and open source.</p>
   <nav>
     <a href="#install">Install</a>
-    <a href="#use">How to use</a>
+    <a href="#use">What it does</a>
     <a href="#keys">Keys</a>
     <a href="#ai">AI and privacy</a>
     <a href="https://github.com/triptu/vikalp">GitHub</a>
@@ -26,48 +29,50 @@
 
 <picture class="hero">
   <source srcset="screenshots/light-02-markers-ghost-overflow.png" media="(prefers-color-scheme: light)">
-  <img src="screenshots/dark-02-markers-ghost-overflow.png" alt="A note with versions of words, a faded sentence, the Alternatives panel on the left and Overflow on the right" width="2880" height="1666">
+  <img src="screenshots/dark-02-markers-ghost-overflow.png" alt="A note with versions of two words, a faded sentence, the Alternatives panel on the left and Overflow on the right" width="2880" height="1666">
 </picture>
 
 <section id="install">
   <h2>Install</h2>
-  <ol>
-    <li>Download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/triptu/vikalp/releases/latest">latest release</a>.</li>
-    <li>Put them in <code>&lt;your vault&gt;/.obsidian/plugins/vikalp/</code>.</li>
-    <li>In Obsidian, open Settings → Community plugins and turn on Vikalp.</li>
-    <li>For the AI features, add an <a href="https://openrouter.ai/keys">OpenRouter</a> key in Settings → Vikalp. Everything else works without one.</li>
-    <li>For hotkeys, turn on <b>Use suggested hotkeys</b> in Settings → Vikalp, or set your own in Settings → Hotkeys. Vikalp takes no keys until you do.</li>
-  </ol>
+  <p>In Obsidian, open Settings → Community plugins → Browse and search for <b>Vikalp</b>. You can also open it from the <a href="https://community.obsidian.md/plugins/vikalp">plugin directory</a> or with the link <code>obsidian://show-plugin?id=vikalp</code>.</p>
+  <p>To install by hand, download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/triptu/vikalp/releases/latest">latest release</a> into <code>&lt;your vault&gt;/.obsidian/plugins/vikalp/</code> and turn on Vikalp in Settings → Community plugins.</p>
+  <p>Then, in Settings → Vikalp, pick an AI provider for the AI features (everything else works without one) and turn on <b>Use suggested hotkeys</b> for <kbd>⌘J</kbd>, <kbd>⌘⇧J</kbd> and <kbd>⌘.</kbd>. Vikalp takes no keys until you do. You can also set your own in Settings → Hotkeys.</p>
 </section>
 
 <section id="use">
-  <h2>How to use</h2>
+  <h2>What it does</h2>
 
-  <h3>Versions in place</h3>
+  <h3>Alternatives</h3>
   <p>Put the cursor on a word and press <kbd>⌘J</kbd>. Type a version and press <kbd>Return</kbd>. Add as many as you like. Press <kbd>⌘J</kbd> again for the sentence, again for the paragraph.</p>
-  <p>Hover the word and press the arrow keys to read each version in the note. There is no accept step: whatever is showing is the note. <kbd>⌘Z</kbd> undoes any swap.</p>
-  <img src="screenshots/guide/alternatives-panel.png" alt="The Alternatives panel with three versions of a word" width="599" height="518" class="narrow">
+  <p>Hover the word and press the arrow keys to read each version in the note. There is no accept step. Whatever is showing is the note, and <kbd>⌘Z</kbd> undoes any swap.</p>
+  <img src="screenshots/guide/alternatives-panel.png" alt="The Alternatives panel with three versions of a word, the showing one marked" width="599" height="518" class="narrow">
+
+  <h3>AI versions</h3>
+  <p>Press <kbd>⌘⇧J</kbd> and options stream in, marked with a small robot. Your showing version never changes. You pick.</p>
+  <img src="screenshots/guide/ai-alternatives.png" alt="AI versions, marked with a robot, listed below the ones you wrote" width="599" height="806" class="narrow">
 
   <h3>Ghosting</h3>
   <p>Select text, press <kbd>⌘.</kbd> then <kbd>G</kbd>. It fades but stays in the note and out of the word count. Right-click → <i>Revive</i> brings it back. <i>Copy clean text</i> copies the note without it.</p>
-  <img src="screenshots/guide/ghost.png" alt="A faded sentence inside a paragraph" width="1455" height="159">
+  <img src="screenshots/guide/ghost.png" alt="A ghosted sentence, still in the paragraph at about a third" width="1455" height="159">
 
   <h3>Overflow</h3>
   <p>Select text, press <kbd>⌘.</kbd> then <kbd>S</kbd>. It moves to a side panel kept with the note. Drag it back when it fits.</p>
-  <img src="screenshots/guide/overflow.png" alt="The Overflow panel with one stashed block" width="591" height="302" class="narrow">
+  <img src="screenshots/guide/overflow.png" alt="The Overflow panel with one stashed sentence" width="591" height="302" class="narrow">
 
   <h3>Linter</h3>
-  <p>Press <kbd>⌘.</kbd> then <kbd>L</kbd>. It flags hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition and passive voice. It runs only when you ask. Edit the rules or add your own in settings.</p>
-  <img src="screenshots/guide/linter.png" alt="Lint marks in a note and the Lint panel" width="1600" height="648">
+  <p>Press <kbd>⌘.</kbd> then <kbd>L</kbd>. Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. It runs only when you ask. Edit the rules or add your own in settings.</p>
+  <img src="screenshots/guide/linter.png" alt="Lint marks in a note, a hover card with the rules a phrase hit, and the Lint panel grouped by rule" width="1600" height="648">
 
   <h3>The Lab</h3>
-  <p>Click <b>Lab</b> in the status bar. Mark passes point at typos, weak sentences and off-tone words. Trim levels strike through the words a model would cut, from 10% to 50%. You keep or cut each one. Nothing is deleted unless you choose to.</p>
-  <img src="screenshots/guide/trim.png" alt="A slight trim with struck words and the trim bar" width="1455" height="1282">
+  <p>Click <b>Lab</b> in the status bar. Mark passes point at typos, weak or convoluted sentences, off-tone words and hedges. Trim levels strike through the words a model would cut, from 10% to 50%. You keep or cut each one. Nothing is deleted unless you choose to.</p>
+  <img src="screenshots/guide/typo-pass.png" alt="The typo pass: each fix shows on hover with Apply and Ignore" width="1600" height="529">
+  <img src="screenshots/guide/trim.png" alt="A slight trim: struck words would go, and the trim bar shows the word count change" width="1455" height="1282">
 
   <h3>Read-through</h3>
   <p>Press <kbd>⌘.</kbd> then <kbd>R</kbd> to hide every marker and read like a reader. <kbd>Esc</kbd> returns.</p>
+  <img src="screenshots/guide/read-through.png" alt="Read-through mode: the note alone, with no markers or sidebars" width="1440" height="833">
 
-  <p>The <a href="https://github.com/triptu/vikalp/blob/main/docs/using-vikalp.md">full guide</a> covers every feature.</p>
+  <p>The <a href="https://github.com/triptu/vikalp/blob/main/docs/using-vikalp.md">guide</a> covers every feature.</p>
 </section>
 
 <section id="keys">
@@ -86,15 +91,16 @@
   <h2>AI and privacy</h2>
   <ul>
     <li>AI never writes into your note. It can add labelled versions, mark text, or suggest cutting your own words.</li>
-    <li>Nothing runs without a click. There is no background AI and no telemetry.</li>
-    <li>When you run an AI action, the text it needs is sent to <a href="https://openrouter.ai">OpenRouter</a> with your own key. You pay OpenRouter directly. The Lab shows what each call cost.</li>
+    <li>Nothing runs without a click. There is no background AI, no telemetry and no account.</li>
+    <li>When you run an AI action, the text it needs goes to the provider you picked in settings: <a href="https://openrouter.ai">OpenRouter</a>, Anthropic or OpenAI with your own key, or a model on your own computer through <a href="https://ollama.com">Ollama</a> or <a href="https://lmstudio.ai">LM Studio</a>. Any other OpenAI-compatible server works too.</li>
+    <li>You pay the provider directly. The Lab shows what each call cost. With Ollama or LM Studio the text stays on your machine and costs nothing.</li>
     <li>Vikalp's data for a note stays in your vault, in <code>.obsidian/plugins/vikalp/notes/</code>.</li>
   </ul>
 </section>
 
 </main>
 <footer>
-  <a href="https://github.com/triptu/vikalp">Source</a> · MIT license · Made by Tushar
+  <a href="https://github.com/triptu/vikalp">Source</a> · Made by <a href="https://tushar.ai">Tushar Tripathi</a>
 </footer>
 </body>
 </html>
