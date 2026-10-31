@@ -12,13 +12,14 @@
     "test:watch": "vitest",
     "e2e": "node e2e/run.mjs",
     "shots": "node e2e/screenshots.mjs",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "check": "node scripts/check-versions.mjs && npm run typecheck && npm test && npm run build"
   },
   "keywords": [
     "obsidian",
     "writing"
   ],
-  "author": "Tushar",
+  "author": "Tushar Tripathi",
   "license": "MIT",
   "dependencies": {
     "@earendil-works/pi-ai": "^1.1.0",

@@ -16,18 +16,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Versions agree
-        run: |
-          node -e '
-            const manifest = require("./manifest.json");
-            const pkg = require("./package.json");
-            const versions = require("./versions.json");
-            if (pkg.version !== manifest.version) throw new Error(`package.json is ${pkg.version}, manifest.json is ${manifest.version}`);
-            if (versions[manifest.version] !== manifest.minAppVersion) throw new Error(`versions.json needs "${manifest.version}": "${manifest.minAppVersion}"`);
-          '
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - run: npm run check
 
   review-lint:
     name: Obsidian review lint
