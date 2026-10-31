@@ -1,6 +1,6 @@
 {
   "name": "vikalp",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Alternative control for writing in Obsidian: versions of words, sentences and paragraphs, ghosting, overflow, a linter and an AI Lab that never writes for you.",
   "main": "main.js",
   "type": "module",
