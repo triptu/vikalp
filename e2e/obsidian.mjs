@@ -1,5 +1,5 @@
 // Launches an isolated Obsidian instance on the dev vault and connects to it over CDP.
-// Uses its own user-data dir so Tushar's running Obsidian and real vault are never touched.
+// Uses its own user-data dir so the maintainer's running Obsidian and real vault are never touched.
 import { spawn, spawnSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, writeFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
@@ -69,7 +69,7 @@ export async function launchObsidian({ vaultPath, keepVault = false, freshProfil
 }
 
 /**
- * The Obsidian.app installer is older than the app Tushar runs, so the test
+ * The Obsidian.app installer is older than the app the maintainer runs, so the test
  * profile gets a copy of the newest downloaded app version. The source is only read.
  */
 function useInstalledAppVersion() {
