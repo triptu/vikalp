@@ -36,7 +36,6 @@
     "@codemirror/view": "^6.38.6",
     "@lezer/common": "^1.5.3",
     "@types/node": "^26.6.4",
-    "builtin-modules": "^5.4.0",
     "esbuild": "^0.28.2",
     "jsdom": "^29.1.1",
     "obsidian": "^1.13.1",
