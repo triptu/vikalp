@@ -1,21 +1,52 @@
 # Vikalp
 
-*Vikalp* is Hindi for "alternative". It's an Obsidian plugin for settling on the right way to say something: keep several versions of a word, sentence or paragraph in place, dim text instead of deleting it, keep spare writing nearby, lint on demand, and ask AI for options, marks and cuts.
+Settle on the right way to say something. Keep several versions of a word, sentence or paragraph in place, dim text instead of deleting it, keep spare writing nearby, lint on demand, and ask AI for options, marks and cuts. *Vikalp* is Hindi for "alternative".
 
-Inspired from [Jason's](https://x.com/jasonfried/status/2105403067793584590) and [Jhey's](https://x.com/jh3yy/status/2102885700979048558) tweets.
+[Website](https://vikalp.tushar.ai/) · [Install in Obsidian](https://community.obsidian.md/plugins/vikalp) · [Latest release](https://github.com/triptu/vikalp/releases/latest) · [Guide](docs/using-vikalp.md)
 
-![Alternatives panel, markers, ghosted text and Overflow](docs/screenshots/dark-02-markers-ghost-overflow.png)
+![A note with versions of two words, a faded sentence, the Alternatives panel on the left and Overflow on the right](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/dark-02-markers-ghost-overflow.png)
 
 ## What it does
 
-- **Alternatives.** Put the cursor on a word, press ⌘J, type versions. Press ⌘J again for the sentence, again for the paragraph. Hover and press the arrow keys to read each one in place. Whatever is showing is the note.
-- **Ghosting.** Fade a passage instead of deleting it. Revive it later, or copy the note without it.
-- **Overflow.** A per-note side panel for writing you cut but want nearby. Drag it back when it fits.
-- **Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. Judgment rules use Jev, TypeSafe's yes/no model.
-- **The Lab.** AI passes that mark typos, weak or convoluted sentences, off-tone words and hedges, and trim levels that fade the words a model would cut. You keep or cut each one.
-- **Read-through.** Hide every marker and read like a reader.
+**Alternatives.** Put the cursor on a word, press ⌘J, type versions. Press ⌘J again for the sentence, again for the paragraph. Hover and press the arrow keys to read each one in place. Whatever is showing is the note.
 
-Read [docs/using-vikalp.md](docs/using-vikalp.md) for the full guide and hotkeys, or see [vikalp-tau.vercel.app](https://vikalp-tau.vercel.app).
+![The Alternatives panel with three versions of a word, the showing one marked](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/alternatives-panel.png)
+
+**AI versions.** Press ⌘⇧J and options stream in, marked with a small robot. Your showing version never changes; you pick.
+
+![AI versions, marked with a robot, listed below the ones you wrote](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/ai-alternatives.png)
+
+**Ghosting.** Fade a passage instead of deleting it. Revive it later, or copy the note without it.
+
+![A ghosted sentence, still in the paragraph at about a third](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/ghost.png)
+
+**Overflow.** A per-note side panel for writing you cut but want nearby. Drag it back when it fits.
+
+![The Overflow panel with one stashed sentence](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/overflow.png)
+
+**Linter.** Rules for hedging, wordiness, AI-sounding phrases, LinkedIn voice, repetition, passive voice and more. Edit them or add your own as YAML. Judgment rules use Jev, TypeSafe's yes/no model.
+
+![Lint marks in a note, a hover card with the rules a phrase hit, and the Lint panel grouped by rule](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/linter.png)
+
+**The Lab.** AI passes that mark typos, weak or convoluted sentences, off-tone words and hedges, and trim levels that fade the words a model would cut. You keep or cut each one.
+
+![The typo pass: each fix shows on hover with Apply and Ignore](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/typo-pass.png)
+
+![A slight trim: struck words would go, and the trim bar shows the word count change](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/trim.png)
+
+**Read-through.** Hide every marker and read like a reader.
+
+![Read-through mode: the note alone, with no markers or sidebars](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/guide/read-through.png)
+
+AI never writes prose into your note. It can add labelled versions, mark text, or propose cutting your own words, and nothing runs until you click.
+
+## Install
+
+In Obsidian, open Settings → Community plugins → Browse and search for **Vikalp**. You can also open it from the [plugin directory](https://community.obsidian.md/plugins/vikalp) or with the link `obsidian://show-plugin?id=vikalp`. Desktop only.
+
+To install by hand, download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/triptu/vikalp/releases/latest) into `<your vault>/.obsidian/plugins/vikalp/` and enable Vikalp in Settings → Community plugins.
+
+Then pick an AI provider in Vikalp's settings for the AI features, and turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys.
 
 ## Network use
 
@@ -23,35 +54,13 @@ Alternatives, ghosting, Overflow, the local lint rules and read-through work off
 
 The AI features (AI versions, judgment lint rules and the Lab) send text to the provider you pick in settings: [OpenRouter](https://openrouter.ai), Anthropic or OpenAI with your own API key, or a model on your own computer through [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai). Any other OpenAI-compatible server works too. Asking for AI versions sends the note title, the paragraph and the paragraphs on either side. Lab passes and judgment rules send the open note. Nothing is sent until you click something. You pay the provider for what you use, and the Lab shows the cost of every call. With Ollama or LM Studio running on your own machine, the text stays on it and costs nothing.
 
-Vikalp has no telemetry and no account.
+- The plugin connects only to the provider you chose: `openrouter.ai`, `api.anthropic.com`, `api.openai.com`, `localhost` for Ollama and LM Studio, or the URL you typed for a custom server.
+- Asking for versions, running a Lab pass or picking a trim level is one request each. A linter run with judgment rules on makes one request per paragraph. The Ollama, LM Studio and custom settings fetch the server's model list when you open them, and the OpenRouter settings fetch its model list and benchmark scores to suggest open models.
+- Your API keys are saved in the plugin's settings file in your vault, `.obsidian/plugins/vikalp/data.json`, and sent only to that provider.
+- Vikalp's own code uses no base64. The bundled AI and YAML libraries contain base64 helpers for binary data that Vikalp never sends. Nothing is hidden or obfuscated; the code is open source.
+- It writes to the clipboard only for **Copy clean text**, and never reads it.
+- Vikalp has no telemetry and no account.
 
-## Install (from source)
+Inspired from [Jason's](https://x.com/jasonfried/status/2105403067793584590) and [Jhey's](https://x.com/jh3yy/status/2102885700979048558) tweets.
 
-```sh
-npm install
-npm run build
-```
-
-Copy `main.js`, `manifest.json` and `styles.css` into `<your vault>/.obsidian/plugins/vikalp/`, enable Vikalp in Settings → Community plugins, and pick an AI provider in Vikalp's settings for the AI features. Turn on **Use suggested hotkeys** in the same settings for ⌘J, ⌘⇧J and ⌘., or set your own in Settings → Hotkeys. Desktop only.
-
-## Develop
-
-- `npm run dev` builds in watch mode into `dev-vault/`. Open `dev-vault` in Obsidian with the Hot Reload plugin to see changes live.
-- `npm test` runs behaviour tests. `npm run e2e` runs the end-to-end flows in an isolated Obsidian. `npm run shots` refreshes the screenshots.
-- CI runs typecheck, tests, build and Obsidian's review lint on every push.
-- To release, run the Release workflow (Actions tab, or `gh workflow run release.yml -f bump=patch`). It checks the plugin, bumps the version in `manifest.json`, `package.json` and `versions.json`, tags it and publishes a GitHub release with `main.js`, `manifest.json` and `styles.css`. In Claude Code, say "release a new version".
-- Start with [docs/architecture.md](docs/architecture.md). Storage is described in [docs/storage.md](docs/storage.md), rules in [docs/rules.md](docs/rules.md).
-
-## Docs
-
-- [Using Vikalp](docs/using-vikalp.md)
-- [Architecture](docs/architecture.md)
-- [Storage](docs/storage.md)
-- [Lint rules](docs/rules.md)
-- [Adding a Lab pass](docs/adding-a-lab-pass.md)
-- [Testing](docs/testing.md)
-
-## Notes for your vault
-
-- Vikalp shows its own word count (without ghosted words) in the status bar. If Obsidian's core *Word count* plugin is on, you'll see two counts; turn the core one off in Settings → Core plugins if that bothers you.
-- Sidecars live in `.obsidian/plugins/vikalp/notes/`. See [docs/storage.md](docs/storage.md) for what that means for sync.
+Working on the plugin? See [docs/development.md](docs/development.md).
