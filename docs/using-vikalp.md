@@ -4,7 +4,7 @@ Vikalp helps you settle on the right way to say something. Keep several versions
 
 Nothing runs or costs money until you click something.
 
-The keys in this guide (⌘J, ⌘⇧J, ⌘.) are Vikalp's suggested hotkeys. They're off until you turn on **Use suggested hotkeys** in Settings → Vikalp → Hotkeys, so Vikalp never takes a key another plugin uses. You can also set your own in Settings → Hotkeys.
+The keys in this guide (⌘J, ⌘⇧J, ⌘.) are Vikalp's suggested hotkeys, on from the start. If they clash with keys you already use, turn off **Use suggested hotkeys** in Settings → Vikalp → Hotkeys, or change any of them in Settings → Hotkeys.
 
 ## Markers
 
@@ -129,7 +129,7 @@ The Lab popover shows this session's AI spend and links to a log of every call: 
 
 ## Keys
 
-Four keys cover almost everything once you turn on suggested hotkeys. The Alternatives panel and the Lab popover show whichever keys you have.
+Four keys cover almost everything. The right-click menu, the ⌘. menu, the Alternatives panel and the Lab popover show whichever keys you have, including any you set yourself.
 
 | Key | What it does |
 |---|---|

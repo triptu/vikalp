@@ -87,7 +87,7 @@ export class VikalpSettingTab extends PluginSettingTab {
 		return [
 			{
 				name: "Use suggested hotkeys",
-				desc: `Sets ${keys.alternatives} for alternatives, ${keys.askAi} to ask AI for versions, and ${keys.actions} for a list of every action. Off by default, so Vikalp doesn't take keys that you or another plugin already use.`,
+				desc: `Sets ${keys.alternatives} for alternatives, ${keys.askAi} to ask AI for versions, and ${keys.actions} for a list of every action. Turn this off if you or another plugin already use those keys.`,
 				aliases: ["shortcuts", "keys", "keyboard"],
 				control: { type: "toggle", key: "suggestedHotkeys" },
 			},
