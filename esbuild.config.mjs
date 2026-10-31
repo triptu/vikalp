@@ -1,9 +1,21 @@
 import esbuild from "esbuild";
 import { builtinModules } from "node:module";
 import { copyFileSync, mkdirSync, existsSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 const production = process.argv[2] === "production";
 const devPluginDir = "dev-vault/.obsidian/plugins/vikalp";
+
+// pi-ai's provider-env module would pull node:fs into main.js for a Bun-only fallback.
+const stubPiAiProviderEnv = {
+	name: "stub-pi-ai-provider-env",
+	setup(build) {
+		build.onResolve({ filter: /\/provider-env\.js$/ }, (args) => {
+			if (!args.importer.includes("@earendil-works/pi-ai/")) return null;
+			return { path: resolve("scripts/bundle-stubs/pi-ai-provider-env.js") };
+		});
+	},
+};
 
 const copyToDevVault = {
 	name: "copy-to-dev-vault",
@@ -55,7 +67,7 @@ const context = await esbuild.context({
 	treeShaking: true,
 	minify: production,
 	outfile: "main.js",
-	plugins: [copyToDevVault],
+	plugins: [stubPiAiProviderEnv, copyToDevVault],
 });
 
 if (production) {
