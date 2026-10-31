@@ -74,13 +74,13 @@ A side panel for writing you cut but want nearby. Each note has its own.
 
 ## Linter
 
-Click the lint icon in the status bar, the **Run linter** button in the Lint panel, or run *Vikalp: Run linter*. Free local rules finish at once. Judgment rules (awkward, LinkedIn voice, AI-sounding paragraphs, and so on) fill in as Jev answers.
+Click the lint icon in the status bar, the **Run linter** button in the Lint panel, or run *Vikalp: Run linter*. Rules without AI finish at once. They are free and nothing leaves your machine. AI rules (awkward, LinkedIn voice, AI-sounding paragraphs, and so on) fill in as the model answers. Turn on **Run rules without AI as you type** in settings to rerun the free rules while you write.
 
 Hover a mark to see which rules it hit, and fix or ignore it. Click a hit in the panel to jump to it, or click a mark in the note to find it in the panel. The toggle at the top of the Lint panel switches between grouping by rule and one flat list in the order marks appear, for working down the note. Marks made by a model (Jev or an LLM) carry an **AI** label and a faint dashed underline.
 
 ![Lint marks in the note, a hover card, and the Lint panel grouped by rule](screenshots/guide/linter.png)
 
-Rules live in Settings → Vikalp → Rules, grouped by name. Switch a group or a single check off, open any rule to edit it in a form, or press **Add rule**. The form previews how many marks a rule makes on the open note before you save. Select a phrase you hate and run *New rule from selection* to flag it everywhere from now on. See [rules.md](rules.md).
+Rules live in Settings → Vikalp → Lint rules, grouped by name. Switch a group or a single check off, open any rule to edit it in a form, or press **Add rule**. The form previews how many marks a rule makes on the open note before you save. Select a phrase you hate and run *New rule from selection* to flag it everywhere from now on. See [rules.md](rules.md).
 
 ## The Lab
 
@@ -110,7 +110,7 @@ Pick one in Settings → Vikalp → AI → **Provider**:
 
 | Provider | What you need | Models |
 |---|---|---|
-| OpenRouter | An OpenRouter API key | Lite, Medium and Heavy, any model OpenRouter has. The only one with Jev for judgment rules. |
+| OpenRouter | An OpenRouter API key | Lite, Medium and Heavy, any model OpenRouter has. The only one with Jev for AI rules. |
 | Anthropic | An Anthropic API key | Lite, Medium and Heavy: Haiku, Sonnet and Opus by default |
 | OpenAI | An OpenAI API key | Lite, Medium and Heavy: gpt-6-luna, gpt-6.1-sol and gpt-5.6-sol by default |
 | Ollama | [Ollama](https://ollama.com) running, with a model downloaded | One, picked from the models Ollama has |
@@ -121,7 +121,7 @@ Ollama and LM Studio run models on your own machine, so the text stays there. Sm
 
 Each provider keeps its own key and models, so you can switch back and forth. Named providers keep their server URL under **Advanced**, for a regional endpoint or an OpenAI-compatible proxy.
 
-Jev only runs on OpenRouter. Elsewhere judgment rules ask the selected model, and the grammar check after a trim is skipped.
+Jev only runs on OpenRouter. Elsewhere AI rules ask the selected model, and the grammar check after a trim is skipped.
 
 ## Cost
 

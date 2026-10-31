@@ -72,7 +72,7 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 					) : (
 						<>
 							Not run on this note yet.
-							<div className="vk-lint-hint">Local rules are free. Judgment rules ask AI and cost a little.</div>
+							<div className="vk-lint-hint">Rules without AI are free. AI rules ask a model and cost a little.</div>
 						</>
 					)
 				) : (
@@ -83,9 +83,9 @@ export function LintPanel({ model, now }: { model: LintPanelModel; now: number }
 			</div>
 
 			{running && run.judgmentTotal > 0 && (
-				<div className="vk-progress" title="Judgment rules">
+				<div className="vk-progress" title="AI rules">
 					<div className="vk-progress-label">
-						Judgment rules {run.judgmentDone}/{run.judgmentTotal}
+						AI rules {run.judgmentDone}/{run.judgmentTotal}
 					</div>
 					<div className="vk-progress-track">
 						<div className="vk-progress-fill" style={{ width: `${(run.judgmentDone / Math.max(1, run.judgmentTotal)) * 100}%` }} />
