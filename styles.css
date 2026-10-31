@@ -30,28 +30,27 @@ body.theme-light {
 
 /* ——— Spans: underline and dot row ——— */
 
+/* The underline is a border, since Obsidian's review flags the text-decoration longhands. On an inline element it doesn't move the text. */
 .vk-span {
-	text-decoration-line: underline;
-	text-decoration-style: solid;
-	text-decoration-thickness: 1px;
-	text-decoration-color: var(--vk-accent-faint);
-	text-underline-offset: 0.3em;
-	transition: text-decoration-color 120ms ease, background-color 120ms ease;
+	border-bottom: 1px solid var(--vk-accent-faint);
+	padding-bottom: 0.15em;
+	background-clip: content-box;
+	transition: border-bottom-color 120ms ease, background-color 120ms ease;
 }
 
 .vk-span.is-variant {
-	text-decoration-color: var(--vk-accent-soft);
+	border-bottom-color: var(--vk-accent-soft);
 }
 
 .vk-span.is-hovered {
-	text-decoration-color: var(--vk-accent);
+	border-bottom-color: var(--vk-accent);
 	background-color: color-mix(in srgb, var(--text-accent) 7%, transparent);
-	border-radius: 2px;
+	border-radius: 2px 2px 0 0;
 }
 
 /* Paragraph spans show a margin bar instead of an underline. */
 .vk-span.vk-span-paragraph {
-	text-decoration: none;
+	border-bottom: none;
 	background: none;
 }
 
@@ -179,11 +178,13 @@ body.theme-light {
 }
 
 .vk-proposal {
+	--vk-proposal-line: color-mix(in srgb, var(--text-muted) 70%, transparent);
 	cursor: pointer;
 	opacity: 0.6;
-	text-decoration: line-through;
-	text-decoration-thickness: 1px;
-	text-decoration-color: color-mix(in srgb, var(--text-muted) 70%, transparent);
+	background-image: linear-gradient(var(--vk-proposal-line), var(--vk-proposal-line));
+	background-repeat: no-repeat;
+	background-size: 100% 1px;
+	background-position: 0 55%;
 }
 
 .vk-proposal:hover {
@@ -200,10 +201,15 @@ body.theme-light {
 	border-bottom-color: transparent;
 }
 
+/* A wavy red underline drawn from gradients, since the wavy text-decoration is flagged too. */
 .vk-proposal.is-risky {
-	text-decoration: underline wavy;
-	text-decoration-color: color-mix(in srgb, var(--color-red) 70%, transparent);
-	text-decoration-thickness: 1px;
+	--vk-risk-line: color-mix(in srgb, var(--color-red) 70%, transparent);
+	background-image:
+		linear-gradient(45deg, transparent 40%, var(--vk-risk-line) 40%, var(--vk-risk-line) 60%, transparent 60%),
+		linear-gradient(-45deg, transparent 40%, var(--vk-risk-line) 40%, var(--vk-risk-line) 60%, transparent 60%);
+	background-repeat: repeat-x;
+	background-size: 4px 3px;
+	background-position: 0 100%, 2px 100%;
 }
 
 .vk-proposal.is-current {
@@ -268,7 +274,7 @@ body.theme-light {
 
 /* ——— Hover cards ——— */
 
-.cm-tooltip.cm-tooltip-hover:has(.vk-tooltip) {
+.cm-tooltip.cm-tooltip-hover.vk-tooltip-host {
 	background: transparent;
 	border: none;
 	box-shadow: none;
@@ -372,8 +378,9 @@ body.theme-light {
 
 /* ——— Panels: shared ——— */
 
-.vk-view {
-	padding: 0 !important;
+/* Outranks Obsidian's `.workspace-leaf-content .view-content` padding. */
+.workspace-leaf-content .view-content.vk-view {
+	padding: 0;
 }
 
 .vk-panel {
@@ -418,8 +425,9 @@ body.theme-light {
 	color: var(--text-faint);
 }
 
-.vk-hidden {
-	display: none !important;
+/* Outranks Obsidian's `.status-bar-item.mod-clickable` display. */
+.status-bar .status-bar-item.vk-hidden {
+	display: none;
 }
 
 .vk-icon {
@@ -1652,15 +1660,16 @@ body.theme-light {
 	border: none;
 	font: inherit;
 	color: var(--text-muted);
-	text-decoration: underline;
-	text-decoration-color: var(--background-modifier-border);
-	text-underline-offset: 2px;
+	background-image: linear-gradient(var(--background-modifier-border), var(--background-modifier-border));
+	background-repeat: no-repeat;
+	background-size: 100% 1px;
+	background-position: 0 calc(100% - 1px);
 	cursor: pointer;
 }
 
 .vk-inline-action:hover {
 	color: var(--text-normal);
-	text-decoration-color: currentColor;
+	background-image: linear-gradient(currentColor, currentColor);
 }
 
 .vk-disclosure {
@@ -1748,9 +1757,8 @@ body.theme-light {
 .vk-span-context-mark {
 	background: none;
 	color: var(--text-normal);
-	text-decoration: underline;
-	text-decoration-color: var(--vk-accent-soft);
-	text-underline-offset: 0.25em;
+	border-bottom: 1px solid var(--vk-accent-soft);
+	padding-bottom: 0.1em;
 }
 
 .vk-alt-empty p {

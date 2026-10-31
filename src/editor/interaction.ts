@@ -239,7 +239,12 @@ const vikalpTooltips = hoverTooltip(
 						tooltipButton(actions, "Ignore", () => host.ignoreLintHit(view, hit.id));
 					}
 				}
-				return { dom };
+				// CodeMirror hosts the card in its own tooltip box; the class lets the stylesheet strip that box's chrome.
+				return {
+					dom,
+					mount: () => dom.parentElement?.addClass("vk-tooltip-host"),
+					destroy: () => dom.parentElement?.removeClass("vk-tooltip-host"),
+				};
 			},
 		};
 	},
