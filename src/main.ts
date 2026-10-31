@@ -12,6 +12,7 @@ import { AiAlternatives } from "./plugin/aiAlternatives";
 import { secretApiKeyStore } from "./plugin/apiKeyStore";
 import { HOTKEY_COMMANDS, registerCommands, registerHotkeyCommands } from "./plugin/commands";
 import { fillEditorMenu } from "./plugin/editorMenu";
+import { hotkeyFor, menuTitle } from "./plugin/hotkeys";
 import { LabService } from "./plugin/labService";
 import { LinterService } from "./plugin/linterService";
 import { CostLogModal } from "./plugin/modals";
@@ -210,9 +211,7 @@ export default class VikalpPlugin extends Plugin {
 
 	/** Reads the hotkeys the main commands have now, so the hints in the panels match them. */
 	refreshKeyHints() {
-		// Obsidian has no public API for a command's current hotkey, so this reads the internal one when it exists.
-		const manager = (this.app as unknown as { hotkeyManager?: { printHotkeyForCommand?: (commandId: string) => string } }).hotkeyManager;
-		const hintFor = (commandId: string) => manager?.printHotkeyForCommand?.(`${this.manifest.id}:${commandId}`).replace(/\s+/g, "") || null;
+		const hintFor = (commandId: string) => hotkeyFor(this.app, commandId);
 		const keyHints: KeyHints = { alternatives: hintFor(HOTKEY_COMMANDS.alternatives), askAi: hintFor(HOTKEY_COMMANDS.askAi), actions: hintFor(HOTKEY_COMMANDS.actions) };
 		const current = this.store.getState().keyHints;
 		if (keyHints.alternatives !== current.alternatives || keyHints.askAi !== current.askAi || keyHints.actions !== current.actions) this.store.setState({ keyHints });
@@ -310,9 +309,9 @@ export default class VikalpPlugin extends Plugin {
 							.setDisabled(markCount === 0)
 							.onClick(() => this.lab.clearMarks()),
 					);
-					menu.addItem((item) => item.setTitle("Remove all AI versions in note").setIcon("x").onClick(() => this.removeAllAiVersions()));
+					menu.addItem((item) => item.setTitle(menuTitle(this.app, "Remove all AI versions in note", "remove-all-ai-alternatives")).setIcon("x").onClick(() => this.removeAllAiVersions()));
 					menu.addSeparator();
-					menu.addItem((item) => item.setTitle("Cost log").setIcon("receipt").onClick(() => this.showCostLog()));
+					menu.addItem((item) => item.setTitle(menuTitle(this.app, "Cost log", "show-cost-log")).setIcon("receipt").onClick(() => this.showCostLog()));
 					menu.addItem((item) =>
 						item
 							.setTitle("Vikalp settings")

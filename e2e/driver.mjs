@@ -85,6 +85,18 @@ export function createDriver(page) {
 			await page.keyboard.press(key);
 			await page.waitForTimeout(150);
 		},
+		/** Right-clicks the middle of the editor's selection, which opens the editor menu. */
+		async rightClickSelection() {
+			const point = await page.evaluate(() => {
+				const view = window.app.plugins.plugins.vikalp.controller.editor;
+				const { from, to } = view.state.selection.main;
+				const start = view.coordsAtPos(from);
+				const end = view.coordsAtPos(to);
+				return { x: (start.left + end.right) / 2, y: (start.top + start.bottom) / 2 };
+			});
+			await page.mouse.click(point.x, point.y, { button: "right" });
+			await page.waitForTimeout(250);
+		},
 		async type(text) {
 			await page.keyboard.type(text, { delay: 15 });
 		},

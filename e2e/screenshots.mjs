@@ -14,8 +14,6 @@ for (const theme of themes) {
 	const shot = (name, options) => driver.screenshot(`${OUT}${theme}-${name}.png`, options);
 	try {
 		await driver.setTheme(theme);
-		// The docs show the suggested hotkeys, so the panels' key hints read ⌘J and ⌘.
-		await driver.evaluate(() => window.app.plugins.plugins.vikalp.setSuggestedHotkeys(true));
 		await driver.openNote(ESSAY);
 
 		await driver.select("tension");

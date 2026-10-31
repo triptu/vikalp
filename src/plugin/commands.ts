@@ -33,7 +33,7 @@ function addEditorCommand(plugin: VikalpPlugin, command: EditorCommand) {
 }
 
 /** The commands that get Vikalp's suggested hotkeys when the writer turns them on. */
-export const HOTKEY_COMMANDS = { actions: "actions", alternatives: "alternatives-for-selection", askAi: "ai-alternatives-for-selection" } as const;
+export const HOTKEY_COMMANDS = { actions: "actions", alternatives: "alternatives-for-selection", askAi: "ai-alternatives-for-selection", settle: "settle-span" } as const;
 
 /**
  * Registers the hotkey commands, with the suggested hotkeys as their defaults
@@ -55,6 +55,17 @@ export function registerHotkeyCommands(plugin: VikalpPlugin, withHotkeys: boolea
 		icon: "sparkles",
 		hotkeys: keys("J", true),
 		run: (view) => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }),
+	});
+	addEditorCommand(plugin, {
+		id: HOTKEY_COMMANDS.settle,
+		name: "Settle: keep the showing version",
+		icon: "check",
+		hotkeys: keys("Enter", true),
+		run: (view) => {
+			const spanId = targetSpan(plugin, view);
+			if (!spanId) new Notice("Put the cursor on text that has versions first.");
+			else runAction(view, settleSpans(view.state, [spanId]));
+		},
 	});
 }
 
@@ -80,15 +91,6 @@ export function registerCommands(plugin: VikalpPlugin) {
 		run: (view) => {
 			const spanId = targetSpan(plugin, view);
 			if (spanId) runAction(view, cycleSpan(view.state, spanId, -1, plugin.switchOptions()));
-		},
-	});
-	editorCommand({
-		id: "settle-span",
-		name: "Settle: keep the showing version",
-		run: (view) => {
-			const spanId = targetSpan(plugin, view);
-			if (!spanId) new Notice("Put the cursor on text that has versions first.");
-			else runAction(view, settleSpans(view.state, [spanId]));
 		},
 	});
 	editorCommand({ id: "settle-all", name: "Settle all alternatives in note", run: (view) => void settleAll(plugin, view) });

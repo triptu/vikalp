@@ -177,15 +177,15 @@ await group("Writing, then a restart", [
 		await driver.press("Escape");
 	}),
 
-	flow("keys: off until turned on in settings; then ⌘J widens word to sentence to paragraph, ⌘. then G ghosts", async (driver) => {
+	flow("keys: on from the start and shown in menus; ⌘J widens word to sentence to paragraph, ⌘. then G ghosts", async (driver) => {
 		await driver.openNote(ESSAY);
 		const defaultKeys = await driver.evaluate(() => window.app.hotkeyManager.getDefaultHotkeys("vikalp:alternatives-for-selection") ?? []);
-		assert(defaultKeys.length === 0, "Vikalp takes no hotkeys until asked");
-		const settings = await driver.openSettings();
-		await settings.locator(".setting-item.mod-toggle", { hasText: "Use suggested hotkeys" }).locator(".checkbox-container").click();
-		await driver.wait(300);
-		await driver.evaluate(() => window.app.setting.close());
-		await driver.wait(300);
+		assert(defaultKeys.length === 1, "⌘J is set without visiting settings");
+		await driver.select("hardest");
+		await driver.rightClickSelection();
+		const menuKey = await driver.evaluate(() => [...document.querySelectorAll(".menu-item")].find((item) => item.textContent?.startsWith("Alternatives for selection"))?.querySelector(".vk-menu-key")?.textContent);
+		assert(menuKey === "⌘J", `the right-click menu shows ⌘J next to Alternatives (got ${menuKey})`);
+		await driver.press("Escape");
 		await driver.cursorAt("hardest", 3);
 		const unit = () => driver.evaluate(() => document.querySelector(".vk-unit-switch .is-active")?.textContent);
 		await driver.press("Meta+j");
@@ -202,9 +202,37 @@ await group("Writing, then a restart", [
 		await driver.press("Meta+.");
 		await driver.wait(200);
 		assert(await driver.evaluate(() => Boolean(document.querySelector(".vk-action-menu"))), "⌘. opens the action menu");
+		const actionHotkey = await driver.evaluate(() => [...document.querySelectorAll(".vk-action-item")].find((item) => item.textContent?.startsWith("Alternatives"))?.querySelector(".vk-action-hotkey")?.textContent);
+		assert(actionHotkey === "⌘J", `the ⌘. menu shows ⌘J next to Alternatives (got ${actionHotkey})`);
 		await driver.press("g");
 		await driver.wait(200);
 		assert((await driver.evaluate(() => document.querySelectorAll(".vk-ghost").length)) === 1, "G ghosts the selection");
+	}),
+
+	flow("settle: ⌘⇧↵ keeps the showing version, and so does K in the ⌘. menu", async (driver) => {
+		await driver.openNote(ESSAY);
+		const hasEffortlessSpan = async () => JSON.stringify((await noteState(driver)).spans).includes("effortless");
+		await driver.select("effortless");
+		await driver.command("vikalp:alternatives-for-selection");
+		await driver.type("easy");
+		await driver.press("Enter");
+		await driver.press("Escape");
+		await driver.cursorAt("should be easy", 11);
+		await driver.press("Meta+Shift+Enter");
+		await driver.wait(200);
+		assert((await driver.docText()).includes("The common path should be easy."), "⌘⇧↵ keeps the showing version in the text");
+		assert(!(await hasEffortlessSpan()), "⌘⇧↵ drops the other versions");
+		await driver.press("Meta+z");
+		await driver.wait(200);
+		assert(await hasEffortlessSpan(), "undo brings the versions back");
+		await driver.cursorAt("should be easy", 11);
+		await driver.press("Meta+.");
+		await driver.wait(200);
+		const keepHint = await driver.evaluate(() => [...document.querySelectorAll(".vk-action-item")].find((item) => item.textContent?.startsWith("Keep this version"))?.querySelector(".vk-action-hotkey")?.textContent);
+		assert(keepHint === "⌘⇧↵", `the ⌘. menu shows ⌘⇧↵ next to Keep this version (got ${keepHint})`);
+		await driver.press("k");
+		await driver.wait(200);
+		assert(!(await hasEffortlessSpan()) && (await driver.docText()).includes("should be easy."), "K keeps the showing version");
 	}),
 
 	flow("span notes: add a note to a span", async (driver) => {

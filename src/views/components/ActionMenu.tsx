@@ -5,6 +5,8 @@ export interface ActionMenuItem {
 	key: string;
 	label: string;
 	icon: string;
+	/** The command's own hotkey, which works without opening this menu. */
+	hotkey?: string;
 	/** Why the action can't run here, shown instead of running it. */
 	unavailable?: string;
 	run: () => void;
@@ -55,6 +57,7 @@ export function ActionMenu({ items, onClose }: ActionMenuProps) {
 				>
 					<Icon name={item.icon} className="vk-action-icon" />
 					<span className="vk-action-label">{item.label}</span>
+					{item.hotkey && <span className="vk-action-hotkey">{item.hotkey}</span>}
 					<kbd className="vk-action-key">{item.key}</kbd>
 				</button>
 			))}

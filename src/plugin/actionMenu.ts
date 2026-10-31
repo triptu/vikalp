@@ -1,14 +1,16 @@
 import type { EditorView } from "@codemirror/view";
 import { h, render } from "preact";
-import { ghostRange, reviveRange } from "../editor/actions";
+import { ghostRange, reviveRange, settleSpans } from "../editor/actions";
 import { ghosts } from "../editor/collections";
 import { runAction } from "../editor/interaction";
 import { noteModeField } from "../editor/noteFields";
+import { spanAt, spanMeta } from "../editor/spansField";
 import type VikalpPlugin from "../main";
 import { ActionMenu, type ActionMenuItem } from "../views/components/ActionMenu";
 import { IconContext } from "../views/components/Icon";
 import { renderIcon } from "../views/panelViews";
-import { copyClean, stash } from "./commands";
+import { copyClean, HOTKEY_COMMANDS, stash } from "./commands";
+import { hotkeyFor } from "./hotkeys";
 import { startAlternatives } from "./viewActions";
 
 /**
@@ -47,19 +49,23 @@ export class ActionMenuHost {
 		const hasSelection = !selection.empty;
 		const onGhost = (selection.empty ? ghosts.at(view.state, selection.head) : ghosts.overlapping(view.state, selection)).length > 0;
 		const needsSelection = hasSelection ? undefined : "Select some text first";
-		return [
-			{ key: "A", label: "Alternatives", icon: "split", run: () => startAlternatives(plugin.alternativesDeps, view) },
-			{ key: "I", label: "Ask AI for versions", icon: "sparkles", run: () => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }) },
-			{ key: "F", label: "Find words worth playing with", icon: "wand-sparkles", run: () => plugin.findSpots() },
+		const spanId = spanAt(view.state, selection.head);
+		const keepId = spanId && (spanMeta(view.state, spanId)?.versions.length ?? 0) > 1 ? spanId : null;
+		const items: (ActionMenuItem & { commandId: string })[] = [
+			{ key: "A", label: "Alternatives", icon: "split", commandId: HOTKEY_COMMANDS.alternatives, run: () => startAlternatives(plugin.alternativesDeps, view) },
+			{ key: "I", label: "Ask AI for versions", icon: "sparkles", commandId: HOTKEY_COMMANDS.askAi, run: () => startAlternatives(plugin.alternativesDeps, view, undefined, { askAi: true }) },
+			...(keepId ? [{ key: "K", label: "Keep this version", icon: "check", commandId: HOTKEY_COMMANDS.settle, run: () => runAction(view, settleSpans(view.state, [keepId])) }] : []),
+			{ key: "F", label: "Find words worth playing with", icon: "wand-sparkles", commandId: "find-spots", run: () => plugin.findSpots() },
 			onGhost
-				? { key: "G", label: "Revive", icon: "eye", run: () => runAction(view, reviveRange(view.state, { from: selection.from, to: selection.to })) }
-				: { key: "G", label: "Ghost it", icon: "ghost", unavailable: needsSelection, run: () => runAction(view, ghostRange(view.state, { from: selection.from, to: selection.to })) },
-			{ key: "S", label: "Stash in Overflow", icon: "layers", unavailable: needsSelection, run: () => stash(plugin, view) },
-			{ key: "L", label: "Run linter", icon: "scan-text", run: () => void plugin.linter.run() },
-			{ key: "T", label: "Open the Lab", icon: "flask-conical", run: () => plugin.labPopover.toggle(document.querySelector<HTMLElement>(".vk-status-lab")) },
-			{ key: "R", label: "Read-through", icon: "glasses", run: () => plugin.readThrough.toggle(view) },
-			{ key: "C", label: hasSelection ? "Copy clean selection" : "Copy clean text", icon: "clipboard-copy", run: () => copyClean(view, hasSelection) },
+				? { key: "G", label: "Revive", icon: "eye", commandId: "revive", run: () => runAction(view, reviveRange(view.state, { from: selection.from, to: selection.to })) }
+				: { key: "G", label: "Ghost it", icon: "ghost", commandId: "ghost-selection", unavailable: needsSelection, run: () => runAction(view, ghostRange(view.state, { from: selection.from, to: selection.to })) },
+			{ key: "S", label: "Stash in Overflow", icon: "layers", commandId: "stash-selection", unavailable: needsSelection, run: () => stash(plugin, view) },
+			{ key: "L", label: "Run linter", icon: "scan-text", commandId: "run-linter", run: () => void plugin.linter.run() },
+			{ key: "T", label: "Open the Lab", icon: "flask-conical", commandId: "open-lab", run: () => plugin.labPopover.toggle(document.querySelector<HTMLElement>(".vk-status-lab")) },
+			{ key: "R", label: "Read-through", icon: "glasses", commandId: "read-through", run: () => plugin.readThrough.toggle(view) },
+			{ key: "C", label: hasSelection ? "Copy clean selection" : "Copy clean text", icon: "clipboard-copy", commandId: hasSelection ? "copy-clean-selection" : "copy-clean-text", run: () => copyClean(view, hasSelection) },
 		];
+		return items.map(({ commandId, ...item }) => ({ ...item, hotkey: hotkeyFor(plugin.app, commandId) ?? undefined }));
 	}
 
 	close(restoreFocus = false) {
