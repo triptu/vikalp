@@ -16,7 +16,13 @@
   };
   themeBtn.addEventListener('click', () => {
     root.dataset.theme = theme() === 'dark' ? 'light' : 'dark';
-    try { localStorage.setItem('vk-theme', root.dataset.theme); } catch (e) {}
+    // Remember only a choice that differs from the system's; picking the system's
+    // own theme again forgets it, so the page follows the system from then on.
+    const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    try {
+      if (root.dataset.theme === system) localStorage.removeItem('vk-theme');
+      else localStorage.setItem('vk-theme', root.dataset.theme);
+    } catch (e) {}
   });
   new MutationObserver(paintThemeBtn).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   paintThemeBtn();
