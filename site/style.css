@@ -248,10 +248,13 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   }
   .story-steps { grid-column: 1; grid-row: 2; padding-bottom: 4svh; }
   .step { position: relative; min-height: 0; height: 50svh; padding: 0; opacity: 1; transition: none; }
+  /* Out of sight, with nothing left to paint: iOS Safari drew a speck of the
+     rotated "try" line through a plain 1px clip. */
   .step > * {
-    position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0;
-    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; padding: 0; border: 0;
+    overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
   }
+  .step .step-try { transform: none; }
   .story-note { --note-size: 15px; }
   .story-note .vk-frame { min-height: 0; }
   .story-note .vk-editor { padding: 12px 16px 0; }
