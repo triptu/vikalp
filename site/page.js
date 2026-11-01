@@ -7,9 +7,14 @@
   const wait = d => new Promise(done => setTimeout(done, d));
 
   /* ---------- theme toggle ---------- */
-  const themeLabel = document.getElementById('themeLabel');
-  const paintThemeLabel = () => { themeLabel.textContent = theme() === 'dark' ? 'Light' : 'Dark'; };
-  document.getElementById('themeBtn').addEventListener('click', () => {
+  // The button shows where it goes: a sun in dark mode, a moon in light mode.
+  const themeBtn = document.getElementById('themeBtn');
+  const paintThemeBtn = () => {
+    const label = `Switch to ${theme() === 'dark' ? 'light' : 'dark'} theme`;
+    themeBtn.setAttribute('aria-label', label);
+    themeBtn.title = label;
+  };
+  themeBtn.addEventListener('click', () => {
     root.dataset.theme = theme() === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('vk-theme', root.dataset.theme); } catch (e) {}
   });
