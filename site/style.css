@@ -124,15 +124,19 @@ a { color: inherit; }
 .wrap--wide { max-width: var(--col-wide); }
 .hand { font: 400 var(--hand-size)/1.1 var(--hand); letter-spacing: 0.02em; color: var(--blue); }
 .keys { white-space: nowrap; }
-/* Every key is the same height and sits on the text's baseline, whether it holds a letter or an icon. */
+/* Every key has one font, size, height and padding and sits on the text's
+   baseline, whether it holds a letter, an icon or both. One gap sets keys
+   apart from the words around them, and one gap sits between an icon and
+   what follows it inside a key. */
 kbd {
-  display: inline-block; min-width: 1.9em; text-align: center; vertical-align: baseline;
-  font: 400 var(--step--2)/1.45 var(--mono); color: var(--ink-2);
-  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 0 5px; white-space: nowrap;
+  display: inline-block; box-sizing: border-box; height: 22px; min-width: 24px; margin-inline: 3px;
+  padding: 0 6px; text-align: center; vertical-align: baseline; white-space: nowrap;
+  font: 500 13px/20px var(--sans); color: var(--ink-2);
+  border: 1px solid var(--rule-strong); border-radius: 2px;
 }
 /* icons drawn in place of characters the fonts don't have, sized to the text around them */
 .ic { display: inline-block; width: 0.95em; height: 0.95em; vertical-align: -0.12em; overflow: visible; }
-kbd .ic + .ic { margin-left: 1px; }
+kbd .ic:not(:last-child) { margin-right: 2px; }
 .step-try .ic-caret { color: var(--red); width: 0.7em; height: 0.7em; vertical-align: 0; }
 .hint .for-touch { display: none; }
 @media (hover: none) {
@@ -178,7 +182,7 @@ h1 .line { display: block; }
 .alts button { font: inherit; color: inherit; background: none; border: 0; padding: 0 2px; cursor: pointer; letter-spacing: inherit; opacity: 0.8; }
 .alts button:hover { opacity: 1; }
 .alts .was { color: var(--red); text-decoration: line-through 2px var(--red); opacity: 0.9; }
-.hint { font: 400 var(--step--1)/1.5 var(--sans); color: var(--ink-3); margin: 22px 0 0; }
+.hint { font: 400 var(--step--1)/1.5 var(--sans); color: var(--ink-3); margin: 22px 0 0; text-wrap: pretty; }
 .lede { font: 400 var(--step-1)/1.55 var(--sans); color: var(--ink-2); max-width: 36ch; margin: 36px 0 0; }
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; align-items: center; }
 .btn {
@@ -218,7 +222,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .step { opacity: 0.35; transition: opacity var(--dur-slow) var(--ease); }
 .step.is-active { opacity: 1; }
 .step h3 { font: 700 var(--step-2)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 12px; }
-.step p { margin: 0; color: var(--ink-2); }
+.step p { margin: 0; color: var(--ink-2); text-wrap: pretty; }
 .step .step-try { margin-top: 16px; transform: rotate(-1.5deg); transform-origin: left center; }
 .step .step-keys { margin-top: 14px; font: 400 var(--step--1)/1.4 var(--sans); color: var(--ink-3); }
 .step-clip {
@@ -244,15 +248,20 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   }
   .story-steps { grid-column: 1; grid-row: 2; padding-bottom: 4svh; }
   .step { position: relative; min-height: 0; height: 50svh; padding: 0; opacity: 1; transition: none; }
+  /* Out of sight, with nothing left to paint: iOS Safari drew a speck of the
+     rotated "try" line through a plain 1px clip. */
   .step > * {
-    position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0;
-    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; padding: 0; border: 0;
+    overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
   }
+  .step .step-try { transform: none; }
   .story-note { --note-size: 15px; }
   .story-note .vk-frame { min-height: 0; }
   .story-note .vk-editor { padding: 12px 16px 0; }
   .story-note .vk-title { display: none; }
-  .story-note .vk-body { line-height: 1.75; margin-bottom: 10px; }
+  .story-note .vk-body { line-height: 1.95; margin-bottom: 10px; }
+  /* the dots tuck under their underline, so they never reach the next line's ascenders */
+  .story-note .vk-anchor .vk-dots { top: calc(100% + 0.12em); }
   .story-note .vk-status { padding: 6px 0 6px; row-gap: 0; }
   .story-note .vk-panel { --tray-h: 146px; }
 
@@ -277,10 +286,11 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
     transition: opacity var(--dur) var(--ease) calc(var(--dur-fast) * 0.5), visibility 0s;
   }
   .story-cap h3 { font: 700 var(--step-1)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 6px; }
-  .story-cap p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+  .story-cap p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
   .story-cap .step-try { font-size: var(--hand-size); line-height: 1.1; margin-top: 8px; transform: rotate(-1.5deg); transform-origin: left center; }
   .story-cap .step-keys { margin-top: 6px; font: 400 var(--step--2)/1.4 var(--sans); color: var(--ink-3); }
-  .story-cap .step-clip.is-focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+  /* the per-step clips are desktop recordings, unreadable this narrow; the tour covers them */
+  .step-clip, .step-clip-sep { display: none; }
 }
 
 /* Tall phones: a roomier tray, so the pinned block uses the height. */
@@ -296,7 +306,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   .story-caption { padding-top: 10px; }
   .story-progress { margin-bottom: 8px; }
   .story-cap p { font-size: 14px; line-height: 1.45; }
-  .story-note .vk-body { line-height: 1.6; }
+  .story-note .vk-body { line-height: 1.8; }
   .story-note .vk-panel { --tray-h: 136px; }
 }
 
@@ -325,7 +335,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .install-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
 .install-steps li { display: grid; grid-template-columns: 2.4ch 1fr; gap: 14px; font: 400 18px/1.6 var(--mono); }
 .install-steps b { color: var(--blue); }
-.install-steps kbd { display: inline; min-width: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
+.install-steps kbd { display: inline; height: auto; min-width: 0; margin: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
 
 footer.wrap { padding-block: 48px 56px; font: 400 var(--step--1)/1.5 var(--mono); color: var(--ink-3); }
 footer a { color: var(--ink-2); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
@@ -395,7 +405,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   transition: background-color var(--dur), text-decoration-color var(--dur-slow) var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
-.vk-v:hover, .vk-v:focus-visible, .vk-v.is-active { background-color: var(--blue-wash); text-decoration-color: var(--blue); }
+.vk-v:focus-visible, .vk-v.is-active { background-color: var(--blue-wash); text-decoration-color: var(--blue); }
 .vk-v:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .vk-v-text { transition: opacity var(--dur-fast) ease-out; }
 .vk-v-text.is-swapping { opacity: 0; }
@@ -408,7 +418,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   content: ""; position: absolute; left: 0; right: 0; bottom: var(--glide-line, 0.12em); height: 1.5px;
   background: var(--blue-soft); transition: background-color var(--dur-slow) var(--ease);
 }
-.vk-glide:hover::after, .vk-glide:focus-visible::after, .vk-glide.is-active::after { background: var(--blue); }
+.vk-glide:focus-visible::after, .vk-glide.is-active::after { background: var(--blue); }
 .vk-glide .vk-anchor { position: absolute; right: 0; top: 0; bottom: 0; }
 /* an empty inline anchor: unlike an inline-block, it adds no line break before trailing punctuation */
 .vk-anchor { position: relative; }
@@ -424,7 +434,6 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-fade { transition: color var(--dur-slow) var(--ease), background-color var(--dur); }
 .vk-fade.is-faded { color: var(--ink-faded); }
 .vk-fade.is-live, .vk-cut-back { cursor: pointer; }
-.vk-fade.is-live:hover, .vk-strike.is-armed:hover, .vk-cut-back:hover { background-color: var(--red-wash); }
 .vk-fade:focus-visible, .vk-strike:focus-visible, .vk-cut-back:focus-visible, .vk-caret:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 /* the strike is a red pencil line drawn left to right */
 .vk-strike {
@@ -447,8 +456,20 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   transition: text-decoration-color var(--dur-slow) var(--ease), background-color var(--dur-slow) var(--ease);
 }
 .vk-lint.is-on { cursor: help; text-decoration-color: var(--blue); }
-.vk-lint.is-on:hover, .vk-lint.is-active { background-color: var(--blue-wash); }
+.vk-lint.is-active { background-color: var(--blue-wash); }
 .vk-lint.is-on:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Hover washes only where there is a real pointer. A touch screen keeps
+   :hover on whatever was last tapped, which would leave a box around it. */
+@media (hover: hover) {
+  .vk-v:hover { background-color: var(--blue-wash); text-decoration-color: var(--blue); }
+  .vk-glide:hover::after { background: var(--blue); }
+  .vk-fade.is-live:hover, .vk-strike.is-armed:hover, .vk-cut-back:hover { background-color: var(--red-wash); }
+  .vk-lint.is-on:hover { background-color: var(--blue-wash); }
+  .vk-list button:hover { background: var(--blue-wash); color: var(--ink); }
+  .vk-olist button:hover { color: var(--ink); background: var(--red-wash); }
+  .vk-trims button:hover { color: var(--ink); background: var(--red-wash); }
+}
 
 /* read it clean: every marker fades away; faded text stays dim, as in the plugin */
 .is-clean .vk-v, .is-clean .vk-v:hover { text-decoration-color: transparent; background-color: transparent; cursor: text; }
@@ -471,13 +492,12 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-empty { margin: 0; font: 400 14px/1.45 var(--sans); color: var(--ink-3); }
 .vk-rule { margin: 0 0 4px; font: 700 14px/1.3 var(--mono); color: var(--blue); }
 .vk-why { margin: 0 0 6px; font: 400 14px/1.45 var(--sans); color: var(--ink-2); }
-.vk-list { list-style: none; margin: 0; padding: 0; }
+.vk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .vk-list button {
   all: unset; box-sizing: border-box; display: grid; grid-template-columns: 12px 1fr auto; font-size: 14px; gap: 8px; align-items: baseline; width: 100%;
   padding: 6px 8px; cursor: pointer; color: var(--ink-2); line-height: 1.4; border-radius: 1px;
 }
 .vk-panel .vk-list button { margin-inline: -8px; width: calc(100% + 16px); }
-.vk-list button:hover { background: var(--blue-wash); color: var(--ink); }
 .vk-list button:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
 .vk-list .on { color: var(--ink); font-weight: 600; }
 .vk-list .d { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--blue); transform: translateY(-1px); }
@@ -492,13 +512,11 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   all: unset; box-sizing: border-box; display: block; width: 100%; padding: 8px 10px; cursor: pointer;
   font: 400 13.5px/1.45 var(--mono); color: var(--ink-2); background: var(--sheet); border: 1px solid var(--rule); border-left: 2px solid var(--red);
 }
-.vk-olist button:hover { color: var(--ink); background: var(--red-wash); }
 .vk-olist .tag { display: block; margin-top: 4px; text-align: right; font: 400 12px/1 var(--mono); color: var(--ink-3); }
 .vk-olist button:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 .vk-trims { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--rule-strong); border-radius: 2px; }
 .vk-trims button { background: none; border: 0; border-left: 1px solid var(--rule-strong); padding: 8px 0; cursor: pointer; font: 400 var(--step--2)/1 var(--mono); color: var(--ink-2); }
 .vk-trims button:first-child { border-left: 0; }
-.vk-trims button:hover { color: var(--ink); background: var(--red-wash); }
 .vk-trims button[aria-pressed="true"] { color: var(--sheet); background: var(--red); font-weight: 700; }
 .vk-trims button:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 .vk-trimnums { margin: 8px 0 0; font: 400 var(--step--2)/1.4 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
@@ -550,7 +568,8 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   .vk-panel[data-tray="fade"] [data-sec="fade"],
   .vk-panel[data-tray="lab"] [data-sec="lab"] { opacity: 1; visibility: visible; }
   .vk-note.is-clean .vk-panel[data-tray] .vk-sec { opacity: 0.3; }
-  .vk-panel .vk-list button { padding-block: 3px; }
+  .vk-panel .vk-list button { padding-block: 2px; }
+  .vk-panel .vk-list { gap: 4px; }
   .vk-panel-h { margin-bottom: 4px; }
 }
 

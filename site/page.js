@@ -46,19 +46,19 @@
     title: 'The night bus',
     paragraphs: [
       [
-        'We took the night bus', { strike: ' to Kanpur', level: 3 }, '. The seats were ',
+        'We took the night bus ', { strike: 'to Kanpur', level: 3 }, '. The seats were ',
         { versions: ['hard', 'narrow', 'thin'], kind: 'word', id: 'hard' },
-        ', and the man beside me fell asleep on my shoulder', { strike: ' before we left the city', level: 2 }, '. ',
+        ', and the man beside me fell asleep on my shoulder ', { strike: 'before we left the city', level: 2 }, '. ',
         { versions: ['I let him sleep.', 'I didn’t have the heart to wake him.'], kind: 'sentence', id: 'sleep' },
       ],
       [
-        'Around two we stopped at a dhaba', { strike: ' by the highway', level: 1 }, ' for tea. ',
+        'Around two we stopped at a dhaba ', { strike: 'by the highway', level: 1 }, ' for tea. ',
         { fade: 'The driver knew everyone there.', id: 'fade' },
-        ' The tea was ', { strike: 'far ', level: 1 }, 'too sweet, and I drank two. ',
+        ' The tea was ', { strike: 'far', level: 1 }, ' too sweet, and I drank two. ',
         { cut: 'A TV above the counter was showing an old cricket match.', id: 'tv' },
       ],
       [
-        'We reached Kanpur ', { strike: 'just ', level: 1 }, 'before five. ',
+        'We reached Kanpur ', { strike: 'just', level: 1 }, ' before five. ',
         { lint: 'I sort of wanted', rule: 'Hedging', why: '“Sort of” softens what you mean.', fix: 'I wanted' },
         ' the ride to go on. ',
         { lint: 'My bag was handed down by the driver.', rule: 'Passive voice', why: 'Say who did it.', fix: 'The driver handed down my bag.' },
@@ -192,7 +192,7 @@
     const c = document.createElement('div');
     c.className = 'story-cap';
     c.append(...[...step.children].map(n => n.cloneNode(true)));
-    c.querySelector('.step-clip').tabIndex = -1;
+    c.querySelectorAll('.step-clip, .step-clip-sep').forEach(n => n.remove());
     return c;
   });
   const progress = document.createElement('p');
@@ -279,20 +279,12 @@
     video.play().catch(() => {});
   }
   steps.forEach(step => {
-    const open = () => {
+    step.querySelector('.step-clip').addEventListener('click', () => {
       clip = step.dataset.clip;
       document.getElementById('clipTitle').textContent = `${step.querySelector('h3').textContent}, in Obsidian`;
       dialog.showModal();
       loadClip(false);
-    };
-    const own = step.querySelector('.step-clip');
-    own.addEventListener('click', open);
-    const copy = captions[capSteps.indexOf(step)]?.querySelector('.step-clip');
-    if (!copy) return;
-    copy.addEventListener('click', open);
-    // On narrow screens the step's own button is visually hidden, so its copy shows the focus.
-    own.addEventListener('focus', () => copy.classList.toggle('is-focus', own.matches(':focus-visible')));
-    own.addEventListener('blur', () => copy.classList.remove('is-focus'));
+    });
   });
   document.getElementById('clipClose').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
@@ -305,7 +297,7 @@
   const tour = document.getElementById('trailer');
   const tourFrame = tour.closest('.trailer-frame');
   const tourSrc = kind => `media/tour-${kind}-${theme()}-v1`;
-  const paintPoster = () => { tour.poster = `media/tour-poster-${theme()}-v2.jpg`; };
+  const paintPoster = () => { tour.poster = `media/tour-poster-${theme()}-v3.jpg`; };
   paintPoster();
   new MutationObserver(paintPoster).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   function playTour(kind) {
@@ -321,6 +313,8 @@
     tour.play().catch(() => {});
   }
   document.getElementById('trailerPlay').addEventListener('click', () => playTour('short'));
+  // However playback starts, the play button goes.
+  tour.addEventListener('play', () => { tourFrame.classList.add('is-playing'); tour.controls = true; });
   tour.addEventListener('click', () => { if (!tour.controls) playTour('short'); });
   document.getElementById('tourFull').addEventListener('click', () => {
     playTour('full');

@@ -30,7 +30,8 @@
 window.Vikalp = (() => {
   const root = document.documentElement;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const countWords = s => (String(s).match(/\S+/g) || []).length;
+  // a word has at least one letter or digit, so a full stop left between two segments isn't one
+  const countWords = s => (String(s).match(/\S*[\p{L}\p{N}]\S*/gu) || []).length;
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const ms = name => {
     const v = getComputedStyle(root).getPropertyValue(name).trim();
@@ -38,7 +39,10 @@ window.Vikalp = (() => {
   };
   const EASE = 'cubic-bezier(.2, .7, .2, 1)';
   const robot = () => '<svg class="vk-robot" aria-hidden="true"><use href="#vk-robot"/></svg>';
-  const tap = matchMedia('(hover: none)').matches ? 'Tap' : 'Click';
+  const touch = matchMedia('(hover: none)').matches;
+  const tap = touch ? 'Tap' : 'Click';
+  // Text as a sentence for a label: ends in one full stop, never two.
+  const sentence = s => (/[.!?…)]$/.test(s.trim()) ? s.trim() : s.trim() + '.');
 
   document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="vk-robot" viewBox="0 0 16 16"><path d="M8 1.5v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><circle cx="8" cy="1.4" r="1" fill="currentColor"/><rect x="2.5" y="4" width="11" height="9" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="6" cy="8.2" r="1.2" fill="currentColor"/><circle cx="10" cy="8.2" r="1.2" fill="currentColor"/><path d="M6 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M1 8v2M15 8v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
@@ -81,7 +85,7 @@ window.Vikalp = (() => {
     const paintText = () => {
       const v = versions[span.i];
       text.innerHTML = (v.ai ? robot() : '') + esc(v.text);
-      el.setAttribute('aria-label', `${v.ai ? 'AI version: ' : ''}${v.text}. Version ${span.i + 1} of ${versions.length}. Arrow keys swap.`);
+      el.setAttribute('aria-label', `${v.ai ? 'AI version: ' : ''}${sentence(v.text)} Version ${span.i + 1} of ${versions.length}.${touch ? '' : ' Arrow keys swap.'}`);
     };
 
     span.enabled = () => !(opts.disabled && opts.disabled());
@@ -299,7 +303,7 @@ window.Vikalp = (() => {
         r.paint = () => {
           el.classList.toggle('is-faded', r.on);
           el.classList.toggle('is-live', r.live);
-          clickable(el, r.live, r.on ? `Faded: ${seg.fade} Click to bring it back.` : `${seg.fade} Click to fade it.`, r.on);
+          clickable(el, r.live, r.on ? `Faded: ${sentence(seg.fade)} ${tap} to bring it back.` : `${sentence(seg.fade)} ${tap} to fade it.`, r.on);
         };
         return r;
       }
@@ -316,7 +320,7 @@ window.Vikalp = (() => {
         r.paint = () => {
           el.classList.toggle('is-armed', r.armed());
           el.classList.toggle('is-struck', r.struck());
-          clickable(el, r.armed(), r.struck() ? `Struck: ${seg.strike} Click to keep it.` : `${seg.strike} Click to strike it.`, r.struck());
+          clickable(el, r.armed(), r.struck() ? `Struck: ${sentence(seg.strike)} ${tap} to keep it.` : `${sentence(seg.strike)} ${tap} to strike it.`, r.struck());
         };
         return r;
       }
@@ -333,7 +337,7 @@ window.Vikalp = (() => {
           const on = r.live();
           el.classList.toggle('is-on', on);
           el.classList.toggle('is-active', on && note.lintShown === r && !note.clean);
-          if (on) { el.tabIndex = note.clean ? -1 : 0; el.setAttribute('aria-label', `${seg.lint}. Lint: ${seg.rule}`); }
+          if (on) { el.tabIndex = note.clean ? -1 : 0; el.setAttribute('aria-label', `${sentence(seg.lint)} Lint: ${seg.rule}.`); }
           else clickable(el, false);
         };
         el.addEventListener('mouseenter', show);
@@ -354,12 +358,12 @@ window.Vikalp = (() => {
           r.state = state;
           el.className = state === 'back' ? 'vk-cut-back' : '';
           el.innerHTML = r.on
-            ? '<button type="button" class="vk-caret" aria-label="A line was cut here and moved to Overflow. Click to put it back."><svg aria-hidden="true"><use href="#vk-caret"/></svg></button>'
+            ? `<button type="button" class="vk-caret" aria-label="A line was cut here and moved to Overflow. ${tap} to put it back."><svg aria-hidden="true"><use href="#vk-caret"/></svg></button>`
             : esc(seg.cut);
         }
         const caret = el.querySelector('.vk-caret');
         if (caret) caret.tabIndex = note.clean ? -1 : 0;
-        clickable(el, state === 'back', `${seg.cut} Click to move it to Overflow.`);
+        clickable(el, state === 'back', `${sentence(seg.cut)} ${tap} to move it to Overflow.`);
       };
       onActivate(el, () => { if (!note.clean && r.live) moveCut(r, !r.on); });
       return r;
@@ -469,13 +473,15 @@ window.Vikalp = (() => {
       if (pick && note.focused) note.focused.span.set(+pick.dataset.pick);
     });
 
-    /* word count: faded lines, struck words and lines in Overflow don't count */
-    const words = () => recs.reduce((n, r) => n + countWords(r.text()), 0);
+    /* word count: faded lines, struck words and lines in Overflow don't count.
+       A narrow note counts only the paragraph it shows. */
+    const counted = () => recs.filter(r => !isTray() || r.p.classList.contains('is-shown'));
+    const words = () => counted().reduce((n, r) => n + countWords(r.text()), 0);
     function update() {
       recs.forEach(r => r.paint && r.paint());
       const count = words();
-      const faded = recs.filter(r => r.type === 'fade' && r.on).length;
-      const over = recs.filter(r => r.type === 'cut' && r.on).length;
+      const faded = counted().filter(r => r.type === 'fade' && r.on).length;
+      const over = counted().filter(r => r.type === 'cut' && r.on).length;
       const extra = [];
       if (faded) extra.push(`${faded} faded`);
       if (over) extra.push(`${over} in Overflow`);
@@ -508,6 +514,7 @@ window.Vikalp = (() => {
       const shown = paras[paragraph];
       const moved = !shown.classList.contains('is-shown');
       paras.forEach(p => p.classList.toggle('is-shown', p === shown));
+      if (moved) update();
       return Promise.all([setTray(tray, animate), wait(moved && animate && isTray() ? ms('--dur') : 0)]);
     }
 
@@ -585,14 +592,18 @@ window.Vikalp = (() => {
     function placeMarks() {
       markFrame = 0;
       const o = host.getBoundingClientRect();
+      // Words get a little room around them; a row (a panel button) is marked to its own edges.
       const boxes = marking
-        ? marking.parts().filter(el => el && shown(el)).flatMap(el => [...el.getClientRects()]).filter(b => b.width > 1)
+        ? marking.parts().filter(el => el && shown(el)).flatMap(el => {
+          const [x, y] = getComputedStyle(el).display === 'inline' ? [3, 1] : [0, 0];
+          return [...el.getClientRects()].filter(b => b.width > 1).map(b => ({ b, x, y }));
+        })
         : [];
       const live = [...marks.children].filter(m => !m.classList.contains('is-gone'));
-      boxes.forEach((b, k) => {
+      boxes.forEach(({ b, x, y }, k) => {
         let m = live[k];
         if (!m) { m = document.createElement('i'); m.className = 'vk-mark'; m.dataset.tone = marking.tone; marks.append(m); }
-        Object.assign(m.style, { left: b.left - o.left - 3 + 'px', top: b.top - o.top - 1 + 'px', width: b.width + 6 + 'px', height: b.height + 2 + 'px' });
+        Object.assign(m.style, { left: b.left - o.left - x + 'px', top: b.top - o.top - y + 'px', width: b.width + 2 * x + 'px', height: b.height + 2 * y + 'px' });
       });
       live.slice(boxes.length).forEach(fadeMark);
     }
@@ -606,7 +617,12 @@ window.Vikalp = (() => {
       .observe(host, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden', 'data-tray'] });
     host.addEventListener('transitionend', replaceMarks);
 
-    new ResizeObserver(() => { focus(note.focused); replaceMarks(); }).observe(host);
+    let wasTray = isTray();
+    new ResizeObserver(() => {
+      focus(note.focused);
+      if (isTray() !== wasTray) { wasTray = isTray(); update(); }
+      replaceMarks();
+    }).observe(host);
     note.focused = spans[0] || null;
     paras[0].classList.add('is-shown');
     update();
