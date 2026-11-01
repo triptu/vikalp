@@ -39,7 +39,7 @@
     paragraphs: [
       [
         'We took the night bus', { strike: ' to Kanpur', level: 3 }, '. The seats were ',
-        { versions: ['hard', 'narrow', 'thin'], kind: 'word' },
+        { versions: ['hard', 'narrow', 'thin'], kind: 'word', id: 'hard' },
         ', and the man beside me fell asleep on my shoulder', { strike: ' before we left the city', level: 2 }, '. ',
         { versions: ['I let him sleep.', 'I didn’t have the heart to wake him.'], kind: 'sentence', id: 'sleep' },
       ],
@@ -82,6 +82,18 @@
     clean: on => { story.setClean(on); return wait(400); },
   };
 
+  // What each step marks once its change lands: blue for versions and AI, red for cuts.
+  const inNote = sel => () => [...noteHost.querySelectorAll(sel)];
+  const MARKS = [
+    { tone: 'blue', parts: () => [story.part('hard'), story.part('sleep')] },
+    { tone: 'red', parts: () => [story.part('fade')] },
+    { tone: 'red', parts: inNote('.vk-caret, .vk-olist button') },
+    { tone: 'blue', parts: () => [story.part('sleep'), ...inNote('.vk-list .d.ai')().map(d => d.closest('button'))] },
+    { tone: 'blue', parts: inNote('.vk-lint.is-on') },
+    { tone: 'red', parts: inNote('.vk-strike.is-struck') },
+    null,
+  ];
+
   // In a narrow note, the paragraph each step acts on and the panel section the tray shows.
   const VIEWS = [
     { paragraph: 0, tray: 'versions' },
@@ -97,7 +109,7 @@
   // step's paragraph and then changes; going back, it changes and then turns.
   // Scrolling past several steps at once applies the skipped ones without
   // motion, so the note never plays catch-up.
-  let target = 0, back = false, running = false;
+  let target = -1, back = false, running = false;
   const applied = {};
   async function run(change, animate) {
     if (animate) return change(true);
@@ -110,40 +122,53 @@
     if (running) return;
     running = true;
     for (;;) {
-      const want = STATES[target];
+      const want = STATES[Math.max(0, target)];
       const differs = k => !!want[k] !== !!applied[k];
       const key = (back ? [...ORDER].reverse() : ORDER).find(differs);
       const animate = !reduced.matches && ORDER.filter(differs).length <= 1;
-      if (!back || !key) await run(a => story.view(VIEWS[target], a), animate);
+      if (!back || !key) await run(a => story.view(VIEWS[Math.max(0, target)], a), animate);
       if (!key) break;
       applied[key] = !!want[key];
       await run(a => CHANGES[key](applied[key], a), animate);
       if (animate) await wait(80);
     }
     running = false;
+    const m = MARKS[target];
+    if (m) story.mark(m.parts, m.tone);
   }
 
   /* ---------- which step is being read ---------- */
   const stage = document.getElementById('storyStage');
   const steps = [...document.querySelectorAll('.step')];
   const frame = noteHost.querySelector('.vk-frame');
-  let active = 0, raf = 0;
+  let active = -1, raf = 0;
 
+  // A step is its text, heading through the "In Obsidian" line, not its tall box.
+  const text = k => {
+    const top = steps[k].querySelector('h3').getBoundingClientRect().top;
+    return { top, bottom: steps[k].querySelector('.step-keys').getBoundingClientRect().bottom };
+  };
+  // Where the eye reads: the middle of the screen, level with the note's centre;
+  // on narrow screens, a little way into the space under the pinned note.
   function readingLine() {
-    if (!narrow.matches) return innerHeight * 0.55;
+    if (!narrow.matches) return innerHeight * 0.5;
     const below = stage.getBoundingClientRect().bottom;
     return below + (innerHeight - below) * 0.4;
   }
+  // Scrolling down, a step starts when its heading reaches the reading line.
+  // Scrolling up, the one before comes back when its last line comes down to it.
   function pick() {
     raf = 0;
     const line = readingLine();
-    let i = 0;
-    steps.forEach((s, k) => { if (s.getBoundingClientRect().top < line) i = k; });
+    let i = active;
+    while (i < steps.length - 1 && text(i + 1).top < line) i++;
+    while (i >= 0 && (i === 0 ? text(0).top > line : text(i - 1).bottom > line)) i--;
     if (i === active) return;
     back = i < active;
     active = i;
     steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
     target = i;
+    story.mark(null);
     settle();
   }
   const schedule = () => { if (!raf) raf = requestAnimationFrame(pick); };
@@ -159,7 +184,6 @@
   }
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', measure);
-  steps[0].classList.add('is-active');
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(measure);
   measure();
 

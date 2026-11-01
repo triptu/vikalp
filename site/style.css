@@ -189,6 +189,9 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .story-steps { grid-column: 1; grid-row: 1; list-style: none; margin: 0; padding: 0 0 12vh; }
 
 .step { min-height: 88vh; display: flex; flex-direction: column; justify-content: center; }
+/* the step being read is at full strength; the rest step back */
+.step { opacity: 0.35; transition: opacity var(--dur-slow) var(--ease); }
+.step.is-active { opacity: 1; }
 .step h3 { font: 700 var(--step-2)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 12px; }
 .step p { margin: 0; color: var(--ink-2); }
 .step .step-try { margin-top: 16px; transform: rotate(-1.5deg); transform-origin: left center; }
