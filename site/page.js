@@ -193,11 +193,14 @@
 
   /* ---------- trailer: one play button, then the browser's own controls ---------- */
   const trailer = document.getElementById('trailer');
-  document.getElementById('trailerPlay').addEventListener('click', () => {
+  const playTrailer = () => {
+    if (trailer.controls) return;
     trailer.closest('.trailer-frame').classList.add('is-playing');
     trailer.controls = true;
     trailer.play().catch(() => {});
-  });
+  };
+  document.getElementById('trailerPlay').addEventListener('click', playTrailer);
+  trailer.addEventListener('click', playTrailer);
 
   window.__story = { note: story, steps, active: () => active, settled: () => !running && target === active };
 })();
