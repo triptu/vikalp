@@ -4,7 +4,7 @@ Settle on the right way to say something. Keep several versions of a word, sente
 
 [Website](https://vikalp.tushar.ai/) · [Install in Obsidian](https://community.obsidian.md/plugins/vikalp) · [Latest release](https://github.com/triptu/vikalp/releases/latest) · [Guide](docs/using-vikalp.md)
 
-[![Watch the trailer: a word with its versions kept underneath](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/trailer-poster-v1.jpg)](https://vikalp.tushar.ai/)
+[![Watch the trailer: "The house was empty." with "quiet" and "still" pencilled above "empty"](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/trailer-poster-v2.jpg)](https://vikalp.tushar.ai/#trailer)
 
 ## What it does
 
