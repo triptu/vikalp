@@ -168,8 +168,12 @@
   const frame = noteHost.querySelector('.vk-frame');
   let active = -1, raf = 0;
 
+  // Touch screens tap rather than click. Only text is rewritten, so icons in a hint stay.
   if (matchMedia('(hover: none)').matches) {
-    document.querySelectorAll('.step-try').forEach(p => { p.textContent = p.textContent.replace(/\bclick\b/g, 'tap'); });
+    document.querySelectorAll('.say-tap').forEach(p => {
+      const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) n.data = n.data.replace(/\bclick\b/g, 'tap').replace(/\bClick\b/g, 'Tap');
+    });
   }
 
   // The phone caption: a copy of each phone step, stacked in one cell so the
