@@ -17,6 +17,7 @@
   --ink:          oklch(0.25 0.014 60);
   --ink-2:        oklch(0.44 0.016 62);
   --ink-3:        oklch(0.51 0.016 65);
+  --ink-faded:    oklch(0.655 0.016 68);   /* faded text: about 3:1 on the sheet */
   --rule:         oklch(0.87 0.016 78);
   --rule-strong:  oklch(0.72 0.02 72);
 
@@ -36,7 +37,6 @@
   --backdrop:     oklch(0.25 0.02 60 / 0.55);
   --grain-opacity: 0.45;
   --grain-blend:  multiply;
-  --faded-opacity: 0.35;
 
   --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
   --sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
@@ -72,6 +72,7 @@
   --ink:          oklch(0.915 0.02 82);
   --ink-2:        oklch(0.79 0.02 78);
   --ink-3:        oklch(0.68 0.018 74);
+  --ink-faded:    oklch(0.55 0.016 70);
   --rule:         oklch(0.35 0.013 66);
   --rule-strong:  oklch(0.47 0.016 68);
   --blue:         oklch(0.79 0.095 246);
@@ -88,7 +89,6 @@
   --backdrop:     oklch(0.15 0.01 60 / 0.65);
   --grain-opacity: 0.3;
   --grain-blend:  soft-light;
-  --faded-opacity: 0.4;
 }
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
@@ -323,8 +323,8 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 
 /* red pencil: cuts */
 .vk-fade, .vk-strike, .vk-cut-back { border-radius: 1px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.vk-fade { transition: opacity var(--dur-slow) var(--ease), background-color var(--dur); }
-.vk-fade.is-faded { opacity: var(--faded-opacity); }
+.vk-fade { transition: color var(--dur-slow) var(--ease), background-color var(--dur); }
+.vk-fade.is-faded { color: var(--ink-faded); }
 .vk-fade.is-live, .vk-cut-back { cursor: pointer; }
 .vk-fade.is-live:hover, .vk-strike.is-armed:hover, .vk-cut-back:hover { background-color: var(--red-wash); }
 .vk-fade:focus-visible, .vk-strike:focus-visible, .vk-cut-back:focus-visible, .vk-caret:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
@@ -332,7 +332,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-strike {
   background-image: linear-gradient(var(--red), var(--red)); background-repeat: no-repeat;
   background-position: 0 58%; background-size: 0% 2px;
-  transition: background-size var(--dur-slow) var(--ease), color var(--dur-slow), opacity var(--dur-slow), background-color var(--dur);
+  transition: background-size var(--dur-slow) var(--ease), color var(--dur-slow), background-color var(--dur);
 }
 .vk-strike.is-armed { cursor: pointer; }
 .vk-strike.is-struck { color: var(--ink-2); background-size: 100% 2px; }
@@ -355,7 +355,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .is-clean .vk-v, .is-clean .vk-v:hover { text-decoration-color: transparent; background-color: transparent; cursor: text; }
 .is-clean .vk-dots, .is-clean .vk-robot, .is-clean .vk-caret { opacity: 0; pointer-events: none; }
 .is-clean .vk-lint.is-on { text-decoration-color: transparent; background-color: transparent; cursor: text; }
-.is-clean .vk-strike.is-struck { background-size: 0% 2px; opacity: var(--faded-opacity); color: var(--ink); }
+.is-clean .vk-strike.is-struck { background-size: 0% 2px; color: var(--ink-faded); }
 .is-clean .vk-fade, .is-clean .vk-strike, .is-clean .vk-cut-back { cursor: text; background-color: transparent; }
 .is-clean .vk-panel > * { opacity: 0.3; pointer-events: none; }
 
