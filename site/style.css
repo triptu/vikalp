@@ -136,7 +136,9 @@ kbd {
 }
 /* icons drawn in place of characters the fonts don't have, sized to the text around them */
 .ic { display: inline-block; width: 0.95em; height: 0.95em; vertical-align: -0.12em; overflow: visible; }
-kbd .ic:not(:last-child) { margin-right: 2px; }
+/* icons carry their own side space, so two icons sit flush and only the gap before a letter needs a margin */
+kbd .ic + .ic { margin-left: -1px; }
+kbd .ic:last-of-type:not(:last-child) { margin-right: 1px; }
 .step-try .ic-caret { color: var(--red); width: 0.7em; height: 0.7em; vertical-align: 0; }
 .hint .for-touch { display: none; }
 @media (hover: none) {
@@ -288,6 +290,8 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   .story-cap h3 { font: 700 var(--step-1)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 6px; }
   .story-cap p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
   .story-cap .step-try { font-size: var(--hand-size); line-height: 1.1; margin-top: 8px; transform: rotate(-1.5deg); transform-origin: left center; }
+  /* only the shown caption is tilted: a tilted, hidden copy left a one-pixel speck in Safari */
+  .story-cap:not(.is-active) .step-try { transform: none; }
   .story-cap .step-keys { margin-top: 6px; font: 400 var(--step--2)/1.4 var(--sans); color: var(--ink-3); }
   /* the per-step clips are desktop recordings, unreadable this narrow; the tour covers them */
   .step-clip, .step-clip-sep { display: none; }
