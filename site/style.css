@@ -182,7 +182,7 @@ h1 .line { display: block; }
 .alts button { font: inherit; color: inherit; background: none; border: 0; padding: 0 2px; cursor: pointer; letter-spacing: inherit; opacity: 0.8; }
 .alts button:hover { opacity: 1; }
 .alts .was { color: var(--red); text-decoration: line-through 2px var(--red); opacity: 0.9; }
-.hint { font: 400 var(--step--1)/1.5 var(--sans); color: var(--ink-3); margin: 22px 0 0; }
+.hint { font: 400 var(--step--1)/1.5 var(--sans); color: var(--ink-3); margin: 22px 0 0; text-wrap: pretty; }
 .lede { font: 400 var(--step-1)/1.55 var(--sans); color: var(--ink-2); max-width: 36ch; margin: 36px 0 0; }
 .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; align-items: center; }
 .btn {
@@ -222,7 +222,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .step { opacity: 0.35; transition: opacity var(--dur-slow) var(--ease); }
 .step.is-active { opacity: 1; }
 .step h3 { font: 700 var(--step-2)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 12px; }
-.step p { margin: 0; color: var(--ink-2); }
+.step p { margin: 0; color: var(--ink-2); text-wrap: pretty; }
 .step .step-try { margin-top: 16px; transform: rotate(-1.5deg); transform-origin: left center; }
 .step .step-keys { margin-top: 14px; font: 400 var(--step--1)/1.4 var(--sans); color: var(--ink-3); }
 .step-clip {
