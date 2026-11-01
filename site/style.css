@@ -124,15 +124,19 @@ a { color: inherit; }
 .wrap--wide { max-width: var(--col-wide); }
 .hand { font: 400 var(--hand-size)/1.1 var(--hand); letter-spacing: 0.02em; color: var(--blue); }
 .keys { white-space: nowrap; }
-/* Every key is the same height and sits on the text's baseline, whether it holds a letter or an icon. */
+/* Every key has one font, size, height and padding and sits on the text's
+   baseline, whether it holds a letter, an icon or both. One gap sets keys
+   apart from the words around them, and one gap sits between an icon and
+   what follows it inside a key. */
 kbd {
-  display: inline-block; min-width: 1.9em; text-align: center; vertical-align: baseline;
-  font: 400 var(--step--2)/1.45 var(--mono); color: var(--ink-2);
-  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 0 5px; white-space: nowrap;
+  display: inline-block; box-sizing: border-box; height: 22px; min-width: 24px; margin-inline: 3px;
+  padding: 0 6px; text-align: center; vertical-align: baseline; white-space: nowrap;
+  font: 500 13px/20px var(--sans); color: var(--ink-2);
+  border: 1px solid var(--rule-strong); border-radius: 2px;
 }
 /* icons drawn in place of characters the fonts don't have, sized to the text around them */
 .ic { display: inline-block; width: 0.95em; height: 0.95em; vertical-align: -0.12em; overflow: visible; }
-kbd .ic + .ic { margin-left: 1px; }
+kbd .ic:not(:last-child) { margin-right: 2px; }
 .step-try .ic-caret { color: var(--red); width: 0.7em; height: 0.7em; vertical-align: 0; }
 .hint .for-touch { display: none; }
 @media (hover: none) {
@@ -326,7 +330,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .install-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
 .install-steps li { display: grid; grid-template-columns: 2.4ch 1fr; gap: 14px; font: 400 18px/1.6 var(--mono); }
 .install-steps b { color: var(--blue); }
-.install-steps kbd { display: inline; min-width: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
+.install-steps kbd { display: inline; height: auto; min-width: 0; margin: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
 
 footer.wrap { padding-block: 48px 56px; font: 400 var(--step--1)/1.5 var(--mono); color: var(--ink-3); }
 footer a { color: var(--ink-2); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
