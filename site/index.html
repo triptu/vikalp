@@ -3,130 +3,164 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vikalp: settle on the right way to say something</title>
-<meta name="description" content="An Obsidian plugin that keeps versions of a word, sentence or paragraph in place, fades text instead of deleting it, lints on demand, and uses AI that never writes for you.">
-<meta property="og:title" content="Vikalp: settle on the right way to say something">
-<meta property="og:description" content="Keep versions of a word, sentence or paragraph in place. Fade text instead of deleting it. AI offers, you pick.">
+<title>Vikalp: find the right word, keep the others</title>
+<meta name="description" content="A writing plugin for Obsidian. Keep several versions of a word, sentence or paragraph in your note, and swap between them to read each one in place.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vikalp: find the right word, keep the others">
+<meta property="og:description" content="A writing plugin for Obsidian. Keep several versions of a word, sentence or paragraph in your note, and swap between them to read each one in place.">
 <meta property="og:url" content="https://vikalp.tushar.ai/">
-<meta property="og:image" content="https://vikalp.tushar.ai/media/trailer-poster-plain-v1.jpg">
+<meta property="og:image" content="https://vikalp.tushar.ai/og-v2.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light dark">
+<link rel="preload" href="fonts/courier-prime-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/courier-prime-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script>
+  // Theme before first paint: a saved choice wins, otherwise follow the system.
+  (() => {
+    let saved = null;
+    try { saved = localStorage.getItem('vk-theme'); } catch (e) {}
+    const system = matchMedia('(prefers-color-scheme: dark)');
+    document.documentElement.dataset.theme = saved || (system.matches ? 'dark' : 'light');
+    system.addEventListener('change', e => {
+      let s = null;
+      try { s = localStorage.getItem('vk-theme'); } catch (err) {}
+      if (!s) document.documentElement.dataset.theme = e.matches ? 'dark' : 'light';
+    });
+  })();
+</script>
 </head>
 <body>
-<main>
 
-<header>
-  <h1>Vikalp</h1>
-  <p class="lede">Settle on the right way to say something.</p>
-  <p class="sub">Keep several versions of a word, sentence or paragraph in the note and read each one in place. Fade text instead of deleting it. Ask AI for options, never for prose. <i>Vikalp</i> is Hindi for "alternative".</p>
-  <p class="actions">
-    <a class="button primary" href="https://community.obsidian.md/plugins/vikalp">Install</a>
-    <a class="button" href="https://github.com/triptu/vikalp">GitHub</a>
-    <a class="open" href="obsidian://show-plugin?id=vikalp">Open in Obsidian</a>
-  </p>
-  <p class="meta">An Obsidian plugin for desktop. Free and open source.</p>
+<header class="wrap top">
+  <a class="wordmark" href="/" aria-label="Vikalp home">Vikalp <small aria-hidden="true">विकल्प</small></a>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg>
+    <span id="themeLabel">Dark</span>
+  </button>
 </header>
 
-<figure class="trailer">
-  <video controls playsinline preload="metadata" poster="media/trailer-poster-plain-v1.jpg" width="1920" height="1080">
-    <source src="media/vikalp-trailer-v1.mp4" type="video/mp4">
-  </video>
-</figure>
+<main>
+  <section class="wrap hero" aria-labelledby="h1">
+    <p class="kicker">A writing plugin for Obsidian</p>
+    <h1 id="h1">
+      <span class="line">Find the <span class="hero-word"><span class="alts" id="heroAlts" aria-hidden="true"></span><span id="heroWord"></span></span> word.</span>
+      <span class="line">Keep the others.</span>
+    </h1>
+    <p class="hint">Hover a dotted word and press <span class="keys"><kbd>←</kbd> <kbd>→</kbd></span>, or tap it.</p>
+    <p class="lede">Keep several versions of a word, sentence or paragraph in your note. Swap between them to read each one in place.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://community.obsidian.md/plugins/vikalp">Install in Obsidian</a>
+      <a class="btn btn-ghost" href="https://github.com/triptu/vikalp">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+    <p class="meta">Free and open source. Desktop only.</p>
+  </section>
 
-<section class="compare">
-  <h2>You don't have to delete</h2>
-  <figure>
-    <figcaption><b>Before.</b> You change a word and the old one is gone.</figcaption>
-    <img src="media/delete-before-v1.png" alt="A note where 'glad' has replaced the old word and nothing marks the change" width="1600" height="440" loading="lazy">
-  </figure>
-  <figure>
-    <figcaption><b>After.</b> The dots under <i>glad</i> are its other versions. The faded sentence is still there, out of the way.</figcaption>
-    <img src="media/keep-after-v1.png" alt="The same note with a row of dots under 'glad' and the first sentence of the second paragraph faded" width="1600" height="440" loading="lazy">
-  </figure>
-</section>
+  <!-- The story: the note stays pinned while the steps scroll by. Each step makes one change to it. -->
+  <section class="story" id="try" aria-labelledby="try-h">
+    <div class="wrap wrap--wide">
+      <div class="story-head">
+        <h2 id="try-h">Try it</h2>
+        <p>Each step below does one thing to this note. You can click anything in it.</p>
+      </div>
+      <div class="story-grid">
+        <div class="story-stage" id="storyStage">
+          <div class="story-note" id="storyNote"></div>
+        </div>
+        <ol class="story-steps">
+          <li class="step" data-clip="alternatives">
+            <h3>Versions, in place</h3>
+            <p>Keep another version of a word, a sentence or a paragraph. Swap between them to read each one in place.</p>
+            <p class="step-try hand">try: click an underlined word</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘J</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+          <li class="step" data-clip="ghost">
+            <h3>Fade, don’t delete</h3>
+            <p>Fade a sentence instead of deleting it. It stays readable, leaves the word count, and comes back with a click.</p>
+            <p class="step-try hand">try: click the faded line</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>G</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+          <li class="step" data-clip="overflow">
+            <h3>Keep what you cut</h3>
+            <p>Move a line to Overflow, a side panel kept with the note. Put it back when it fits.</p>
+            <p class="step-try hand">try: click the ‸ to put it back</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>S</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+          <li class="step" data-clip="ai">
+            <h3>AI offers, you pick</h3>
+            <p>Ask AI for more versions, each marked with a robot. Your text changes only when you pick one.</p>
+            <p class="step-try hand">try: pick a robot version</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘⇧J</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+          <li class="step" data-clip="lint">
+            <h3>Lint when you ask</h3>
+            <p>Check your note for hedging, wordy phrases, passive voice and AI-sounding lines. Edit the rules or write your own.</p>
+            <p class="step-try hand">try: click a wavy line</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>L</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+          <li class="step" data-clip="lab">
+            <h3>The Lab</h3>
+            <p>Ask a model to mark typos and weak sentences, or to strike what it would cut. You keep or cut each one.</p>
+            <p class="step-try hand">try: click a struck phrase</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>T</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+          <li class="step" data-clip="read">
+            <h3>Read it clean</h3>
+            <p>Hide every marker and read your note the way a reader will.</p>
+            <p class="step-try hand">try: switch it off</p>
+            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>R</kbd> · <button class="step-clip" type="button">watch it</button></p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
 
-<section class="points">
-  <h2>What it does</h2>
+  <section class="trailer" aria-label="Trailer">
+    <div class="wrap">
+      <div class="trailer-frame">
+        <video id="trailer" preload="none" playsinline poster="media/trailer-poster-v4.jpg" width="1920" height="1080">
+          <source src="media/trailer-v4.mp4" type="video/mp4">
+        </video>
+        <button class="trailer-play" type="button" id="trailerPlay"><span aria-hidden="true">▶</span> Watch the trailer <span class="trailer-len">0:24</span></button>
+      </div>
+    </div>
+  </section>
 
-  <article>
-    <h3>Versions, in place</h3>
-    <p>Press <kbd>⌘J</kbd> on a word and type a version. Hover the word and press the arrow keys to read each one in the sentence. Whatever is showing is the note. Press <kbd>⌘J</kbd> again for the sentence, again for the paragraph.</p>
-    <video autoplay muted loop playsinline preload="metadata" poster="media/alternatives-v2.jpg" width="1600" height="720" aria-label="Typing versions of a word in the Alternatives panel, then swapping them in the note with the arrow keys">
-      <source src="media/alternatives-v2.mp4" type="video/mp4">
-    </video>
-  </article>
-
-  <article>
-    <h3>AI offers. You pick.</h3>
-    <p>Press <kbd>⌘⇧J</kbd> and options stream in, marked with a small robot. Your text doesn't change until you choose one. AI never writes into your note. It can add versions, mark text or suggest cutting your own words, and nothing runs until you click.</p>
-    <video autoplay muted loop playsinline preload="metadata" poster="media/ai-v2.jpg" width="1600" height="720" aria-label="AI versions streaming into the Alternatives panel below the ones you wrote">
-      <source src="media/ai-v2.mp4" type="video/mp4">
-    </video>
-  </article>
-
-  <article>
-    <h3>Fade it. Don't delete it.</h3>
-    <p>Select text and press <kbd>⌘.</kbd> then <kbd>G</kbd>. It fades, stays in the note and leaves the word count. Revive it later, or copy the note without it.</p>
-    <video autoplay muted loop playsinline preload="metadata" poster="media/ghost-v2.jpg" width="1600" height="720" aria-label="A selected sentence fading to a ghost while staying in the paragraph">
-      <source src="media/ghost-v2.mp4" type="video/mp4">
-    </video>
-  </article>
-
-  <article>
-    <h3>Keep spare writing nearby</h3>
-    <p><kbd>⌘.</kbd> then <kbd>S</kbd> moves a passage to Overflow, a side panel kept with the note. Drag it back when it fits.</p>
-    <video autoplay muted loop playsinline preload="metadata" poster="media/overflow-v2.jpg" width="1600" height="720" aria-label="A selected sentence leaving the note and appearing in the Overflow panel">
-      <source src="media/overflow-v2.mp4" type="video/mp4">
-    </video>
-  </article>
-
-  <article>
-    <h3>Lint when you ask</h3>
-    <p><kbd>⌘.</kbd> then <kbd>L</kbd> runs rules for hedging, wordiness, passive voice, repetition and AI-sounding phrases. It never runs on its own. Edit the rules or add your own.</p>
-    <video autoplay muted loop playsinline preload="metadata" poster="media/lint-v2.jpg" width="1600" height="720" aria-label="Running the linter: hedges and wordy phrases get marked in the note and listed by rule in the Lint panel">
-      <source src="media/lint-v2.mp4" type="video/mp4">
-    </video>
-  </article>
-
-  <article>
-    <h3>The Lab</h3>
-    <p>AI passes mark typos, weak sentences, off-tone words and hedges. Trim levels strike through what a model would cut, from 10% to 50%. You keep or cut each one.</p>
-    <img class="lab" src="screenshots/guide/trim.png" alt="A slight trim: struck sentences would go, and the trim bar shows 305 words becoming 274" width="1455" height="1282" loading="lazy">
-  </article>
-
-  <article>
-    <h3>Read it like a reader</h3>
-    <p><kbd>⌘.</kbd> then <kbd>R</kbd> hides every marker and panel. <kbd>Esc</kbd> brings them back.</p>
-    <video autoplay muted loop playsinline preload="metadata" poster="media/read-v2.jpg" width="1600" height="720" aria-label="Read-through: the panels and markers disappear, leaving the note alone">
-      <source src="media/read-v2.mp4" type="video/mp4">
-    </video>
-  </article>
-</section>
-
-<section class="start">
-  <h2>Quick start</h2>
-  <ol>
-    <li>Install Vikalp from <a href="https://community.obsidian.md/plugins/vikalp">Community plugins</a> and turn it on.</li>
-        <li>Open a note, put the cursor on a word and press <kbd>⌘J</kbd>.</li>
-    <li>For AI versions and the Lab, pick a provider in the same settings: OpenRouter, Anthropic or OpenAI with your own key, or Ollama or LM Studio on your own computer. Everything else works offline.</li>
-  </ol>
-  <p>The <a href="https://github.com/triptu/vikalp#readme">README</a> covers the rest: every command, the linter rules, and what the AI features send and where.</p>
-</section>
-
+  <section class="install" aria-labelledby="get-h">
+    <div class="wrap install-grid">
+      <div>
+        <h2 id="get-h">Get Vikalp</h2>
+        <a class="btn btn-primary" href="https://community.obsidian.md/plugins/vikalp">Install in Obsidian</a>
+      </div>
+      <ol class="install-steps">
+        <li><b>1.</b><span>In Obsidian, open Settings → Community plugins and search for Vikalp.</span></li>
+        <li><b>2.</b><span>Put the cursor on a word and press <kbd>⌘J</kbd>.</span></li>
+        <li><b>3.</b><span>For AI features, add a key for OpenRouter, Anthropic or OpenAI, or run a model locally with Ollama or LM Studio. Everything else works offline.</span></li>
+      </ol>
+    </div>
+  </section>
 </main>
-<footer>
-  <p>Inspired by <a href="https://x.com/jasonfried/status/2105403067793584590">Jason's</a> and <a href="https://x.com/jh3yy/status/2102885700979048558">Jhey's</a> tweets.</p>
-  <p><a href="https://github.com/triptu/vikalp">Source</a> · Made by <a href="https://tushar.ai">Tushar Tripathi</a></p>
+
+<footer class="wrap">
+  <p class="end" aria-hidden="true"># # #</p>
+  <a href="https://github.com/triptu/vikalp">Source on GitHub</a> · Made by <a href="https://tushar.ai">Tushar Tripathi</a>
 </footer>
-<script>
-if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-  for (const video of document.querySelectorAll("video[autoplay]")) {
-    video.removeAttribute("autoplay");
-    video.pause();
-    video.load();
-  }
-}
-</script>
+
+<dialog class="clip" id="clip" aria-labelledby="clipTitle">
+  <div class="clip-head">
+    <p id="clipTitle"></p>
+    <button type="button" class="clip-close" id="clipClose">Close</button>
+  </div>
+  <video id="clipVideo" muted loop playsinline controls preload="none"></video>
+</dialog>
+
+<script src="note.js"></script>
+<script src="page.js"></script>
 </body>
 </html>
