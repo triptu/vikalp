@@ -237,16 +237,30 @@
   dialog.addEventListener('close', () => { video.pause(); video.removeAttribute('src'); video.load(); clip = null; });
   new MutationObserver(() => { if (clip) loadClip(true); }).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
-  /* ---------- trailer: one play button, then the browser's own controls ---------- */
-  const trailer = document.getElementById('trailer');
-  const playTrailer = () => {
-    if (trailer.controls) return;
-    trailer.closest('.trailer-frame').classList.add('is-playing');
-    trailer.controls = true;
-    trailer.play().catch(() => {});
-  };
-  document.getElementById('trailerPlay').addEventListener('click', playTrailer);
-  trailer.addEventListener('click', playTrailer);
+  /* ---------- the tour: one play button, then the browser's own controls ----------
+     The short and full tours were each recorded in Obsidian's light and dark
+     themes; the page plays the one that matches its own theme. */
+  const tour = document.getElementById('trailer');
+  const tourFrame = tour.closest('.trailer-frame');
+  const tourSrc = kind => `media/tour-${kind}-${theme()}-v1`;
+  function playTour(kind) {
+    const base = tourSrc(kind);
+    if (tour.dataset.src !== base) {
+      tour.dataset.src = base;
+      tour.dataset.tour = kind;
+      tour.src = base + '.mp4';
+      tour.querySelector('track').src = base + '.vtt';
+    }
+    tourFrame.classList.add('is-playing');
+    tour.controls = true;
+    tour.play().catch(() => {});
+  }
+  document.getElementById('trailerPlay').addEventListener('click', () => playTour('short'));
+  tour.addEventListener('click', () => { if (!tour.controls) playTour('short'); });
+  document.getElementById('tourFull').addEventListener('click', () => {
+    playTour('full');
+    tourFrame.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'center' });
+  });
 
   window.__story = { note: story, steps, active: () => active, settled: () => !running && target === active };
 })();

@@ -1,0 +1,211 @@
+WEBVTT
+
+00:00.080 --> 00:02.800
+This is what a lot of drafts look like.
+
+00:02.960 --> 00:06.000
+Three versions of a word, split by slashes.
+
+00:06.240 --> 00:07.600
+A sentence written twice,
+
+00:07.600 --> 00:09.040
+because you couldn't decide.
+
+00:09.360 --> 00:11.440
+And at the bottom, everything you cut
+
+00:11.440 --> 00:13.120
+but couldn't bring yourself to delete.
+
+00:13.835 --> 00:15.915
+All of that deserves a better place.
+
+00:17.024 --> 00:19.344
+Vikalp is a plugin for Obsidian.
+
+00:19.424 --> 00:21.584
+The name is Hindi for alternative.
+
+00:23.975 --> 00:25.975
+Here's the same draft with Vikalp.
+
+00:26.375 --> 00:28.215
+A thin underline and a few dots
+
+00:28.215 --> 00:29.495
+mean there are other versions.
+
+00:30.210 --> 00:32.290
+Hover over it and use the arrow keys,
+
+00:32.290 --> 00:34.530
+and you read each one right where it lives.
+
+00:35.010 --> 00:36.530
+There's no accept button.
+
+00:36.530 --> 00:38.210
+Whatever's showing is the note.
+
+00:38.690 --> 00:40.610
+It works for whole sentences too.
+
+00:41.250 --> 00:42.770
+And it handles the small stuff.
+
+00:42.930 --> 00:45.745
+Swap pencil for eraser, and the article in
+
+00:45.745 --> 00:48.865
+front fixes itself, so it reads an eraser.
+
+00:50.662 --> 00:52.742
+To add your own, put the cursor on a word,
+
+00:52.742 --> 00:54.262
+and press Command J.
+
+00:54.502 --> 00:56.342
+Type the other ways you might say it,
+
+00:56.342 --> 00:57.702
+and try each one in the sentence.
+
+00:58.447 --> 01:00.287
+Press it again, and you're trying
+
+01:00.287 --> 01:01.887
+versions of the whole sentence.
+
+01:02.367 --> 01:04.527
+Once more, and it's the whole paragraph.
+
+01:05.958 --> 01:08.358
+This aside about lighthouses is nice,
+
+01:08.358 --> 01:09.718
+but it might not belong.
+
+01:09.958 --> 01:12.153
+Instead of deleting it, ghost it.
+
+01:12.313 --> 01:14.233
+It stays right there, faded,
+
+01:14.313 --> 01:15.993
+and it's left out of the word count.
+
+01:16.233 --> 01:17.753
+Bring it back whenever you want.
+
+01:18.778 --> 01:21.178
+This line is really a different essay,
+
+01:21.178 --> 01:22.618
+so it goes to Overflow.
+
+01:22.938 --> 01:24.778
+Cuts that used to pile up at the bottom of
+
+01:24.778 --> 01:27.178
+the page live here now, one Overflow per note.
+
+01:27.653 --> 01:30.213
+When one fits again, drag it back in.
+
+01:31.506 --> 01:32.626
+Stuck on a word?
+
+01:32.706 --> 01:35.426
+Type two question marks, and AI adds a few more.
+
+01:36.658 --> 01:38.178
+Each one gets a little robot,
+
+01:38.178 --> 01:40.098
+so you always know which words are yours.
+
+01:40.178 --> 01:42.098
+It never changes the note on its own.
+
+01:42.418 --> 01:43.538
+It just gives you options.
+
+01:44.426 --> 01:47.146
+When a draft feels done, run the linter.
+
+01:47.146 --> 01:47.946
+It
+
+01:49.083 --> 01:51.643
+It catches the usual habits: hedging,
+
+01:51.723 --> 01:54.523
+filler, sentences that go on too long.
+
+01:54.683 --> 01:56.283
+You can write your own rules too.
+
+01:57.223 --> 01:58.343
+There's even one for when you
+
+01:58.343 --> 01:59.623
+start sounding like LinkedIn.
+
+02:01.396 --> 02:04.516
+Then there's the Lab, a few passes for editing.
+
+02:04.676 --> 02:07.716
+It can catch typos, mark the weakest sentences,
+
+02:07.796 --> 02:11.076
+the ones that run long, or words that don't fit the tone.
+
+02:11.396 --> 02:12.596
+Or ask it to tighten things
+
+02:12.596 --> 02:13.796
+up by about twenty percent.
+
+02:15.492 --> 02:17.332
+It doesn't rewrite a single sentence.
+
+02:17.332 --> 02:18.372
+It only strikes out the
+
+02:18.372 --> 02:19.892
+words it thinks you can lose.
+
+02:19.972 --> 02:21.492
+If it cuts something you'd keep,
+
+02:21.492 --> 02:22.852
+click it, and it stays.
+
+02:23.172 --> 02:25.892
+Then ghost the cuts, so nothing is gone for good.
+
+02:26.837 --> 02:27.717
+Then hide everything,
+
+02:27.717 --> 02:29.477
+and read it the way a reader would.
+
+02:33.061 --> 02:34.981
+The AI never writes for you.
+
+02:34.981 --> 02:37.141
+It only helps you look at your own words,
+
+02:37.141 --> 02:38.581
+and only when you ask.
+
+02:38.821 --> 02:40.981
+And the note itself stays plain markdown.
+
+02:41.301 --> 02:42.821
+That's Vikalp.
+
+02:42.821 --> 02:44.901
+A writing plugin built for how you think.
