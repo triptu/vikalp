@@ -30,7 +30,8 @@
 window.Vikalp = (() => {
   const root = document.documentElement;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const countWords = s => (String(s).match(/\S+/g) || []).length;
+  // a word has at least one letter or digit, so a full stop left between two segments isn't one
+  const countWords = s => (String(s).match(/\S*[\p{L}\p{N}]\S*/gu) || []).length;
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const ms = name => {
     const v = getComputedStyle(root).getPropertyValue(name).trim();
@@ -357,7 +358,7 @@ window.Vikalp = (() => {
           r.state = state;
           el.className = state === 'back' ? 'vk-cut-back' : '';
           el.innerHTML = r.on
-            ? '<button type="button" class="vk-caret" aria-label="A line was cut here and moved to Overflow. Click to put it back."><svg aria-hidden="true"><use href="#vk-caret"/></svg></button>'
+            ? `<button type="button" class="vk-caret" aria-label="A line was cut here and moved to Overflow. ${tap} to put it back."><svg aria-hidden="true"><use href="#vk-caret"/></svg></button>`
             : esc(seg.cut);
         }
         const caret = el.querySelector('.vk-caret');
@@ -472,13 +473,15 @@ window.Vikalp = (() => {
       if (pick && note.focused) note.focused.span.set(+pick.dataset.pick);
     });
 
-    /* word count: faded lines, struck words and lines in Overflow don't count */
-    const words = () => recs.reduce((n, r) => n + countWords(r.text()), 0);
+    /* word count: faded lines, struck words and lines in Overflow don't count.
+       A narrow note counts only the paragraph it shows. */
+    const counted = () => recs.filter(r => !isTray() || r.p.classList.contains('is-shown'));
+    const words = () => counted().reduce((n, r) => n + countWords(r.text()), 0);
     function update() {
       recs.forEach(r => r.paint && r.paint());
       const count = words();
-      const faded = recs.filter(r => r.type === 'fade' && r.on).length;
-      const over = recs.filter(r => r.type === 'cut' && r.on).length;
+      const faded = counted().filter(r => r.type === 'fade' && r.on).length;
+      const over = counted().filter(r => r.type === 'cut' && r.on).length;
       const extra = [];
       if (faded) extra.push(`${faded} faded`);
       if (over) extra.push(`${over} in Overflow`);
@@ -511,6 +514,7 @@ window.Vikalp = (() => {
       const shown = paras[paragraph];
       const moved = !shown.classList.contains('is-shown');
       paras.forEach(p => p.classList.toggle('is-shown', p === shown));
+      if (moved) update();
       return Promise.all([setTray(tray, animate), wait(moved && animate && isTray() ? ms('--dur') : 0)]);
     }
 
@@ -613,7 +617,12 @@ window.Vikalp = (() => {
       .observe(host, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden', 'data-tray'] });
     host.addEventListener('transitionend', replaceMarks);
 
-    new ResizeObserver(() => { focus(note.focused); replaceMarks(); }).observe(host);
+    let wasTray = isTray();
+    new ResizeObserver(() => {
+      focus(note.focused);
+      if (isTray() !== wasTray) { wasTray = isTray(); update(); }
+      replaceMarks();
+    }).observe(host);
     note.focused = spans[0] || null;
     paras[0].classList.add('is-shown');
     update();
