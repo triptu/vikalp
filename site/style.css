@@ -155,7 +155,7 @@ kbd .ic:last-of-type:not(:last-child) { margin-right: 1px; }
   color: var(--ink-2); background: none; border: 1px solid var(--rule-strong); border-radius: 2px; cursor: pointer;
   transition: color var(--dur), border-color var(--dur);
 }
-.theme-btn:hover { color: var(--ink); border-color: var(--ink-2); }
+@media (hover: hover) { .theme-btn:hover { color: var(--ink); border-color: var(--ink-2); } }
 /* both icons sit in one place; switching crossfades and turns them a little. The page itself flips at once. */
 .theme-btn svg {
   position: absolute; inset: 0; margin: auto; width: 18px; height: 18px;
@@ -182,7 +182,7 @@ h1 .line { display: block; }
   transform: rotate(-3deg); transform-origin: left bottom; display: flex; gap: 0.55em; align-items: baseline;
 }
 .alts button { font: inherit; color: inherit; background: none; border: 0; padding: 0 2px; cursor: pointer; letter-spacing: inherit; opacity: 0.8; }
-.alts button:hover { opacity: 1; }
+@media (hover: hover) { .alts button:hover { opacity: 1; } }
 .alts .was { color: var(--red); text-decoration: line-through 2px var(--red); opacity: 0.9; }
 .hint { font: 400 var(--step--1)/1.5 var(--sans); color: var(--ink-3); margin: 22px 0 0; text-wrap: pretty; }
 .lede { font: 400 var(--step-1)/1.55 var(--sans); color: var(--ink-2); max-width: 36ch; margin: 36px 0 0; }
@@ -193,9 +193,9 @@ h1 .line { display: block; }
   transition: background-color var(--dur), border-color var(--dur), color var(--dur);
 }
 .btn-primary { background: var(--btn-bg); color: var(--btn-text); }
-.btn-primary:hover { background: var(--btn-hover); border-color: var(--btn-hover); }
+@media (hover: hover) { .btn-primary:hover { background: var(--btn-hover); border-color: var(--btn-hover); } }
 .btn-ghost { color: var(--ink); background: transparent; border-color: var(--rule-strong); }
-.btn-ghost:hover { border-color: var(--ink); }
+@media (hover: hover) { .btn-ghost:hover { border-color: var(--ink); } }
 .btn svg { width: 16px; height: 16px; }
 
 /* the hero word is a note span, scaled up */
@@ -232,7 +232,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   text-decoration: underline 1px var(--rule-strong); text-underline-offset: 4px;
   transition: color var(--dur), text-decoration-color var(--dur);
 }
-.step-clip:hover { color: var(--ink); text-decoration-color: var(--ink-2); }
+@media (hover: hover) { .step-clip:hover { color: var(--ink); text-decoration-color: var(--ink-2); } }
 
 .story-caption { display: none; }
 
@@ -329,7 +329,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   font: 400 var(--step--2)/1 var(--mono); color: var(--ink-2); background: none; border: 1px solid var(--rule-strong);
   border-radius: 2px; padding: 8px 10px; cursor: pointer;
 }
-.clip-close:hover { color: var(--ink); border-color: var(--ink-2); }
+@media (hover: hover) { .clip-close:hover { color: var(--ink); border-color: var(--ink-2); } }
 .clip video { display: block; width: 100%; height: auto; aspect-ratio: 1600 / 720; background: var(--sheet-2); }
 
 /* ---------- install ---------- */
@@ -343,7 +343,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 
 footer.wrap { padding-block: 48px 56px; font: 400 var(--step--1)/1.5 var(--mono); color: var(--ink-3); }
 footer a { color: var(--ink-2); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
-footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
+@media (hover: hover) { footer a:hover { color: var(--ink); text-decoration-color: var(--blue); } }
 
 @media (max-width: 960px) {
   .install-grid { grid-template-columns: 1fr; gap: 28px; }
@@ -394,7 +394,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   display: inline-flex; align-items: center; gap: 9px; background: none; border: 0; padding: 4px 0; cursor: pointer;
   font: 400 var(--step--2)/1 var(--mono); color: var(--ink-2);
 }
-.vk-switch:hover { color: var(--ink); }
+@media (hover: hover) { .vk-switch:hover { color: var(--ink); } }
 .vk-track { width: 30px; height: 16px; border: 1.5px solid var(--ink-2); border-radius: 2px; position: relative; transition: background-color var(--dur), border-color var(--dur); }
 .vk-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; background: var(--ink-2); transition: transform var(--dur) var(--ease), background-color var(--dur); }
 .vk-switch[aria-checked="true"] { color: var(--ink); }
@@ -476,7 +476,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 }
 
 /* read it clean: every marker fades away; faded text stays dim, as in the plugin */
-.is-clean .vk-v, .is-clean .vk-v:hover { text-decoration-color: transparent; background-color: transparent; cursor: text; }
+.is-clean .vk-v { text-decoration-color: transparent; background-color: transparent; cursor: text; }
 .is-clean .vk-dots, .is-clean .vk-robot, .is-clean .vk-caret { opacity: 0; pointer-events: none; }
 .is-clean .vk-lint.is-on, .is-clean .vk-lint.is-active { text-decoration-color: transparent; background-color: transparent; cursor: text; }
 .is-clean .vk-strike.is-struck { background-size: 0% 2px; color: var(--ink-faded); }
@@ -596,9 +596,11 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 .trailer-play svg { width: 34px; height: 34px; fill: currentColor; margin-left: 4px; }
-.trailer-play:hover, .trailer-frame:not(.is-playing) video:hover ~ .trailer-play {
-  background: color-mix(in oklch, var(--ink), var(--paper) 14%);
-  box-shadow: 0 14px 32px -10px oklch(0.2 0.02 60 / 0.7), 0 2px 6px -2px oklch(0.2 0.02 60 / 0.4);
+@media (hover: hover) {
+  .trailer-play:hover, .trailer-frame:not(.is-playing) video:hover ~ .trailer-play {
+    background: color-mix(in oklch, var(--ink), var(--paper) 14%);
+    box-shadow: 0 14px 32px -10px oklch(0.2 0.02 60 / 0.7), 0 2px 6px -2px oklch(0.2 0.02 60 / 0.4);
+  }
 }
 .trailer-play:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
 .trailer-frame.is-playing .trailer-play { display: none; }
@@ -608,7 +610,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   text-decoration: underline 1px var(--rule-strong); text-underline-offset: 4px;
   transition: color var(--dur), text-decoration-color var(--dur);
 }
-.tour-full:hover { color: var(--ink); text-decoration-color: var(--ink-2); }
+@media (hover: hover) { .tour-full:hover { color: var(--ink); text-decoration-color: var(--ink-2); } }
 .tour-len { font-family: var(--mono); font-size: var(--step--2); }
 @media (max-width: 640px) {
   .trailer { padding-bottom: 56px; }
