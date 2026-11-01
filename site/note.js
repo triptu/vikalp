@@ -119,13 +119,16 @@ window.Vikalp = (() => {
   const wait = d => new Promise(done => setTimeout(done, d));
 
   // A copy of a cut line slides in a straight line between the text and Overflow,
-  // fading between the opacities in `fade`. Resolves with the copy; the caller removes it.
+  // fading between the opacities in `fade`. `to` is a box, or a function from the
+  // copy to a box. Resolves with the copy; the caller removes it.
   function fly(text, from, to, d, fade = [0.4, 1]) {
     const ghost = document.createElement('div');
     ghost.className = 'vk-fly';
     ghost.textContent = text;
-    Object.assign(ghost.style, { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px' });
+    ghost.style.width = from.width + 'px';
     document.body.append(ghost);
+    if (typeof to === 'function') to = to(ghost);
+    Object.assign(ghost.style, { left: to.left + 'px', top: to.top + 'px' });
     const anim = ghost.animate([
       { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: fade[0] },
       { transform: 'none', opacity: fade[1] },
@@ -310,19 +313,30 @@ window.Vikalp = (() => {
 
     /* Moving a line to Overflow and back. One motion at a time: the line
        leaves as a card that flies to Overflow, then its paragraph closes
-       around a ‸. Going back is the same in reverse: the card lifts out of
-       Overflow and flies to the ‸, then the paragraph opens and the line
-       settles into it as the card fades. */
+       around a ‸. Going back, the paragraph opens a space for the line while
+       the card flies to it; both finish together, then the card crossfades
+       into the line. */
     // Where the line starts in the text, kept inside the note so the card never hangs over the panel.
     function spot(el, width) {
       const line = el.getClientRects()[0] || el.getBoundingClientRect();
       const box = body.getBoundingClientRect();
       return { left: Math.max(box.left, Math.min(line.left, box.right - width)), top: line.top, width };
     }
+    // Where a card lands on a restored line: its text starting under the
+    // line's first word where the note is wide enough, and its bottom on the
+    // line's last row, so it covers the line and stays clear of the next paragraph.
+    function landing(el, card) {
+      const rows = [...el.getClientRects()];
+      const box = body.getBoundingClientRect();
+      const size = card.getBoundingClientRect();
+      const style = getComputedStyle(card);
+      const inset = parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth);
+      const left = Math.max(box.left - inset, Math.min(rows[0].left - inset, box.right - size.width + inset));
+      return { left, top: rows[rows.length - 1].bottom - size.height };
+    }
     async function moveCut(r, out, animate = true) {
       if (r.busy || r.on === out) return;
       const d = animate ? ms('--dur-slow') : 0;
-      const close = d * 0.7;
       r.busy = true;
       await setTray('overflow', animate);
       if (out) {
@@ -330,25 +344,23 @@ window.Vikalp = (() => {
           const slot = overflow.getBoundingClientRect();
           const from = spot(r.el, slot.width);
           r.el.style.visibility = 'hidden';
-          (await fly(r.seg.cut, from, { left: slot.left, top: slot.top, width: slot.width }, d)).remove();
+          (await fly(r.seg.cut, from, { left: slot.left, top: slot.top }, d)).remove();
         }
-        await easeHeight(r.p, () => { r.on = true; update(); r.el.style.visibility = ''; }, close);
+        await easeHeight(r.p, () => { r.on = true; update(); r.el.style.visibility = ''; }, d * 0.7);
+      } else if (!d) {
+        r.on = false;
+        update();
       } else {
-        let ghost = null;
-        if (d) {
-          const row = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`);
-          const from = row.getBoundingClientRect();
-          row.style.visibility = 'hidden';
-          ghost = await fly(r.seg.cut, from, spot(r.el, from.width), d, [1, 0.4]);
-        }
-        const opened = easeHeight(r.p, () => { r.on = false; update(); }, close);
-        if (ghost) {
-          const settle = { duration: close, easing: EASE };
-          r.el.animate([{ opacity: 0 }, { opacity: 1 }], settle);
-          await Promise.all([opened, ghost.animate([{ opacity: 0.4 }, { opacity: 0 }], settle).finished.catch(() => {})]);
-          ghost.remove();
-        }
+        const from = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`).getBoundingClientRect();
+        r.el.style.opacity = '0';
+        const opened = easeHeight(r.p, () => { r.on = false; update(); }, d);
+        const ghost = await fly(r.seg.cut, from, card => landing(r.el, card), d, [1, 1]);
         await opened;
+        const settle = { duration: ms('--dur-fast'), easing: 'ease-out' };
+        r.el.style.opacity = '';
+        r.el.animate([{ opacity: 0 }, { opacity: 1 }], settle);
+        await ghost.animate([{ opacity: 1 }, { opacity: 0 }], settle).finished.catch(() => {});
+        ghost.remove();
       }
       r.busy = false;
     }
