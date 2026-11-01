@@ -38,7 +38,10 @@ window.Vikalp = (() => {
   };
   const EASE = 'cubic-bezier(.2, .7, .2, 1)';
   const robot = () => '<svg class="vk-robot" aria-hidden="true"><use href="#vk-robot"/></svg>';
-  const tap = matchMedia('(hover: none)').matches ? 'Tap' : 'Click';
+  const touch = matchMedia('(hover: none)').matches;
+  const tap = touch ? 'Tap' : 'Click';
+  // Text as a sentence for a label: ends in one full stop, never two.
+  const sentence = s => (/[.!?…)]$/.test(s.trim()) ? s.trim() : s.trim() + '.');
 
   document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="vk-robot" viewBox="0 0 16 16"><path d="M8 1.5v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><circle cx="8" cy="1.4" r="1" fill="currentColor"/><rect x="2.5" y="4" width="11" height="9" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="6" cy="8.2" r="1.2" fill="currentColor"/><circle cx="10" cy="8.2" r="1.2" fill="currentColor"/><path d="M6 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M1 8v2M15 8v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
@@ -81,7 +84,7 @@ window.Vikalp = (() => {
     const paintText = () => {
       const v = versions[span.i];
       text.innerHTML = (v.ai ? robot() : '') + esc(v.text);
-      el.setAttribute('aria-label', `${v.ai ? 'AI version: ' : ''}${v.text}. Version ${span.i + 1} of ${versions.length}. Arrow keys swap.`);
+      el.setAttribute('aria-label', `${v.ai ? 'AI version: ' : ''}${sentence(v.text)} Version ${span.i + 1} of ${versions.length}.${touch ? '' : ' Arrow keys swap.'}`);
     };
 
     span.enabled = () => !(opts.disabled && opts.disabled());
@@ -299,7 +302,7 @@ window.Vikalp = (() => {
         r.paint = () => {
           el.classList.toggle('is-faded', r.on);
           el.classList.toggle('is-live', r.live);
-          clickable(el, r.live, r.on ? `Faded: ${seg.fade} Click to bring it back.` : `${seg.fade} Click to fade it.`, r.on);
+          clickable(el, r.live, r.on ? `Faded: ${sentence(seg.fade)} ${tap} to bring it back.` : `${sentence(seg.fade)} ${tap} to fade it.`, r.on);
         };
         return r;
       }
@@ -316,7 +319,7 @@ window.Vikalp = (() => {
         r.paint = () => {
           el.classList.toggle('is-armed', r.armed());
           el.classList.toggle('is-struck', r.struck());
-          clickable(el, r.armed(), r.struck() ? `Struck: ${seg.strike} Click to keep it.` : `${seg.strike} Click to strike it.`, r.struck());
+          clickable(el, r.armed(), r.struck() ? `Struck: ${sentence(seg.strike)} ${tap} to keep it.` : `${sentence(seg.strike)} ${tap} to strike it.`, r.struck());
         };
         return r;
       }
@@ -333,7 +336,7 @@ window.Vikalp = (() => {
           const on = r.live();
           el.classList.toggle('is-on', on);
           el.classList.toggle('is-active', on && note.lintShown === r && !note.clean);
-          if (on) { el.tabIndex = note.clean ? -1 : 0; el.setAttribute('aria-label', `${seg.lint}. Lint: ${seg.rule}`); }
+          if (on) { el.tabIndex = note.clean ? -1 : 0; el.setAttribute('aria-label', `${sentence(seg.lint)} Lint: ${seg.rule}.`); }
           else clickable(el, false);
         };
         el.addEventListener('mouseenter', show);
@@ -359,7 +362,7 @@ window.Vikalp = (() => {
         }
         const caret = el.querySelector('.vk-caret');
         if (caret) caret.tabIndex = note.clean ? -1 : 0;
-        clickable(el, state === 'back', `${seg.cut} Click to move it to Overflow.`);
+        clickable(el, state === 'back', `${sentence(seg.cut)} ${tap} to move it to Overflow.`);
       };
       onActivate(el, () => { if (!note.clean && r.live) moveCut(r, !r.on); });
       return r;
