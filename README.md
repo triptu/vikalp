@@ -4,7 +4,7 @@ Settle on the right way to say something. Keep several versions of a word, sente
 
 [Website](https://vikalp.tushar.ai/) · [Install in Obsidian](https://community.obsidian.md/plugins/vikalp) · [Latest release](https://github.com/triptu/vikalp/releases/latest) · [Guide](docs/using-vikalp.md)
 
-[![Watch a one-minute tour: "She kept changing one word." with "changing" struck through and "rewriting" pencilled above it](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/tour-poster-v1.jpg)](https://vikalp.tushar.ai/#tour)
+[![Watch a one-minute tour: a draft in Obsidian with "breaks / steals / scatters" and a sentence written twice](https://raw.githubusercontent.com/triptu/vikalp/main/docs/screenshots/tour-poster-v2.jpg)](https://vikalp.tushar.ai/#tour)
 
 ## What it does
 
