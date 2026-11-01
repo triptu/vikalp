@@ -118,22 +118,41 @@ window.Vikalp = (() => {
   /* ---------- small motion helpers ---------- */
   const wait = d => new Promise(done => setTimeout(done, d));
 
-  // A copy of a cut line slides in a straight line between the text and Overflow,
-  // fading between the opacities in `fade`. `to` is a box, or a function from the
-  // copy to a box. Resolves with the copy; the caller removes it.
-  function fly(text, from, to, d, fade = [0.4, 1]) {
+  function card(text, width) {
     const ghost = document.createElement('div');
     ghost.className = 'vk-fly';
     ghost.textContent = text;
-    ghost.style.width = from.width + 'px';
+    ghost.style.width = width + 'px';
     document.body.append(ghost);
-    if (typeof to === 'function') to = to(ghost);
+    return ghost;
+  }
+
+  // A copy of a cut line slides in a straight line from the text to Overflow,
+  // fading in as it goes. Resolves with the copy; the caller removes it.
+  function fly(text, from, to, d) {
+    const ghost = card(text, from.width);
     Object.assign(ghost.style, { left: to.left + 'px', top: to.top + 'px' });
     const anim = ghost.animate([
-      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: fade[0] },
-      { transform: 'none', opacity: fade[1] },
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: 0.4 },
+      { transform: 'none', opacity: 1 },
     ], { duration: d, easing: EASE });
     return anim.finished.then(() => ghost, () => ghost);
+  }
+
+  // A copy of a cut line flies from `from` toward the box `to`, and over the last
+  // `tail` ms shrinks and fades into `point`, as if going back into that spot.
+  // `to` and `point` are functions from the copy to a box.
+  function flyInto(text, from, to, point, d, tail) {
+    const ghost = card(text, from.width);
+    to = to(ghost);
+    point = point(ghost);
+    Object.assign(ghost.style, { left: to.left + 'px', top: to.top + 'px', transformOrigin: 'left top' });
+    const anim = ghost.animate([
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, easing: EASE },
+      { offset: 1 - tail / d, transform: 'none', opacity: 1, easing: 'ease-in' },
+      { transform: `translate(${point.left - to.left}px, ${point.top - to.top}px) scale(0.06)`, opacity: 0 },
+    ], { duration: d });
+    return anim.finished.then(() => ghost.remove(), () => ghost.remove());
   }
 
   // Run a DOM change, then ease the element's height from what it was to what it is.
@@ -314,8 +333,8 @@ window.Vikalp = (() => {
     /* Moving a line to Overflow and back. One motion at a time: the line
        leaves as a card that flies to Overflow, then its paragraph closes
        around a ‸. Going back, the paragraph opens a space for the line while
-       the card flies to it; both finish together, then the card crossfades
-       into the line. */
+       the card flies to the ‸ and shrinks into it; only once the card is gone
+       does the line fade in, so the two copies never show at once. */
     // Where the line starts in the text, kept inside the note so the card never hangs over the panel.
     function spot(el, width) {
       const line = el.getClientRects()[0] || el.getBoundingClientRect();
@@ -333,6 +352,12 @@ window.Vikalp = (() => {
       const inset = parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth);
       const left = Math.max(box.left - inset, Math.min(rows[0].left - inset, box.right - size.width + inset));
       return { left, top: rows[rows.length - 1].bottom - size.height };
+    }
+    // Where the ‸ stood: the restored line's first character, less the card's inset.
+    function caretSpot(el, card) {
+      const row = el.getClientRects()[0];
+      const style = getComputedStyle(card);
+      return { left: row.left - parseFloat(style.borderLeftWidth), top: row.top };
     }
     async function moveCut(r, out, animate = true) {
       if (r.busy || r.on === out) return;
@@ -352,15 +377,13 @@ window.Vikalp = (() => {
         update();
       } else {
         const from = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`).getBoundingClientRect();
+        const flight = d * 1.2;
         r.el.style.opacity = '0';
-        const opened = easeHeight(r.p, () => { r.on = false; update(); }, d);
-        const ghost = await fly(r.seg.cut, from, card => landing(r.el, card), d, [1, 1]);
+        const opened = easeHeight(r.p, () => { r.on = false; update(); }, flight);
+        await flyInto(r.seg.cut, from, card => landing(r.el, card), card => caretSpot(r.el, card), flight, 160);
         await opened;
-        const settle = { duration: ms('--dur-fast'), easing: 'ease-out' };
         r.el.style.opacity = '';
-        r.el.animate([{ opacity: 0 }, { opacity: 1 }], settle);
-        await ghost.animate([{ opacity: 1 }, { opacity: 0 }], settle).finished.catch(() => {});
-        ghost.remove();
+        await r.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' }).finished.catch(() => {});
       }
       r.busy = false;
     }
