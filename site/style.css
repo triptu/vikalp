@@ -491,6 +491,6 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 /* a phone-sized poster has little room between its title and its subtitle */
 @media (max-width: 640px) {
   .trailer { padding-bottom: 56px; }
-  .trailer-play { width: 40px; height: 40px; }
-  .trailer-play svg { width: 18px; height: 18px; margin-left: 2px; }
+  .trailer-play { width: 60px; height: 60px; }
+  .trailer-play svg { width: 24px; height: 24px; margin-left: 3px; }
 }
