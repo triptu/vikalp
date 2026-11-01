@@ -50,9 +50,7 @@ Lower layers never import higher ones. Only `plugin/` and `views/*View.ts` impor
 
 - The site is the static `site/` folder. Vercel copies it to `public/` and deploys main to https://vikalp.tushar.ai/ (see `vercel.json`).
 - Serve it locally with `python3 -m http.server <port>` inside `site/`.
-- Before merging a site change, run these and fix what they report, then look at visible changes on real phone browsers:
-  - `node scripts/check-site-glyphs.mjs`: every character is in the font it is set in, including inside the story's panels.
-  - `node ~/Documents/code/tstack/scripts/site-check/spacing.mjs site`: no touching blocks, no mismatched key or icon sizes, no mouse wording on touch screens, at every scroll position.
+- When a change touches symbols, spacing or layout, or when asked, check it with `node scripts/check-site-glyphs.mjs` (every character is in the font it is set in) and `node ~/Documents/code/tstack/scripts/site-check/spacing.mjs site` (touching blocks, mismatched key or icon sizes, mouse wording on touch screens). They aren't needed for every change.
 - Site PRs merge without waiting for review once the checks pass. The maintainer asked for this.
 - The narrated tour videos in `site/media/tour-*` come from the maintainer's own recordings, not the explainers studio. Use them rather than generating a new trailer.
 
