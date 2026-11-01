@@ -121,7 +121,16 @@
     </div>
   </section>
 
-  <!-- Trailer: a short launch video goes here later. -->
+  <section class="trailer" aria-label="Trailer">
+    <div class="wrap">
+      <div class="trailer-frame">
+        <video id="trailer" preload="none" playsinline poster="media/trailer-poster-v4.jpg" width="1920" height="1080">
+          <source src="media/trailer-v4.mp4" type="video/mp4">
+        </video>
+        <button class="trailer-play" type="button" id="trailerPlay"><span aria-hidden="true">▶</span> Watch the trailer <span class="trailer-len">0:24</span></button>
+      </div>
+    </div>
+  </section>
 
   <section class="install" aria-labelledby="get-h">
     <div class="wrap install-grid">

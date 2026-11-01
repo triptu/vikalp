@@ -442,3 +442,21 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   .vk-panel .vk-list button { padding-block: 3px; }
   .vk-panel-h { margin-bottom: 4px; }
 }
+
+/* the trailer: a sheet of paper with one play button, native controls once it plays */
+.trailer { padding-block: 24px 96px; }
+.trailer-frame {
+  /* the trailer is filmed on light paper, in either theme */
+  --poster-ink: oklch(0.25 0.014 60); --poster-paper: oklch(0.962 0.014 82);
+  position: relative; background: var(--sheet); box-shadow: 0 0 0 1px var(--rule), var(--shadow-pop); }
+.trailer-frame video { display: block; width: 100%; height: auto; }
+.trailer-play {
+  position: absolute; left: 24px; bottom: 24px; display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 18px; border: 1px solid var(--poster-ink); background: var(--poster-ink); color: var(--poster-paper); cursor: pointer;
+  font: 700 var(--step--1)/1 var(--mono); transition: background-color var(--dur), color var(--dur);
+}
+.trailer-play:hover { background: var(--poster-paper); color: var(--poster-ink); }
+.trailer-play:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.trailer-len { font-weight: 400; opacity: 0.75; }
+.trailer-frame.is-playing .trailer-play { display: none; }
+@media (max-width: 520px) { .trailer-play { left: 10px; bottom: 10px; padding: 8px 11px; font-size: 13px; } }
