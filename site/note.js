@@ -117,18 +117,19 @@ window.Vikalp = (() => {
   /* ---------- small motion helpers ---------- */
   const wait = d => new Promise(done => setTimeout(done, d));
 
-  // A copy of a cut line slides in a straight line between the text and Overflow.
-  function fly(text, from, to, d) {
+  // A copy of a cut line slides in a straight line between the text and Overflow,
+  // fading between the opacities in `fade`. Resolves with the copy; the caller removes it.
+  function fly(text, from, to, d, fade = [0.4, 1]) {
     const ghost = document.createElement('div');
     ghost.className = 'vk-fly';
     ghost.textContent = text;
     Object.assign(ghost.style, { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px' });
     document.body.append(ghost);
     const anim = ghost.animate([
-      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: 0.4 },
-      { transform: 'none', opacity: 1 },
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: fade[0] },
+      { transform: 'none', opacity: fade[1] },
     ], { duration: d, easing: EASE });
-    return anim.finished.then(() => ghost.remove(), () => ghost.remove());
+    return anim.finished.then(() => ghost, () => ghost);
   }
 
   // Run a DOM change, then ease the element's height from what it was to what it is.
@@ -307,8 +308,16 @@ window.Vikalp = (() => {
     }
 
     /* Moving a line to Overflow and back. One motion at a time: the line
-       leaves, then its paragraph closes; going back, the paragraph opens,
-       then the line arrives. */
+       leaves as a card that flies to Overflow, then its paragraph closes
+       around a ‸. Going back is the same in reverse: the card lifts out of
+       Overflow and flies to the ‸, then the paragraph opens and the line
+       settles into it as the card fades. */
+    // Where the line starts in the text, kept inside the note so the card never hangs over the panel.
+    function spot(el, width) {
+      const line = el.getClientRects()[0] || el.getBoundingClientRect();
+      const box = body.getBoundingClientRect();
+      return { left: Math.max(box.left, Math.min(line.left, box.right - width)), top: line.top, width };
+    }
     async function moveCut(r, out, animate = true) {
       if (r.busy || r.on === out) return;
       const d = animate ? ms('--dur-slow') : 0;
@@ -316,21 +325,29 @@ window.Vikalp = (() => {
       r.busy = true;
       await setTray('overflow', animate);
       if (out) {
-        const from = r.el.getBoundingClientRect();
         if (d) {
           const slot = overflow.getBoundingClientRect();
+          const from = spot(r.el, slot.width);
           r.el.style.visibility = 'hidden';
-          await fly(r.seg.cut, { left: from.left, top: from.top }, { left: slot.left, top: slot.top, width: slot.width }, d);
+          (await fly(r.seg.cut, from, { left: slot.left, top: slot.top, width: slot.width }, d)).remove();
         }
         await easeHeight(r.p, () => { r.on = true; update(); r.el.style.visibility = ''; }, close);
       } else {
-        const from = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`).getBoundingClientRect();
-        await easeHeight(r.p, () => { r.on = false; update(); if (d) r.el.style.visibility = 'hidden'; }, close);
+        let ghost = null;
         if (d) {
-          const to = r.el.getBoundingClientRect();
-          await fly(r.seg.cut, { left: from.left, top: from.top }, { left: to.left, top: to.top, width: from.width }, d);
-          r.el.style.visibility = '';
+          const row = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`);
+          const from = row.getBoundingClientRect();
+          row.style.visibility = 'hidden';
+          ghost = await fly(r.seg.cut, from, spot(r.el, from.width), d, [1, 0.4]);
         }
+        const opened = easeHeight(r.p, () => { r.on = false; update(); }, close);
+        if (ghost) {
+          const settle = { duration: close, easing: EASE };
+          r.el.animate([{ opacity: 0 }, { opacity: 1 }], settle);
+          await Promise.all([opened, ghost.animate([{ opacity: 0.4 }, { opacity: 0 }], settle).finished.catch(() => {})]);
+          ghost.remove();
+        }
+        await opened;
       }
       r.busy = false;
     }
