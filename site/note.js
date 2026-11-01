@@ -457,7 +457,7 @@ window.Vikalp = (() => {
     }
     function renderLab(after) {
       host.querySelectorAll('[data-trim]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.trim === note.trim)));
-      const struck = recs.filter(r => r.type === 'strike' && r.struck());
+      const struck = counted().filter(r => r.type === 'strike' && r.struck());
       const before = after + struck.reduce((n, r) => n + countWords(r.seg.strike), 0);
       host.querySelector('.vk-trimnums').textContent = note.trim ? `${before} words, cut to ${after}` : 'Pick a trim to see what a model would cut.';
     }
