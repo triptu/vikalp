@@ -321,6 +321,8 @@
     tour.play().catch(() => {});
   }
   document.getElementById('trailerPlay').addEventListener('click', () => playTour('short'));
+  // However playback starts, the play button goes.
+  tour.addEventListener('play', () => { tourFrame.classList.add('is-playing'); tour.controls = true; });
   tour.addEventListener('click', () => { if (!tour.controls) playTour('short'); });
   document.getElementById('tourFull').addEventListener('click', () => {
     playTour('full');
