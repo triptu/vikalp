@@ -77,15 +77,35 @@
     fade: on => story.fade('fade', on),
     cut: (on, animate) => story.cut('tv', on, animate),
     ai: (on, animate) => (on ? story.addAI('sleep', AI_VERSIONS, animate) : story.removeAI('sleep')),
-    lint: on => story.group('lint', on),
+    lint: on => story.lint(on),
     lab: on => story.lab(on),
     clean: on => { story.setClean(on); return wait(400); },
   };
 
-  // One change at a time. Scrolling past several steps at once applies the
-  // skipped ones without motion, so the note never plays catch-up.
+  // In a narrow note, the paragraph each step acts on and the panel section the tray shows.
+  const VIEWS = [
+    { paragraph: 0, tray: 'versions' },
+    { paragraph: 1, tray: 'versions' },
+    { paragraph: 1, tray: 'overflow' },
+    { paragraph: 0, tray: 'versions' },
+    { paragraph: 2, tray: 'lint' },
+    { paragraph: 1, tray: 'lab' },
+    { paragraph: 1, tray: 'lab' },
+  ];
+
+  // One change at a time. Going forward, a narrow note first turns to the
+  // step's paragraph and then changes; going back, it changes and then turns.
+  // Scrolling past several steps at once applies the skipped ones without
+  // motion, so the note never plays catch-up.
   let target = 0, back = false, running = false;
   const applied = {};
+  async function run(change, animate) {
+    if (animate) return change(true);
+    root.classList.add('vk-instant');
+    await change(false);
+    void noteHost.offsetHeight;
+    root.classList.remove('vk-instant');
+  }
   async function settle() {
     if (running) return;
     running = true;
@@ -93,18 +113,12 @@
       const want = STATES[target];
       const differs = k => !!want[k] !== !!applied[k];
       const key = (back ? [...ORDER].reverse() : ORDER).find(differs);
-      if (!key) break;
       const animate = !reduced.matches && ORDER.filter(differs).length <= 1;
+      if (!back || !key) await run(a => story.view(VIEWS[target], a), animate);
+      if (!key) break;
       applied[key] = !!want[key];
-      if (animate) {
-        await CHANGES[key](applied[key], true);
-        await wait(80);
-      } else {
-        root.classList.add('vk-instant');
-        await CHANGES[key](applied[key], false);
-        void noteHost.offsetHeight;
-        root.classList.remove('vk-instant');
-      }
+      await run(a => CHANGES[key](applied[key], a), animate);
+      if (animate) await wait(80);
     }
     running = false;
   }
@@ -129,7 +143,6 @@
     back = i < active;
     active = i;
     steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
-    Vikalp.hidePop();
     target = i;
     settle();
   }

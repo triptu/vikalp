@@ -1,6 +1,6 @@
 /* Vikalp note: a small working model of the plugin's editor.
 
-   window.Vikalp = { createSpan, createNote, hidePop }
+   window.Vikalp = { createSpan, createNote }
 
    createSpan(el, versions, opts) turns an element into a span with versions.
      versions: ['a', 'b', 'ai:c'] (an "ai:" prefix marks an AI version)
@@ -12,9 +12,13 @@
        { versions: [...], kind, id }       blue underline and dots; click swaps
        { fade: 'text', id }                faded text; click brings it back
        { strike: 'text', level: 1 to 3 }   struck by a Lab trim of that level or more
-       { lint: 'text', rule, why, fix }    wavy mark; a popover names the rule
+       { lint: 'text', rule, why, fix }    wavy mark; the side panel names the rule
        { cut: 'text', id }                 a line that can move to Overflow
-     Fade, cut and lint start off; the page turns them on with set() and group().
+     Fade, cut and lint start off; the page turns them on with fade(), cut() and lint().
+
+   The side panel holds Versions, Overflow, Lint and the Lab. In a note narrower
+   than 620px it becomes a tray under the text that shows one section at a time,
+   and the text shows one paragraph at a time; view() picks both.
 
    Every animation reads its duration from the CSS tokens, so under
    prefers-reduced-motion (durations of 0ms) states change instantly. */
@@ -43,42 +47,6 @@ window.Vikalp = (() => {
     e.preventDefault();
     span.step(e.key === 'ArrowRight' ? 1 : -1);
   });
-
-  /* one popover, shared by every note */
-  const pop = document.createElement('div');
-  pop.className = 'vk-pop';
-  pop.setAttribute('aria-hidden', 'true');
-  document.body.append(pop);
-  let popOwner = null, popTimer = 0, popScroll = 0;
-  function showPop(owner, html, anchor) {
-    clearTimeout(popTimer);
-    popOwner = owner;
-    popScroll = scrollY;
-    pop.innerHTML = html;
-    pop.classList.add('show');
-    pop.setAttribute('aria-hidden', 'false');
-    const rects = anchor.getClientRects();
-    const r = rects[rects.length - 1] || anchor.getBoundingClientRect();
-    const left = Math.max(16, Math.min(r.left, root.clientWidth - pop.offsetWidth - 16));
-    pop.style.left = (left + scrollX) + 'px';
-    pop.style.top = (r.bottom + scrollY + 12) + 'px';
-  }
-  function hidePop(delay = 0) {
-    clearTimeout(popTimer);
-    const go = () => { popOwner = null; pop.classList.remove('show'); pop.setAttribute('aria-hidden', 'true'); };
-    delay ? (popTimer = setTimeout(go, delay)) : go();
-  }
-  pop.addEventListener('mouseenter', () => clearTimeout(popTimer));
-  pop.addEventListener('mouseleave', () => hidePop(150));
-  pop.addEventListener('click', e => {
-    const b = e.target.closest('[data-pick]');
-    if (b && popOwner) popOwner.pick(+b.dataset.pick);
-  });
-  document.addEventListener('pointerdown', e => {
-    if (popOwner && !pop.contains(e.target) && !popOwner.el.contains(e.target)) hidePop();
-  });
-  addEventListener('resize', () => hidePop());
-  addEventListener('scroll', () => { if (popOwner && Math.abs(scrollY - popScroll) > 60) hidePop(); }, { passive: true });
 
   const versionRows = (versions, current) => versions.map((v, k) =>
     `<li><button type="button" data-pick="${k}" class="${k === current ? 'on' : ''}${v.fresh ? ' is-new' : ''}" aria-pressed="${k === current}">` +
@@ -191,10 +159,11 @@ window.Vikalp = (() => {
           '<div class="vk-status"><span class="vk-count"><span class="vk-wc"></span><span class="vk-state"></span></span>' +
           '<button class="vk-switch" type="button" role="switch" aria-checked="false"><span class="vk-track" aria-hidden="true"></span>Read it clean</button></div>' +
         '</div>' +
-        '<aside class="vk-panel" aria-label="Side panel">' +
-          '<section class="vk-sec"><p class="vk-panel-h">Versions</p><ul class="vk-list"></ul></section>' +
-          '<section class="vk-sec"><p class="vk-panel-h">Overflow</p><div class="vk-overflow"></div></section>' +
-          '<section class="vk-sec vk-sec--lab" hidden><p class="vk-panel-h">The Lab</p>' +
+        '<aside class="vk-panel" aria-label="Side panel" data-tray="versions">' +
+          '<section class="vk-sec" data-sec="versions"><p class="vk-panel-h">Versions</p><ul class="vk-list"></ul></section>' +
+          '<section class="vk-sec" data-sec="overflow"><p class="vk-panel-h">Overflow</p><div class="vk-overflow"></div></section>' +
+          '<section class="vk-sec" data-sec="lint" hidden><p class="vk-panel-h">Lint</p><div class="vk-lintbox" aria-live="polite"></div></section>' +
+          '<section class="vk-sec" data-sec="lab" hidden><p class="vk-panel-h">The Lab</p>' +
             '<div class="vk-trims" role="group" aria-label="Trim">' +
             [1, 2, 3].map(l => `<button type="button" data-trim="${l}" aria-pressed="false">${TRIMS[l]}</button>`).join('') +
             '</div><p class="vk-trimnums"></p></section>' +
@@ -205,13 +174,17 @@ window.Vikalp = (() => {
     const panel = host.querySelector('.vk-panel');
     const versionList = host.querySelector('.vk-list');
     const overflow = host.querySelector('.vk-overflow');
-    const labSec = host.querySelector('.vk-sec--lab');
+    const lintBox = host.querySelector('.vk-lintbox');
+    const sec = name => host.querySelector(`[data-sec="${name}"]`);
     const sw = host.querySelector('.vk-switch');
-    const panelShown = () => panel.offsetWidth > 40;
+    const paras = [];
+    // matches the container query in style.css
+    const isTray = () => host.clientWidth <= 620;
 
     data.paragraphs.forEach(segs => {
       const p = document.createElement('p');
       p.className = 'vk-p';
+      paras.push(p);
       segs.forEach(seg => {
         const r = makeSeg(seg);
         r.p = p;
@@ -248,9 +221,8 @@ window.Vikalp = (() => {
         r.span = createSpan(el, seg.versions, {
           kind: seg.kind,
           disabled: () => note.clean,
-          onChange: () => { focus(r); update(); if (popOwner === r.span) popVersions(r); },
-          onEnter: () => { if (note.clean) return; focus(r); if (!panelShown()) popVersions(r); },
-          onLeave: () => { if (popOwner === r.span && document.activeElement !== el) hidePop(150); },
+          onChange: () => { focus(r); setTray('versions'); update(); },
+          onEnter: () => { if (!note.clean) focus(r); },
         });
         r.text = () => r.span.current().text;
         return r;
@@ -296,23 +268,17 @@ window.Vikalp = (() => {
         el.textContent = seg.lint;
         r.live = () => note.groups.lint && !r.fixed;
         r.text = () => (r.fixed && seg.fix ? seg.fix : seg.lint);
-        r.pick = () => { r.fixed = true; el.textContent = r.text(); hidePop(); update(); };
-        r.show = () => {
-          if (note.clean || !r.live()) return;
-          showPop(r, `<p class="rule">${esc(seg.rule)}</p><p class="why">${esc(seg.why)}</p>` +
-            (seg.fix ? `<ul class="vk-list"><li><button type="button" data-pick="0"><span class="d"></span><span class="t">${esc(seg.fix)}</span><span class="tag">use it</span></button></li></ul>` : ''), el);
-        };
+        const show = () => { if (!note.clean && r.live()) { note.lintShown = r; setTray('lint'); update(); } };
         r.paint = () => {
           const on = r.live();
           el.classList.toggle('is-on', on);
+          el.classList.toggle('is-active', on && note.lintShown === r && !note.clean);
           if (on) { el.tabIndex = note.clean ? -1 : 0; el.setAttribute('aria-label', `${seg.lint}. Lint: ${seg.rule}`); }
           else clickable(el, false);
         };
-        el.addEventListener('mouseenter', r.show);
-        el.addEventListener('focus', r.show);
-        el.addEventListener('click', r.show);
-        el.addEventListener('mouseleave', () => { if (popOwner === r) hidePop(150); });
-        el.addEventListener('blur', () => { if (popOwner === r) hidePop(150); });
+        el.addEventListener('mouseenter', show);
+        el.addEventListener('focus', show);
+        el.addEventListener('click', show);
         return r;
       }
 
@@ -347,27 +313,22 @@ window.Vikalp = (() => {
       const d = animate ? ms('--dur-slow') : 0;
       const close = d * 0.7;
       r.busy = true;
+      await setTray('overflow', animate);
       if (out) {
         const from = r.el.getBoundingClientRect();
         if (d) {
-          if (panelShown()) {
-            const slot = overflow.getBoundingClientRect();
-            r.el.style.visibility = 'hidden';
-            await fly(r.seg.cut, { left: from.left, top: from.top }, { left: slot.left, top: slot.top, width: slot.width }, d);
-          } else {
-            await r.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: d, easing: EASE, fill: 'forwards' }).finished;
-          }
+          const slot = overflow.getBoundingClientRect();
+          r.el.style.visibility = 'hidden';
+          await fly(r.seg.cut, { left: from.left, top: from.top }, { left: slot.left, top: slot.top, width: slot.width }, d);
         }
-        await easeHeight(r.p, () => { r.on = true; update(); r.el.style.visibility = ''; r.el.getAnimations().forEach(a => a.cancel()); }, close);
+        await easeHeight(r.p, () => { r.on = true; update(); r.el.style.visibility = ''; }, close);
       } else {
-        const item = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`);
-        const from = item && item.getBoundingClientRect();
+        const from = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`).getBoundingClientRect();
         await easeHeight(r.p, () => { r.on = false; update(); if (d) r.el.style.visibility = 'hidden'; }, close);
         if (d) {
           const to = r.el.getBoundingClientRect();
-          if (from && panelShown()) await fly(r.seg.cut, { left: from.left, top: from.top }, { left: to.left, top: to.top, width: from.width }, d);
+          await fly(r.seg.cut, { left: from.left, top: from.top }, { left: to.left, top: to.top, width: from.width }, d);
           r.el.style.visibility = '';
-          if (!from || !panelShown()) await r.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: d, easing: EASE }).finished;
         }
       }
       r.busy = false;
@@ -377,12 +338,9 @@ window.Vikalp = (() => {
     let listed = null;
     function focus(r) {
       note.focused = r;
-      spans.forEach(x => x.el.classList.toggle('is-active', x === r && panelShown() && !note.clean));
+      const listShown = !isTray() || panel.dataset.tray === 'versions';
+      spans.forEach(x => x.el.classList.toggle('is-active', x === r && listShown && !note.clean));
       renderVersions();
-    }
-    function popVersions(r) {
-      if (note.clean) return;
-      showPop(r.span, `<ul class="vk-list">${versionRows(r.span.versions, r.span.i)}</ul><p class="count">${r.span.i + 1} of ${r.span.versions.length} versions</p>`, r.el);
     }
     function renderVersions() {
       const r = note.focused;
@@ -395,8 +353,14 @@ window.Vikalp = (() => {
     function renderOverflow() {
       const cut = recs.filter(r => r.type === 'cut' && r.on);
       overflow.innerHTML = cut.length
-        ? '<ul class="vk-olist">' + cut.map(r => `<li><button type="button" data-back="${recs.indexOf(r)}">${esc(r.seg.cut)}</button></li>`).join('') + '</ul>'
+        ? '<ul class="vk-olist">' + cut.map(r => `<li><button type="button" data-back="${recs.indexOf(r)}">${esc(r.seg.cut)}<span class="tag">put it back</span></button></li>`).join('') + '</ul>'
         : '<p class="vk-empty">Lines you cut land here.</p>';
+    }
+    function renderLint() {
+      const r = note.lintShown;
+      if (!r || !r.live()) { lintBox.innerHTML = '<p class="vk-empty">Click a wavy line to see why it’s marked.</p>'; return; }
+      lintBox.innerHTML = `<p class="vk-rule">${esc(r.seg.rule)}</p><p class="vk-why">${esc(r.seg.why)}</p>` +
+        (r.seg.fix ? `<ul class="vk-list"><li><button type="button" data-fix><span class="d"></span><span class="t">${esc(r.seg.fix)}</span><span class="tag">use it</span></button></li></ul>` : '');
     }
     function renderLab(after) {
       host.querySelectorAll('[data-trim]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.trim === note.trim)));
@@ -409,6 +373,7 @@ window.Vikalp = (() => {
       if (note.clean) return;
       const back = e.target.closest('[data-back]');
       if (back) { moveCut(recs[+back.dataset.back], false); return; }
+      if (e.target.closest('[data-fix]')) { fixLint(note.lintShown); return; }
       const trimBtn = e.target.closest('[data-trim]');
       if (trimBtn) { const l = +trimBtn.dataset.trim; trim(note.trim === l ? 0 : l); return; }
       const pick = e.target.closest('[data-pick]');
@@ -429,14 +394,35 @@ window.Vikalp = (() => {
       host.querySelector('.vk-state').textContent = extra.length ? ' · ' + extra.join(' · ') : '';
       renderVersions();
       renderOverflow();
+      renderLint();
       renderLab(count);
+    }
+
+    function fixLint(r) {
+      r.fixed = true;
+      r.el.textContent = r.text();
+      note.lintShown = recs.find(x => x.type === 'lint' && x.live()) || null;
+      update();
+    }
+
+    /* Which section the tray shows. A no-op beside a wide note, where every section shows. */
+    function setTray(name, animate = true) {
+      if (panel.dataset.tray === name) return Promise.resolve();
+      panel.dataset.tray = name;
+      focus(note.focused);
+      return wait(animate && isTray() ? ms('--dur') : 0);
+    }
+    function view({ paragraph, tray }, animate = true) {
+      const shown = paras[paragraph];
+      const moved = !shown.classList.contains('is-shown');
+      paras.forEach(p => p.classList.toggle('is-shown', p === shown));
+      return Promise.all([setTray(tray, animate), wait(moved && animate && isTray() ? ms('--dur') : 0)]);
     }
 
     function setClean(on) {
       note.clean = !!on;
       host.classList.toggle('is-clean', note.clean);
       sw.setAttribute('aria-checked', String(note.clean));
-      if (note.clean) hidePop();
       focus(note.focused);
       update();
     }
@@ -456,9 +442,14 @@ window.Vikalp = (() => {
       if (on) { r.live = true; return moveCut(r, true, animate); }
       return moveCut(r, false, animate).then(() => { r.live = false; update(); });
     }
-    function group(name, on) {
-      note.groups[name] = on;
-      if (!on && popOwner && popOwner.type === 'lint') hidePop();
+    function reveal(name, on) {
+      sec(name).hidden = !on;
+      if (on && ms('--dur') && !isTray()) sec(name).animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur'), easing: EASE });
+    }
+    function lint(on) {
+      note.groups.lint = on;
+      note.lintShown = on ? recs.find(r => r.type === 'lint' && r.live()) : null;
+      reveal('lint', on);
       update();
       return wait(ms('--dur-slow'));
     }
@@ -470,8 +461,7 @@ window.Vikalp = (() => {
     }
     function lab(on) {
       note.lab = on;
-      labSec.hidden = !on;
-      if (on && ms('--dur')) labSec.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms('--dur'), easing: EASE });
+      reveal('lab', on);
       return trim(on ? 2 : 0);
     }
     async function addAI(id, texts, animate) {
@@ -480,28 +470,27 @@ window.Vikalp = (() => {
       for (const text of texts) {
         r.span.add({ text, ai: true, fresh: animate });
         renderVersions();
-        if (popOwner === r.span) popVersions(r);
         if (animate) await wait(ms('--dur-slow'));
       }
     }
     function removeAI(id) {
       const r = byId[id];
       r.span.removeAI();
-      if (popOwner === r.span) hidePop();
       update();
       return Promise.resolve();
     }
 
     new ResizeObserver(() => focus(note.focused)).observe(host);
     note.focused = spans[0] || null;
+    paras[0].classList.add('is-shown');
     update();
 
     return {
       el: host, words, isClean: () => note.clean, setClean,
-      fade, cut, group, lab, trim, addAI, removeAI,
+      fade, cut, lint, lab, trim, addAI, removeAI, view,
       focus: id => focus(byId[id]),
     };
   }
 
-  return { createSpan, createNote, hidePop: () => hidePop() };
+  return { createSpan, createNote };
 })();
