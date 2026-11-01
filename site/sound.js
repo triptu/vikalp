@@ -2,16 +2,12 @@
    little paper on top, about 60 ms, peaking near -18 dBFS. Synthesised, so there is
    no file to load.
 
-   window.VikalpSound = { play(), on }
-     play() taps once, at most every 60 ms, with a ±3% change in pitch so repeats
-     don't sound mechanical. Call it only from the visitor's own click or key press:
-     browsers start audio only then.
-     on is the visitor's choice, kept in localStorage; it starts on. */
+   window.VikalpSound = { play() }
+     play() taps once, at most every 60 ms, with a 3% change in pitch either way so
+     repeats don't sound mechanical. Call it only from the visitor's own click or key
+     press: browsers start audio only then, and the page never plays sound by itself. */
 window.VikalpSound = (() => {
-  const KEY = 'vk-sound';
   const GAIN = 0.145;
-  let on = true;
-  try { on = localStorage.getItem(KEY) !== 'off'; } catch (e) {}
   let ctx = null, last = -Infinity, noise = null;
 
   function envelope(t, attack, decay, peak) {
@@ -55,7 +51,6 @@ window.VikalpSound = (() => {
   }
 
   function play() {
-    if (!on) return;
     const now = performance.now();
     if (now - last < 60) return;
     last = now;
@@ -66,12 +61,5 @@ window.VikalpSound = (() => {
     } catch (e) {}
   }
 
-  return {
-    play,
-    get on() { return on; },
-    set on(value) {
-      on = !!value;
-      try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) {}
-    },
-  };
+  return { play };
 })();

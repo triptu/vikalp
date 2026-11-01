@@ -1,4 +1,4 @@
-/* Page wiring: the theme and sound toggles, the hero word, the scroll story and the clip lightbox. */
+/* Page wiring: the theme toggle, the swap sound, the hero word, the scroll story and the clip lightbox. */
 (() => {
   const root = document.documentElement;
   const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
@@ -13,17 +13,10 @@
     root.dataset.theme = theme() === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('vk-theme', root.dataset.theme); } catch (e) {}
   });
-  new MutationObserver(paintThemeLabel).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-  paintThemeLabel();
+  new MutationObserver(paintThemeBtn).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  paintThemeBtn();
 
-  /* ---------- sound: a soft tap when the visitor swaps a version ---------- */
-  const soundBtn = document.getElementById('soundBtn');
-  const paintSound = () => {
-    soundBtn.setAttribute('aria-pressed', String(VikalpSound.on));
-    soundBtn.querySelector('use').setAttribute('href', VikalpSound.on ? '#ic-sound-on' : '#ic-sound-off');
-  };
-  soundBtn.addEventListener('click', () => { VikalpSound.on = !VikalpSound.on; paintSound(); });
-  paintSound();
+  /* ---------- a soft tap when the visitor swaps a version ---------- */
   document.addEventListener('vk-swap', () => VikalpSound.play());
 
   /* ---------- hero: one word, its other versions pencilled above it ---------- */
