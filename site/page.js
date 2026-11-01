@@ -143,30 +143,50 @@
   const frame = noteHost.querySelector('.vk-frame');
   let active = -1, raf = 0;
 
+  if (matchMedia('(hover: none)').matches) {
+    document.querySelectorAll('.step-try').forEach(p => { p.textContent = p.textContent.replace(/\bclick\b/g, 'tap'); });
+  }
+
+  // The narrow layout's caption: a copy of each step, stacked in one cell so the
+  // caption keeps the tallest step's height. Only the active one shows.
+  const captions = steps.map(step => {
+    const c = document.createElement('div');
+    c.className = 'story-cap';
+    c.append(...[...step.children].map(n => n.cloneNode(true)));
+    c.querySelector('.step-clip').tabIndex = -1;
+    return c;
+  });
+  captions[0].classList.add('is-active');
+  document.getElementById('storyCaption').append(...captions);
+
   // A step is its text, heading through the "In Obsidian" line, not its tall box.
   const text = k => {
     const top = steps[k].querySelector('h3').getBoundingClientRect().top;
     return { top, bottom: steps[k].querySelector('.step-keys').getBoundingClientRect().bottom };
   };
-  // Where the eye reads: the middle of the screen, level with the note's centre;
-  // on narrow screens, a little way into the space under the pinned note.
-  function readingLine() {
-    if (!narrow.matches) return innerHeight * 0.5;
-    const below = stage.getBoundingClientRect().bottom;
-    return below + (innerHeight - below) * 0.4;
-  }
-  // Scrolling down, a step starts when its heading reaches the reading line.
-  // Scrolling up, the one before comes back when its last line comes down to it.
+  // On desktop, a step starts when its heading reaches the middle of the screen
+  // going down, and the one before comes back when its last line comes down to
+  // it going up. On narrow screens the steps are empty markers under the pinned
+  // note: one starts when its top slides under the note, and ends when it comes
+  // back out a little way, so a resting thumb never flips between two.
   function pick() {
     raf = 0;
-    const line = readingLine();
     let i = active;
-    while (i < steps.length - 1 && text(i + 1).top < line) i++;
-    while (i >= 0 && (i === 0 ? text(0).top > line : text(i - 1).bottom > line)) i--;
+    if (narrow.matches) {
+      const line = stage.getBoundingClientRect().bottom;
+      const top = k => steps[k].getBoundingClientRect().top;
+      while (i < steps.length - 1 && top(i + 1) < line) i++;
+      while (i >= 0 && top(i) > line + 24) i--;
+    } else {
+      const line = innerHeight * 0.5;
+      while (i < steps.length - 1 && text(i + 1).top < line) i++;
+      while (i >= 0 && (i === 0 ? text(0).top > line : text(i - 1).bottom > line)) i--;
+    }
     if (i === active) return;
     back = i < active;
     active = i;
     steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
+    captions.forEach((c, k) => c.classList.toggle('is-active', k === Math.max(0, i)));
     target = i;
     story.mark(null);
     settle();
@@ -179,17 +199,12 @@
     const h = frame.offsetHeight;
     frame.style.minHeight = h + 'px';
     stage.style.setProperty('--stage-top', Math.max(16, Math.round((innerHeight - h) / 2)) + 'px');
-    stage.parentElement.style.setProperty('--stage-h', stage.offsetHeight + 'px');
     schedule();
   }
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', measure);
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(measure);
   measure();
-
-  if (matchMedia('(hover: none)').matches) {
-    document.querySelectorAll('.step-try').forEach(p => { p.textContent = p.textContent.replace(/\bclick\b/g, 'tap'); });
-  }
 
   /* ---------- "See it in Obsidian": the real clip in a lightbox ---------- */
   const dialog = document.getElementById('clip');
@@ -202,13 +217,20 @@
     video.currentTime = t;
     video.play().catch(() => {});
   }
-  steps.forEach(step => {
-    step.querySelector('.step-clip').addEventListener('click', () => {
+  steps.forEach((step, k) => {
+    const open = () => {
       clip = step.dataset.clip;
       document.getElementById('clipTitle').textContent = `${step.querySelector('h3').textContent}, in Obsidian`;
       dialog.showModal();
       loadClip(false);
-    });
+    };
+    const own = step.querySelector('.step-clip');
+    const copy = captions[k].querySelector('.step-clip');
+    own.addEventListener('click', open);
+    copy.addEventListener('click', open);
+    // On narrow screens the step's own button is visually hidden, so its copy shows the focus.
+    own.addEventListener('focus', () => copy.classList.toggle('is-focus', own.matches(':focus-visible')));
+    own.addEventListener('blur', () => copy.classList.remove('is-focus'));
   });
   document.getElementById('clipClose').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
