@@ -35,6 +35,14 @@
 </head>
 <body>
 
+<!-- Key and arrow icons. The fonts don't have these characters, and each device's fallback draws them at its own size. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-left" viewBox="0 0 16 16"><path d="M13 8H3.5M7.5 4 3.5 8l4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-right" viewBox="0 0 16 16"><path d="M3 8h9.5M8.5 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-cmd" viewBox="0 0 16 16"><path d="M6 6V4.25A1.75 1.75 0 1 0 4.25 6H11.75A1.75 1.75 0 1 0 10 4.25V11.75A1.75 1.75 0 1 0 11.75 10H4.25A1.75 1.75 0 1 0 6 11.75Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-shift" viewBox="0 0 16 16"><path d="M8 2.5 2.75 8.5H5.5v5h5v-5h2.75Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></symbol>
+</svg>
+
 <header class="wrap top">
   <a class="wordmark" href="/" aria-label="Vikalp home">Vikalp <small aria-hidden="true">विकल्प</small></a>
   <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour theme">
@@ -49,7 +57,7 @@
     <h1 id="h1">
       <span class="line">Find the <span class="hero-word"><span class="alts" id="heroAlts" aria-hidden="true"></span><span id="heroWord"></span></span> word.</span>
     </h1>
-    <p class="hint">Hover a dotted word and press <span class="keys"><kbd>←</kbd> <kbd>→</kbd></span>, or tap it.</p>
+    <p class="hint"><span class="for-pointer">Hover a dotted word and press <span class="keys"><kbd><svg class="ic" role="img" aria-label="Left arrow"><use href="#ic-left"/></svg></kbd> <kbd><svg class="ic" role="img" aria-label="Right arrow"><use href="#ic-right"/></svg></kbd></span>, or click it.</span><span class="for-touch">Tap the dotted word to try another.</span></p>
     <p class="lede">Keep several versions of a word, sentence or paragraph in your note. Swap between them to read each one in place.</p>
     <div class="actions">
       <a class="btn btn-primary" href="https://community.obsidian.md/plugins/vikalp">Install in Obsidian</a>
@@ -81,7 +89,7 @@
     <div class="wrap wrap--wide">
       <div class="story-head">
         <h2 id="try-h">Try it</h2>
-        <p>Each step below does one thing to this note. You can click anything in it.</p>
+        <p class="say-tap">Each step below does one thing to this note. You can click anything in it.</p>
       </div>
       <div class="story-grid">
         <div class="story-stage" id="storyStage">
@@ -93,44 +101,44 @@
           <li class="step" data-clip="alternatives">
             <h3>Versions, in place</h3>
             <p>Keep another version of a word, a sentence or a paragraph. Swap between them to read each one in place.</p>
-            <p class="step-try hand">try: click an underlined word</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘J</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="step-try hand say-tap">try: click an underlined word</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>J</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
           <li class="step" data-clip="ghost">
             <h3>Fade, don’t delete</h3>
-            <p>Fade a sentence instead of deleting it. It stays readable, leaves the word count, and comes back with a click.</p>
-            <p class="step-try hand">try: click the faded line</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>G</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="say-tap">Fade a sentence instead of deleting it. It stays readable, leaves the word count, and comes back with a click.</p>
+            <p class="step-try hand say-tap">try: click the faded line</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>.</kbd> then <kbd>G</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
           <li class="step" data-clip="overflow">
             <h3>Keep what you cut</h3>
             <p>Move a line to Overflow, a side panel kept with the note. Put it back when it fits.</p>
-            <p class="step-try hand">try: click the ‸ to put it back</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>S</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="step-try hand say-tap">try: click the <svg class="ic ic-caret" role="img" aria-label="caret"><use href="#vk-caret"/></svg> to put it back</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>.</kbd> then <kbd>S</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
           <li class="step" data-clip="ai">
             <h3>Ideas when you’re stuck</h3>
             <p>Ask AI for a few other ways to say a word or a sentence. They sit next to your own versions, marked with a robot, and you decide what fits. Your note only changes when you pick one.</p>
-            <p class="step-try hand">try: pick a robot version</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘⇧J</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="step-try hand say-tap">try: pick a robot version</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg><svg class="ic" role="img" aria-label="Shift"><use href="#ic-shift"/></svg>J</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
           <li class="step" data-clip="lint">
             <h3>Lint when you ask</h3>
             <p>Check your note for hedging, wordy phrases, passive voice and AI-sounding lines. Edit the rules or write your own.</p>
-            <p class="step-try hand">try: click a wavy line</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>L</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="step-try hand say-tap">try: click a wavy line</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>.</kbd> then <kbd>L</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
           <li class="step" data-clip="lab">
             <h3>The Lab</h3>
             <p>Ask a model to mark typos and weak sentences, or to strike what it would cut. You keep or cut each one.</p>
-            <p class="step-try hand">try: click a struck phrase</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>T</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="step-try hand say-tap">try: click a struck phrase</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>.</kbd> then <kbd>T</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
           <li class="step" data-clip="read">
             <h3>Read it clean</h3>
             <p>Hide every marker and read your note the way a reader will.</p>
-            <p class="step-try hand">try: switch it off</p>
-            <p class="step-keys">In Obsidian: <kbd>⌘.</kbd> then <kbd>R</kbd> · <button class="step-clip" type="button">watch it</button></p>
+            <p class="step-try hand say-tap">try: switch it off</p>
+            <p class="step-keys">In Obsidian: <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>.</kbd> then <kbd>R</kbd> · <button class="step-clip" type="button">watch it</button></p>
           </li>
         </ol>
       </div>
@@ -144,8 +152,8 @@
         <a class="btn btn-primary" href="https://community.obsidian.md/plugins/vikalp">Install in Obsidian</a>
       </div>
       <ol class="install-steps">
-        <li><b>1.</b><span>In Obsidian, open Settings → Community plugins and search for Vikalp.</span></li>
-        <li><b>2.</b><span>Put the cursor on a word and press <kbd>⌘J</kbd>.</span></li>
+        <li><b>1.</b><span>In Obsidian, open Settings, then Community plugins, and search for Vikalp.</span></li>
+        <li><b>2.</b><span>Put the cursor on a word and press <kbd><svg class="ic" role="img" aria-label="Cmd"><use href="#ic-cmd"/></svg>J</kbd>.</span></li>
         <li><b>3.</b><span>For AI features, add a key for OpenRouter, Anthropic or OpenAI, or run a model locally with Ollama or LM Studio. Everything else works offline.</span></li>
       </ol>
     </div>

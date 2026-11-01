@@ -123,9 +123,20 @@ a { color: inherit; }
 .wrap--wide { max-width: var(--col-wide); }
 .hand { font: 400 var(--hand-size)/1.1 var(--hand); letter-spacing: 0.02em; color: var(--blue); }
 .keys { white-space: nowrap; }
+/* Every key is the same height and sits on the text's baseline, whether it holds a letter or an icon. */
 kbd {
-  font: 400 var(--step--2)/1 var(--mono); color: var(--ink-2);
-  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 2px 5px; white-space: nowrap;
+  display: inline-block; min-width: 1.9em; text-align: center; vertical-align: baseline;
+  font: 400 var(--step--2)/1.45 var(--mono); color: var(--ink-2);
+  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 0 5px; white-space: nowrap;
+}
+/* icons drawn in place of characters the fonts don't have, sized to the text around them */
+.ic { display: inline-block; width: 0.95em; height: 0.95em; vertical-align: -0.12em; overflow: visible; }
+kbd .ic + .ic { margin-left: 1px; }
+.step-try .ic-caret { color: var(--red); width: 0.7em; height: 0.7em; vertical-align: 0; }
+.hint .for-touch { display: none; }
+@media (hover: none) {
+  .hint .for-touch { display: inline; }
+  .hint .for-pointer { display: none; }
 }
 
 /* ---------- top bar ---------- */
@@ -302,7 +313,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .install-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
 .install-steps li { display: grid; grid-template-columns: 2.4ch 1fr; gap: 14px; font: 400 18px/1.6 var(--mono); }
 .install-steps b { color: var(--blue); }
-.install-steps kbd { font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
+.install-steps kbd { display: inline; min-width: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
 
 footer.wrap { padding-block: 48px 56px; font: 400 var(--step--1)/1.5 var(--mono); color: var(--ink-3); }
 footer .end { margin: 0 0 28px; letter-spacing: 0.6em; }
@@ -400,9 +411,10 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-strike.is-armed { cursor: pointer; }
 .vk-strike.is-struck { color: var(--ink-2); background-size: 100% 2px; }
 .vk-caret {
-  font: 400 1.3em/1 var(--hand); color: var(--red); background: none; border: 0; padding: 0 0.2em; margin: 0 -0.1em; cursor: pointer; vertical-align: -0.15em;
+  font: inherit; line-height: 1; color: var(--red); background: none; border: 0; padding: 0 0.15em; margin: 0 -0.05em; cursor: pointer;
   transition: opacity var(--dur-slow);
 }
+.vk-caret svg { display: inline-block; width: 0.85em; height: 0.85em; vertical-align: -0.05em; }
 
 /* blue pencil: lint marks */
 .vk-lint {
