@@ -186,8 +186,9 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .step h3 { font: 700 var(--step-2)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 12px; }
 .step p { margin: 0; color: var(--ink-2); }
 .step .step-try { margin-top: 16px; transform: rotate(-1.5deg); transform-origin: left center; }
+.step .step-keys { margin-top: 14px; font: 400 var(--step--1)/1.4 var(--sans); color: var(--ink-3); }
 .step-clip {
-  align-self: flex-start; margin-top: 18px; padding: 4px 0; background: none; border: 0; cursor: pointer;
+  align-self: flex-start; margin-top: 6px; padding: 4px 0; background: none; border: 0; cursor: pointer;
   font: 400 var(--step--1)/1.3 var(--sans); color: var(--ink-3);
   text-decoration: underline 1px var(--rule-strong); text-underline-offset: 4px;
   transition: color var(--dur), text-decoration-color var(--dur);
