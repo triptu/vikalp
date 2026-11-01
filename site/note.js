@@ -585,14 +585,18 @@ window.Vikalp = (() => {
     function placeMarks() {
       markFrame = 0;
       const o = host.getBoundingClientRect();
+      // Words get a little room around them; a row (a panel button) is marked to its own edges.
       const boxes = marking
-        ? marking.parts().filter(el => el && shown(el)).flatMap(el => [...el.getClientRects()]).filter(b => b.width > 1)
+        ? marking.parts().filter(el => el && shown(el)).flatMap(el => {
+          const [x, y] = getComputedStyle(el).display === 'inline' ? [3, 1] : [0, 0];
+          return [...el.getClientRects()].filter(b => b.width > 1).map(b => ({ b, x, y }));
+        })
         : [];
       const live = [...marks.children].filter(m => !m.classList.contains('is-gone'));
-      boxes.forEach((b, k) => {
+      boxes.forEach(({ b, x, y }, k) => {
         let m = live[k];
         if (!m) { m = document.createElement('i'); m.className = 'vk-mark'; m.dataset.tone = marking.tone; marks.append(m); }
-        Object.assign(m.style, { left: b.left - o.left - 3 + 'px', top: b.top - o.top - 1 + 'px', width: b.width + 6 + 'px', height: b.height + 2 + 'px' });
+        Object.assign(m.style, { left: b.left - o.left - x + 'px', top: b.top - o.top - y + 'px', width: b.width + 2 * x + 'px', height: b.height + 2 * y + 'px' });
       });
       live.slice(boxes.length).forEach(fadeMark);
     }
