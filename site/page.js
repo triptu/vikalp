@@ -83,7 +83,8 @@
   };
 
   // Each step, by its clip name: the change it makes, what it marks once the
-  // change lands (blue for versions and AI, red for cuts), and in a narrow note
+  // change lands (blue for versions and AI, red for cuts; withChange marks rows
+  // as they appear, so a row and its wash arrive together), and in a narrow note
   // the paragraph it acts on and the panel section the tray shows.
   const inNote = sel => () => [...noteHost.querySelectorAll(sel)];
   const STEPS = {
@@ -104,7 +105,7 @@
     ai: {
       change: { ai: true },
       view: { paragraph: 0, tray: 'versions', span: 'sleep' },
-      mark: { tone: 'blue', parts: () => [...inNote('.vk-list .d.ai')().map(d => d.closest('button'))] },
+      mark: { tone: 'blue', withChange: true, parts: () => inNote('.vk-list .d.ai')().map(d => d.closest('button')) },
     },
     lint: {
       change: { lint: true },
@@ -143,7 +144,7 @@
   // step's paragraph and then changes; going back, it changes and then turns.
   // Scrolling past several steps at once applies the skipped ones without
   // motion, so the note never plays catch-up.
-  let target = -1, back = false, running = false;
+  let target = -1, back = false, running = false, marked = null;
   const applied = {};
   async function run(change, animate) {
     if (animate) return change(true);
@@ -163,12 +164,14 @@
       if (!back || !key) await run(a => story.view(plan[Math.max(0, target)].view, a), animate);
       if (!key) break;
       applied[key] = !!want[key];
+      const m = plan[target]?.mark;
+      if (m?.withChange && !ORDER.some(differs)) { story.mark(m.parts, m.tone); marked = m; }
       await run(a => CHANGES[key](applied[key], a), animate);
       if (animate) await wait(80);
     }
     running = false;
     const m = plan[target]?.mark;
-    if (m) story.mark(m.parts, m.tone);
+    if (m && m !== marked) story.mark(m.parts, m.tone);
   }
 
   /* ---------- which step is being read ---------- */
@@ -241,6 +244,7 @@
     paintProgress(cap);
     target = i;
     story.mark(null);
+    marked = null;
     settle();
   }
   const schedule = () => { if (!raf) raf = requestAnimationFrame(pick); };

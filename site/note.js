@@ -23,7 +23,7 @@
 
    The side panel holds Versions, Overflow, Lint and the Lab. In a note narrower
    than 620px it becomes a tray under the text that shows one section at a time,
-   and the text shows one paragraph at a time; view() picks both, and can focus a span.
+   and the text shows one paragraph at a time; view() picks both.
 
    Every animation reads its duration from the CSS tokens, so under
    prefers-reduced-motion (durations of 0ms) states change instantly. */
@@ -590,7 +590,10 @@ window.Vikalp = (() => {
     marks.setAttribute('aria-hidden', 'true');
     host.append(marks);
     let marking = null, markFrame = 0;
-    const shown = el => el.isConnected && (!el.checkVisibility || el.checkVisibility({ opacityProperty: true, visibilityProperty: true }));
+    // A row still fading in counts as shown, so its wash fades in with it.
+    const fadingIn = el => el.getAnimations().some(a => a.playState === 'running');
+    const shown = el => el.isConnected && (!el.checkVisibility ||
+      el.checkVisibility({ visibilityProperty: true }) && (el.checkVisibility({ opacityProperty: true }) || fadingIn(el)));
     const fadeMark = m => { m.classList.add('is-gone'); setTimeout(() => m.remove(), ms('--dur')); };
     function placeMarks() {
       markFrame = 0;
@@ -598,14 +601,15 @@ window.Vikalp = (() => {
       // Words get a little room around them; a row (a panel button) is marked to its own edges.
       const boxes = marking
         ? marking.parts().filter(el => el && shown(el)).flatMap(el => {
-          const [x, y] = getComputedStyle(el).display === 'inline' ? [3, 1] : [0, 0];
-          return [...el.getClientRects()].filter(b => b.width > 1).map(b => ({ b, x, y }));
+          const row = getComputedStyle(el).display !== 'inline';
+          const [x, y] = row ? [0, 0] : [3, 1];
+          return [...el.getClientRects()].filter(b => b.width > 1).map(b => ({ b, x, y, row }));
         })
         : [];
       const live = [...marks.children].filter(m => !m.classList.contains('is-gone'));
-      boxes.forEach(({ b, x, y }, k) => {
+      boxes.forEach(({ b, x, y, row }, k) => {
         let m = live[k];
-        if (!m) { m = document.createElement('i'); m.className = 'vk-mark'; m.dataset.tone = marking.tone; marks.append(m); }
+        if (!m) { m = document.createElement('i'); m.className = row ? 'vk-mark is-row' : 'vk-mark'; m.dataset.tone = marking.tone; marks.append(m); }
         Object.assign(m.style, { left: b.left - o.left - x + 'px', top: b.top - o.top - y + 'px', width: b.width + 2 * x + 'px', height: b.height + 2 * y + 'px' });
       });
       live.slice(boxes.length).forEach(fadeMark);

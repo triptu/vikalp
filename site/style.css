@@ -538,6 +538,8 @@ footer a { color: var(--ink-2); text-underline-offset: 3px; text-decoration-colo
 .vk-mark[data-tone="red"] { background: var(--red-mark); }
 .vk-mark.is-gone { opacity: 0; }
 @keyframes vk-draw { from { transform: scaleX(0); } }
+/* a row's wash fades in with the row, as one piece */
+.vk-mark.is-row { animation-name: vk-in; }
 .is-clean .vk-marks { opacity: 0; }
 
 /* a cut line on its way between the text and Overflow */
