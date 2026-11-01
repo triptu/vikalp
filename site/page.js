@@ -88,8 +88,8 @@
   const inNote = sel => () => [...noteHost.querySelectorAll(sel)];
   const STEPS = {
     alternatives: {
-      view: { paragraph: 0, tray: 'versions' },
-      mark: { tone: 'blue', parts: () => [story.part('hard'), story.part('sleep')] },
+      view: { paragraph: 0, tray: 'versions', span: 'hard' },
+      mark: { tone: 'blue', parts: () => [story.part('hard')] },
     },
     ghost: {
       change: { fade: true },
@@ -103,8 +103,8 @@
     },
     ai: {
       change: { ai: true },
-      view: { paragraph: 0, tray: 'versions' },
-      mark: { tone: 'blue', parts: () => [story.part('sleep'), ...inNote('.vk-list .d.ai')().map(d => d.closest('button'))] },
+      view: { paragraph: 0, tray: 'versions', span: 'sleep' },
+      mark: { tone: 'blue', parts: () => [...inNote('.vk-list .d.ai')().map(d => d.closest('button'))] },
     },
     lint: {
       change: { lint: true },

@@ -23,7 +23,7 @@
 
    The side panel holds Versions, Overflow, Lint and the Lab. In a note narrower
    than 620px it becomes a tray under the text that shows one section at a time,
-   and the text shows one paragraph at a time; view() picks both.
+   and the text shows one paragraph at a time; view() picks both, and can focus a span.
 
    Every animation reads its duration from the CSS tokens, so under
    prefers-reduced-motion (durations of 0ms) states change instantly. */
@@ -429,7 +429,9 @@ window.Vikalp = (() => {
 
     /* the focused span fills the Versions list */
     let listed = null;
+    // Only the focused span shows as active, so moving focus lifts any step's pencil marks.
     function focus(r) {
+      if (r !== note.focused && marking) mark(null);
       note.focused = r;
       const listShown = !isTray() || panel.dataset.tray === 'versions';
       spans.forEach(x => x.el.classList.toggle('is-active', x === r && listShown && !note.clean));
@@ -510,7 +512,8 @@ window.Vikalp = (() => {
       focus(note.focused);
       return wait(animate && isTray() ? ms('--dur') : 0);
     }
-    function view({ paragraph, tray }, animate = true) {
+    function view({ paragraph, tray, span }, animate = true) {
+      if (span) focus(byId[span]);
       const shown = paras[paragraph];
       const moved = !shown.classList.contains('is-shown');
       paras.forEach(p => p.classList.toggle('is-shown', p === shown));
