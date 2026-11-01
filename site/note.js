@@ -4,7 +4,11 @@
 
    createSpan(el, versions, opts) turns an element into a span with versions.
      versions: ['a', 'b', 'ai:c'] (an "ai:" prefix marks an AI version)
-     opts: { kind, onChange(span), onEnter(span), onLeave(span), disabled() }
+     opts: { kind, glide, onChange(span), onEnter(span), onLeave(span), disabled() }
+     With glide, a swap eases the span's width from the old version to the new one,
+     so the text after it moves along instead of jumping. For a span on one line.
+     A swap fires a bubbling "vk-swap" event on el right away, inside the click or
+     key press that caused it. Only the visitor swaps; nothing in the note does.
 
    createNote(host, data) renders a note and wires every interaction.
      data: { title, paragraphs: [[segment, ...], ...] }
@@ -34,12 +38,14 @@ window.Vikalp = (() => {
   };
   const EASE = 'cubic-bezier(.2, .7, .2, 1)';
   const robot = () => '<svg class="vk-robot" aria-hidden="true"><use href="#vk-robot"/></svg>';
+  const tap = matchMedia('(hover: none)').matches ? 'Tap' : 'Click';
 
   document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="vk-robot" viewBox="0 0 16 16"><path d="M8 1.5v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><circle cx="8" cy="1.4" r="1" fill="currentColor"/><rect x="2.5" y="4" width="11" height="9" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="6" cy="8.2" r="1.2" fill="currentColor"/><circle cx="10" cy="8.2" r="1.2" fill="currentColor"/><path d="M6 11h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M1 8v2M15 8v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="vk-caret" viewBox="0 0 16 16"><path d="M3.5 13.5C5 10.4 6.6 6.9 8.1 3c1.5 3.8 3 7.2 4.6 10.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   </svg>`);
 
-  /* ← → go to the focused span, or else the hovered one */
+  /* Left and right arrows go to the focused span, or else the hovered one */
   let hovered = null;
   document.addEventListener('keydown', e => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -66,7 +72,8 @@ window.Vikalp = (() => {
     el.innerHTML = '<span class="vk-v-text"></span><span class="vk-anchor" aria-hidden="true"><span class="vk-dots"></span></span>';
     const text = el.querySelector('.vk-v-text');
     const dots = el.querySelector('.vk-dots');
-    let timer = 0;
+    let timer = 0, widthAnim = null;
+    if (opts.glide) el.classList.add('vk-glide');
 
     const paintDots = () => {
       dots.innerHTML = versions.map((v, k) => `<i class="${v.ai ? 'ai' : ''}${k === span.i ? ' on' : ''}"></i>`).join('');
@@ -86,7 +93,9 @@ window.Vikalp = (() => {
       if (k === span.i) return;
       span.prev = span.i;
       span.i = k;
+      el.dispatchEvent(new CustomEvent('vk-swap', { bubbles: true }));
       paintDots();
+      if (opts.glide) { glide(); return; }
       const d = ms('--dur-fast');
       clearTimeout(timer);
       const done = () => { paintText(); text.classList.remove('is-swapping'); opts.onChange && opts.onChange(span); };
@@ -94,6 +103,32 @@ window.Vikalp = (() => {
       text.classList.add('is-swapping');
       timer = setTimeout(done, d);
     };
+    // The old version lifts out on top while the new one settles in below it, and
+    // the slot between them eases to the new width. A swap during a swap starts
+    // from wherever the width and the fading text are, so nothing jumps.
+    function glide() {
+      const d = ms('--dur-glide');
+      const from = el.getBoundingClientRect().width;
+      const leaving = text.cloneNode(true);
+      leaving.className = 'vk-v-out';
+      leaving.style.opacity = getComputedStyle(text).opacity;
+      if (widthAnim) widthAnim.cancel();
+      text.getAnimations().forEach(a => a.cancel());
+      el.querySelectorAll('.vk-v-out').forEach(o => o.remove());
+      el.style.width = '';
+      paintText();
+      opts.onChange && opts.onChange(span);
+      if (!d) return;
+      const to = el.getBoundingClientRect().width;
+      el.prepend(leaving);
+      const lift = '-0.16em', settle = '0.16em';
+      leaving.animate([{ transform: 'none' }, { opacity: 0, transform: `translateY(${lift})` }], { duration: d * 0.45, easing: 'ease-out', fill: 'forwards' })
+        .finished.then(() => leaving.remove(), () => leaving.remove());
+      text.animate([{ opacity: 0, transform: `translateY(${settle})` }, { opacity: 1, transform: 'none' }], { duration: d * 0.6, delay: d * 0.4, easing: EASE, fill: 'backwards' });
+      widthAnim = el.animate([{ width: from + 'px' }, { width: to + 'px' }], { duration: d, easing: EASE });
+      widthAnim.finished.then(() => { widthAnim = null; }, () => {});
+    }
+
     span.step = d => span.set(span.i + d);
     span.pick = k => span.set(k);
     span.add = v => { versions.push(v); paintDots(); };
@@ -307,7 +342,7 @@ window.Vikalp = (() => {
         return r;
       }
 
-      // a cut line: in the text, or in Overflow with a red ‸ where it was
+      // a cut line: in the text, or in Overflow with a red caret where it was
       r.type = 'cut';
       r.live = false;
       r.on = false;
@@ -319,7 +354,7 @@ window.Vikalp = (() => {
           r.state = state;
           el.className = state === 'back' ? 'vk-cut-back' : '';
           el.innerHTML = r.on
-            ? '<button type="button" class="vk-caret" aria-label="A line was cut here and moved to Overflow. Click to put it back.">‸</button>'
+            ? '<button type="button" class="vk-caret" aria-label="A line was cut here and moved to Overflow. Click to put it back."><svg aria-hidden="true"><use href="#vk-caret"/></svg></button>'
             : esc(seg.cut);
         }
         const caret = el.querySelector('.vk-caret');
@@ -332,8 +367,8 @@ window.Vikalp = (() => {
 
     /* Moving a line to Overflow and back. One motion at a time: the line
        leaves as a card that flies to Overflow, then its paragraph closes
-       around a ‸. Going back, the paragraph opens a space for the line while
-       the card flies to the ‸ and shrinks into it; only once the card is gone
+       around a caret. Going back, the paragraph opens a space for the line while
+       the card flies to the caret and shrinks into it; only once the card is gone
        does the line fade in, so the two copies never show at once. */
     // Where the line starts in the text, kept inside the note so the card never hangs over the panel.
     function spot(el, width) {
@@ -353,7 +388,7 @@ window.Vikalp = (() => {
       const left = Math.max(box.left - inset, Math.min(rows[0].left - inset, box.right - size.width + inset));
       return { left, top: rows[rows.length - 1].bottom - size.height };
     }
-    // Where the ‸ stood: the restored line's first character, less the card's inset.
+    // Where the caret stood: the restored line's first character, less the card's inset.
     function caretSpot(el, card) {
       const row = el.getClientRects()[0];
       const style = getComputedStyle(card);
@@ -412,7 +447,7 @@ window.Vikalp = (() => {
     }
     function renderLint() {
       const r = note.lintShown;
-      if (!r || !r.live()) { lintBox.innerHTML = '<p class="vk-empty">Click a wavy line to see why it’s marked.</p>'; return; }
+      if (!r || !r.live()) { lintBox.innerHTML = `<p class="vk-empty">${tap} a wavy line to see why it’s marked.</p>`; return; }
       lintBox.innerHTML = `<p class="vk-rule">${esc(r.seg.rule)}</p><p class="vk-why">${esc(r.seg.why)}</p>` +
         (r.seg.fix ? `<ul class="vk-list"><li><button type="button" data-fix><span class="d"></span><span class="t">${esc(r.seg.fix)}</span><span class="tag">use it</span></button></li></ul>` : '');
     }
@@ -420,7 +455,7 @@ window.Vikalp = (() => {
       host.querySelectorAll('[data-trim]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.trim === note.trim)));
       const struck = recs.filter(r => r.type === 'strike' && r.struck());
       const before = after + struck.reduce((n, r) => n + countWords(r.seg.strike), 0);
-      host.querySelector('.vk-trimnums').textContent = note.trim ? `${before} → ${after} words` : 'Pick a trim to see what a model would cut.';
+      host.querySelector('.vk-trimnums').textContent = note.trim ? `${before} words, cut to ${after}` : 'Pick a trim to see what a model would cut.';
     }
 
     panel.addEventListener('click', e => {
@@ -447,8 +482,8 @@ window.Vikalp = (() => {
       host.querySelector('.vk-wc').textContent = plural(count, 'word', 'words');
       host.querySelector('.vk-state').textContent = extra.length ? ' · ' + extra.join(' · ') : '';
       host.querySelector('.vk-fadebox').textContent = faded
-        ? 'The faded line stays in the note and leaves the word count. Tap it to bring it back.'
-        : 'The line is back in the word count. Tap it to fade it again.';
+        ? `The faded line stays in the note and leaves the word count. ${tap} it to bring it back.`
+        : `The line is back in the word count. ${tap} it to fade it again.`;
       renderVersions();
       renderOverflow();
       renderLint();

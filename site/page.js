@@ -1,4 +1,4 @@
-/* Page wiring: the theme toggle, the hero word, the scroll story and the clip lightbox. */
+/* Page wiring: the theme toggle, the swap sound, the hero word, the scroll story and the clip lightbox. */
 (() => {
   const root = document.documentElement;
   const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
@@ -7,14 +7,22 @@
   const wait = d => new Promise(done => setTimeout(done, d));
 
   /* ---------- theme toggle ---------- */
-  const themeLabel = document.getElementById('themeLabel');
-  const paintThemeLabel = () => { themeLabel.textContent = theme() === 'dark' ? 'Light' : 'Dark'; };
-  document.getElementById('themeBtn').addEventListener('click', () => {
+  // The button shows where it goes: a sun in dark mode, a moon in light mode.
+  const themeBtn = document.getElementById('themeBtn');
+  const paintThemeBtn = () => {
+    const label = `Switch to ${theme() === 'dark' ? 'light' : 'dark'} theme`;
+    themeBtn.setAttribute('aria-label', label);
+    themeBtn.title = label;
+  };
+  themeBtn.addEventListener('click', () => {
     root.dataset.theme = theme() === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('vk-theme', root.dataset.theme); } catch (e) {}
   });
-  new MutationObserver(paintThemeLabel).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-  paintThemeLabel();
+  new MutationObserver(paintThemeBtn).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  paintThemeBtn();
+
+  /* ---------- a soft tap when the visitor swaps a version ---------- */
+  document.addEventListener('vk-swap', () => VikalpSound.play());
 
   /* ---------- hero: one word, its other versions pencilled above it ---------- */
   const heroAlts = document.getElementById('heroAlts');
@@ -30,7 +38,7 @@
       return [b];
     }));
   };
-  paintAlts(Vikalp.createSpan(document.getElementById('heroWord'), ['right', 'exact', 'plain', 'true'], { onChange: paintAlts }));
+  paintAlts(Vikalp.createSpan(document.getElementById('heroWord'), ['right', 'exact', 'plain', 'true'], { glide: true, onChange: paintAlts }));
 
   /* ---------- the story's note ---------- */
   const noteHost = document.getElementById('storyNote');
@@ -168,8 +176,12 @@
   const frame = noteHost.querySelector('.vk-frame');
   let active = -1, raf = 0;
 
+  // Touch screens tap rather than click. Only text is rewritten, so icons in a hint stay.
   if (matchMedia('(hover: none)').matches) {
-    document.querySelectorAll('.step-try').forEach(p => { p.textContent = p.textContent.replace(/\bclick\b/g, 'tap'); });
+    document.querySelectorAll('.say-tap').forEach(p => {
+      const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) n.data = n.data.replace(/\bclick\b/g, 'tap').replace(/\bClick\b/g, 'Tap');
+    });
   }
 
   // The phone caption: a copy of each phone step, stacked in one cell so the

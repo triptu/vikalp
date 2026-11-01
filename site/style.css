@@ -65,6 +65,7 @@
   --dur-fast: 140ms;   /* version crossfade */
   --dur:      220ms;   /* hovers, small fades */
   --dur-slow: 420ms;   /* each story change */
+  --dur-glide: 260ms;  /* the hero word's slot easing to a new width */
   --ease:     cubic-bezier(.2, .7, .2, 1);
 }
 :root[data-theme="dark"] {
@@ -97,10 +98,10 @@
   --grain-blend:  soft-light;
 }
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
+  :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; --dur-glide: 0ms; }
 }
 /* the story skipping past several steps at once */
-:root.vk-instant { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
+:root.vk-instant { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; --dur-glide: 0ms; }
 
 /* ---------- page ---------- */
 * { box-sizing: border-box; }
@@ -123,9 +124,20 @@ a { color: inherit; }
 .wrap--wide { max-width: var(--col-wide); }
 .hand { font: 400 var(--hand-size)/1.1 var(--hand); letter-spacing: 0.02em; color: var(--blue); }
 .keys { white-space: nowrap; }
+/* Every key is the same height and sits on the text's baseline, whether it holds a letter or an icon. */
 kbd {
-  font: 400 var(--step--2)/1 var(--mono); color: var(--ink-2);
-  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 2px 5px; white-space: nowrap;
+  display: inline-block; min-width: 1.9em; text-align: center; vertical-align: baseline;
+  font: 400 var(--step--2)/1.45 var(--mono); color: var(--ink-2);
+  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 0 5px; white-space: nowrap;
+}
+/* icons drawn in place of characters the fonts don't have, sized to the text around them */
+.ic { display: inline-block; width: 0.95em; height: 0.95em; vertical-align: -0.12em; overflow: visible; }
+kbd .ic + .ic { margin-left: 1px; }
+.step-try .ic-caret { color: var(--red); width: 0.7em; height: 0.7em; vertical-align: 0; }
+.hint .for-touch { display: none; }
+@media (hover: none) {
+  .hint .for-touch { display: inline; }
+  .hint .for-pointer { display: none; }
 }
 
 /* ---------- top bar ---------- */
@@ -133,12 +145,20 @@ kbd {
 .wordmark { font: 700 22px/1 var(--mono); letter-spacing: -0.01em; text-decoration: none; display: inline-flex; align-items: baseline; gap: 10px; }
 .wordmark small { font: 300 19px/1 var(--hand-deva); color: var(--blue); transform: rotate(-4deg) translateY(-3px); display: inline-block; }
 .theme-btn {
-  font: 400 var(--step--1)/1 var(--mono); color: var(--ink-2); background: none; border: 1px solid var(--rule-strong);
-  padding: 8px 12px; border-radius: 2px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center;
+  position: relative; width: 38px; height: 38px; padding: 0; flex: none;
+  color: var(--ink-2); background: none; border: 1px solid var(--rule-strong); border-radius: 2px; cursor: pointer;
   transition: color var(--dur), border-color var(--dur);
 }
 .theme-btn:hover { color: var(--ink); border-color: var(--ink-2); }
-.theme-btn svg { width: 14px; height: 14px; }
+/* both icons sit in one place; switching crossfades and turns them a little. The page itself flips at once. */
+.theme-btn svg {
+  position: absolute; inset: 0; margin: auto; width: 18px; height: 18px;
+  transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+}
+.theme-btn .theme-sun, :root[data-theme="dark"] .theme-btn .theme-moon { opacity: 0; transform: rotate(-45deg); }
+:root[data-theme="dark"] .theme-btn .theme-sun { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .theme-btn svg { transition: none; } }
+@media (max-width: 860px), (pointer: coarse) { .theme-btn { width: 44px; height: 44px; } }
 
 /* ---------- hero ---------- */
 .hero { padding-block: clamp(48px, 8vh, 88px) clamp(64px, 10vh, 112px); }
@@ -174,6 +194,9 @@ h1 .line { display: block; }
 /* the hero word is a note span, scaled up */
 h1 .vk-v { text-decoration-thickness: 3px; text-underline-offset: 0.16em; text-decoration-skip-ink: none; }
 h1 .vk-anchor .vk-dots { top: calc(100% + 0.06em); gap: 6px; right: 0.04em; }
+/* the slot's underline and dots where the text's own underline and dots were */
+h1 .vk-glide::after { height: 3px; bottom: calc(0.28em - 3px); }
+h1 .vk-glide .vk-anchor { bottom: 0.1em; }
 h1 .vk-dots i { width: 9px; height: 9px; border-width: 1.5px; }
 
 h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin: 0; }
@@ -302,7 +325,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .install-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
 .install-steps li { display: grid; grid-template-columns: 2.4ch 1fr; gap: 14px; font: 400 18px/1.6 var(--mono); }
 .install-steps b { color: var(--blue); }
-.install-steps kbd { font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
+.install-steps kbd { display: inline; min-width: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
 
 footer.wrap { padding-block: 48px 56px; font: 400 var(--step--1)/1.5 var(--mono); color: var(--ink-3); }
 footer .end { margin: 0 0 28px; letter-spacing: 0.6em; }
@@ -320,6 +343,8 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   .alts { font-size: 24px; }
   h1 .vk-dots i { width: 6px; height: 6px; border-width: 1px; }
   h1 .vk-anchor .vk-dots { gap: 4px; top: calc(100% + 0.06em); }
+  h1 .vk-glide::after { bottom: calc(0.41em - 3px); }
+  h1 .vk-glide .vk-anchor { bottom: 0.21em; }
   .kicker { font-size: 14px; margin-bottom: 20px; }
   .lede { font-size: 18px; margin-top: 28px; }
   .actions { margin-top: 28px; }
@@ -375,6 +400,17 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-v:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .vk-v-text { transition: opacity var(--dur-fast) ease-out; }
 .vk-v-text.is-swapping { opacity: 0; }
+/* a gliding span: one line whose box eases between widths. The underline and dots
+   belong to the box, so they follow it; the leaving version sits on top of the new one. */
+.vk-glide { display: inline-block; position: relative; white-space: nowrap; vertical-align: baseline; text-decoration: none; }
+.vk-glide .vk-v-text { display: inline-block; }
+.vk-glide .vk-v-out { position: absolute; left: 0; top: 0; pointer-events: none; }
+.vk-glide::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: var(--glide-line, 0.12em); height: 1.5px;
+  background: var(--blue-soft); transition: background-color var(--dur-slow) var(--ease);
+}
+.vk-glide:hover::after, .vk-glide:focus-visible::after, .vk-glide.is-active::after { background: var(--blue); }
+.vk-glide .vk-anchor { position: absolute; right: 0; top: 0; bottom: 0; }
 /* an empty inline anchor: unlike an inline-block, it adds no line break before trailing punctuation */
 .vk-anchor { position: relative; }
 .vk-anchor .vk-dots { position: absolute; right: 0; top: calc(100% + 0.22em); }
@@ -400,9 +436,10 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-strike.is-armed { cursor: pointer; }
 .vk-strike.is-struck { color: var(--ink-2); background-size: 100% 2px; }
 .vk-caret {
-  font: 400 1.3em/1 var(--hand); color: var(--red); background: none; border: 0; padding: 0 0.2em; margin: 0 -0.1em; cursor: pointer; vertical-align: -0.15em;
+  font: inherit; line-height: 1; color: var(--red); background: none; border: 0; padding: 0 0.15em; margin: 0 -0.05em; cursor: pointer;
   transition: opacity var(--dur-slow);
 }
+.vk-caret svg { display: inline-block; width: 0.85em; height: 0.85em; vertical-align: -0.05em; }
 
 /* blue pencil: lint marks */
 .vk-lint {
