@@ -38,7 +38,7 @@
       return [b];
     }));
   };
-  paintAlts(Vikalp.createSpan(document.getElementById('heroWord'), ['right', 'exact', 'plain', 'true'], { onChange: paintAlts }));
+  paintAlts(Vikalp.createSpan(document.getElementById('heroWord'), ['right', 'exact', 'plain', 'true'], { glide: true, onChange: paintAlts }));
 
   /* ---------- the story's note ---------- */
   const noteHost = document.getElementById('storyNote');

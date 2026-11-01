@@ -65,6 +65,7 @@
   --dur-fast: 140ms;   /* version crossfade */
   --dur:      220ms;   /* hovers, small fades */
   --dur-slow: 420ms;   /* each story change */
+  --dur-glide: 260ms;  /* the hero word's slot easing to a new width */
   --ease:     cubic-bezier(.2, .7, .2, 1);
 }
 :root[data-theme="dark"] {
@@ -97,10 +98,10 @@
   --grain-blend:  soft-light;
 }
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
+  :root { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; --dur-glide: 0ms; }
 }
 /* the story skipping past several steps at once */
-:root.vk-instant { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; }
+:root.vk-instant { --dur-fast: 0ms; --dur: 0ms; --dur-slow: 0ms; --dur-glide: 0ms; }
 
 /* ---------- page ---------- */
 * { box-sizing: border-box; }
@@ -193,6 +194,9 @@ h1 .line { display: block; }
 /* the hero word is a note span, scaled up */
 h1 .vk-v { text-decoration-thickness: 3px; text-underline-offset: 0.16em; text-decoration-skip-ink: none; }
 h1 .vk-anchor .vk-dots { top: calc(100% + 0.06em); gap: 6px; right: 0.04em; }
+/* the slot's underline and dots where the text's own underline and dots were */
+h1 .vk-glide::after { height: 3px; bottom: calc(0.28em - 3px); }
+h1 .vk-glide .vk-anchor { bottom: 0.1em; }
 h1 .vk-dots i { width: 9px; height: 9px; border-width: 1.5px; }
 
 h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin: 0; }
@@ -339,6 +343,8 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   .alts { font-size: 24px; }
   h1 .vk-dots i { width: 6px; height: 6px; border-width: 1px; }
   h1 .vk-anchor .vk-dots { gap: 4px; top: calc(100% + 0.06em); }
+  h1 .vk-glide::after { bottom: calc(0.41em - 3px); }
+  h1 .vk-glide .vk-anchor { bottom: 0.21em; }
   .kicker { font-size: 14px; margin-bottom: 20px; }
   .lede { font-size: 18px; margin-top: 28px; }
   .actions { margin-top: 28px; }
@@ -394,6 +400,17 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-v:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .vk-v-text { transition: opacity var(--dur-fast) ease-out; }
 .vk-v-text.is-swapping { opacity: 0; }
+/* a gliding span: one line whose box eases between widths. The underline and dots
+   belong to the box, so they follow it; the leaving version sits on top of the new one. */
+.vk-glide { display: inline-block; position: relative; white-space: nowrap; vertical-align: baseline; text-decoration: none; }
+.vk-glide .vk-v-text { display: inline-block; }
+.vk-glide .vk-v-out { position: absolute; left: 0; top: 0; pointer-events: none; }
+.vk-glide::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: var(--glide-line, 0.12em); height: 1.5px;
+  background: var(--blue-soft); transition: background-color var(--dur-slow) var(--ease);
+}
+.vk-glide:hover::after, .vk-glide:focus-visible::after, .vk-glide.is-active::after { background: var(--blue); }
+.vk-glide .vk-anchor { position: absolute; right: 0; top: 0; bottom: 0; }
 /* an empty inline anchor: unlike an inline-block, it adds no line break before trailing punctuation */
 .vk-anchor { position: relative; }
 .vk-anchor .vk-dots { position: absolute; right: 0; top: calc(100% + 0.22em); }

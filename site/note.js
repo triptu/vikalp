@@ -4,7 +4,9 @@
 
    createSpan(el, versions, opts) turns an element into a span with versions.
      versions: ['a', 'b', 'ai:c'] (an "ai:" prefix marks an AI version)
-     opts: { kind, onChange(span), onEnter(span), onLeave(span), disabled() }
+     opts: { kind, glide, onChange(span), onEnter(span), onLeave(span), disabled() }
+     With glide, a swap eases the span's width from the old version to the new one,
+     so the text after it moves along instead of jumping. For a span on one line.
      A swap fires a bubbling "vk-swap" event on el right away, inside the click or
      key press that caused it. Only the visitor swaps; nothing in the note does.
 
@@ -70,7 +72,8 @@ window.Vikalp = (() => {
     el.innerHTML = '<span class="vk-v-text"></span><span class="vk-anchor" aria-hidden="true"><span class="vk-dots"></span></span>';
     const text = el.querySelector('.vk-v-text');
     const dots = el.querySelector('.vk-dots');
-    let timer = 0;
+    let timer = 0, widthAnim = null;
+    if (opts.glide) el.classList.add('vk-glide');
 
     const paintDots = () => {
       dots.innerHTML = versions.map((v, k) => `<i class="${v.ai ? 'ai' : ''}${k === span.i ? ' on' : ''}"></i>`).join('');
@@ -92,6 +95,7 @@ window.Vikalp = (() => {
       span.i = k;
       el.dispatchEvent(new CustomEvent('vk-swap', { bubbles: true }));
       paintDots();
+      if (opts.glide) { glide(); return; }
       const d = ms('--dur-fast');
       clearTimeout(timer);
       const done = () => { paintText(); text.classList.remove('is-swapping'); opts.onChange && opts.onChange(span); };
@@ -99,6 +103,32 @@ window.Vikalp = (() => {
       text.classList.add('is-swapping');
       timer = setTimeout(done, d);
     };
+    // The old version lifts out on top while the new one settles in below it, and
+    // the slot between them eases to the new width. A swap during a swap starts
+    // from wherever the width and the fading text are, so nothing jumps.
+    function glide() {
+      const d = ms('--dur-glide');
+      const from = el.getBoundingClientRect().width;
+      const leaving = text.cloneNode(true);
+      leaving.className = 'vk-v-out';
+      leaving.style.opacity = getComputedStyle(text).opacity;
+      if (widthAnim) widthAnim.cancel();
+      text.getAnimations().forEach(a => a.cancel());
+      el.querySelectorAll('.vk-v-out').forEach(o => o.remove());
+      el.style.width = '';
+      paintText();
+      opts.onChange && opts.onChange(span);
+      if (!d) return;
+      const to = el.getBoundingClientRect().width;
+      el.prepend(leaving);
+      const lift = '-0.16em', settle = '0.16em';
+      leaving.animate([{ transform: 'none' }, { opacity: 0, transform: `translateY(${lift})` }], { duration: d * 0.45, easing: 'ease-out', fill: 'forwards' })
+        .finished.then(() => leaving.remove(), () => leaving.remove());
+      text.animate([{ opacity: 0, transform: `translateY(${settle})` }, { opacity: 1, transform: 'none' }], { duration: d * 0.6, delay: d * 0.4, easing: EASE, fill: 'backwards' });
+      widthAnim = el.animate([{ width: from + 'px' }, { width: to + 'px' }], { duration: d, easing: EASE });
+      widthAnim.finished.then(() => { widthAnim = null; }, () => {});
+    }
+
     span.step = d => span.set(span.i + d);
     span.pick = k => span.set(k);
     span.add = v => { versions.push(v); paintDots(); };
