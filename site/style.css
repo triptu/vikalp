@@ -174,7 +174,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 
 /* ---------- the story ---------- */
 .story { padding-top: clamp(56px, 8vh, 88px); border-top: 1px solid var(--rule); }
-.story-head { max-width: 640px; }
+.story-head { max-width: 640px; margin-bottom: 48px; }
 .story-head p { margin: 12px 0 0; color: var(--ink-2); }
 .story-grid { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 0 64px; align-items: start; }
 .story-stage { grid-column: 2; grid-row: 1; position: sticky; top: var(--stage-top, 40px); }
