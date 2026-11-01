@@ -164,6 +164,8 @@ kbd .ic + .ic { margin-left: 1px; }
 .hero { padding-block: clamp(48px, 8vh, 88px) clamp(64px, 10vh, 112px); }
 .kicker { font: 400 15px/1.4 var(--mono); color: var(--ink-2); margin: 0 0 28px; display: flex; align-items: center; gap: 12px; }
 .kicker::before { content: ""; width: 28px; height: 1px; background: var(--rule-strong); }
+/* a phone wraps the kicker; split it evenly and drop the rule so both lines start at the same edge */
+@media (max-width: 520px) { .kicker { display: block; text-wrap: balance; } .kicker::before { display: none; } }
 h1 { font: 700 var(--step-4)/1.3 var(--mono); letter-spacing: -0.04em; margin: 0; padding-top: 0.35em; }
 h1 .line { display: block; }
 .hero-word { position: relative; display: inline-block; }
@@ -189,7 +191,6 @@ h1 .line { display: block; }
 .btn-ghost { color: var(--ink); background: transparent; border-color: var(--rule-strong); }
 .btn-ghost:hover { border-color: var(--ink); }
 .btn svg { width: 16px; height: 16px; }
-.meta { font: 400 var(--step--1)/1.4 var(--sans); color: var(--ink-3); margin: 18px 0 0; }
 
 /* the hero word is a note span, scaled up */
 h1 .vk-v { text-decoration-thickness: 3px; text-underline-offset: 0.16em; text-decoration-skip-ink: none; }
@@ -205,7 +206,6 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 /* the bottom padding is the space the pinned note keeps when it releases above the install section */
 .story { padding-block: clamp(56px, 8vh, 88px) 80px; border-top: 1px solid var(--rule); }
 .story-head { max-width: 640px; margin-bottom: 48px; }
-.story-head p { margin: 12px 0 0; color: var(--ink-2); }
 .story-grid { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 0 64px; align-items: start; }
 .story-stage { grid-column: 2; grid-row: 1; position: sticky; top: var(--stage-top, 40px); }
 /* tall enough for the side panel at its fullest (the Lab step) */
@@ -328,7 +328,6 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .install-steps kbd { display: inline; min-width: 0; font: inherit; font-weight: 700; color: inherit; border: 0; padding: 0; }
 
 footer.wrap { padding-block: 48px 56px; font: 400 var(--step--1)/1.5 var(--mono); color: var(--ink-3); }
-footer .end { margin: 0 0 28px; letter-spacing: 0.6em; }
 footer a { color: var(--ink-2); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
 footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 
@@ -579,13 +578,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   box-shadow: 0 14px 32px -10px oklch(0.2 0.02 60 / 0.7), 0 2px 6px -2px oklch(0.2 0.02 60 / 0.4);
 }
 .trailer-play:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
-.tour-label {
-  position: absolute; z-index: 1; left: 50%; top: calc(50% + 64px); translate: -50% 0; pointer-events: none;
-  font: 400 var(--step--1)/1 var(--mono); color: var(--ink); white-space: nowrap;
-  padding: 6px 10px; background: var(--paper); box-shadow: 0 0 0 1px var(--rule);
-}
-.trailer-frame.is-playing .tour-label { display: none; }
-.trailer-frame.is-playing .trailer-play { display: none; }
+.trailer-frame.is-playing .trailer-frame.is-playing .trailer-play { display: none; }
 .tour-more { margin: 14px 0 0; font: 400 var(--step--1)/1.4 var(--sans); color: var(--ink-3); text-align: center; }
 .tour-full {
   padding: 2px 0; background: none; border: 0; cursor: pointer; font: inherit; color: var(--ink-2);
@@ -598,5 +591,4 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   .trailer { padding-bottom: 56px; }
   .trailer-play { width: 60px; height: 60px; }
   .trailer-play svg { width: 24px; height: 24px; margin-left: 3px; }
-  .tour-label { top: calc(50% + 42px); font-size: 12px; }
-}
+  }
