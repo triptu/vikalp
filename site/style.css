@@ -150,6 +150,8 @@ kbd .ic + .ic { margin-left: 1px; }
 }
 .theme-btn:hover { color: var(--ink); border-color: var(--ink-2); }
 .theme-btn svg { width: 14px; height: 14px; }
+.top-actions { display: flex; gap: 8px; }
+.sound-btn { padding-inline: 10px; }
 
 /* ---------- hero ---------- */
 .hero { padding-block: clamp(48px, 8vh, 88px) clamp(64px, 10vh, 112px); }

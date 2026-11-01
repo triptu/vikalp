@@ -1,4 +1,4 @@
-/* Page wiring: the theme toggle, the hero word, the scroll story and the clip lightbox. */
+/* Page wiring: the theme and sound toggles, the hero word, the scroll story and the clip lightbox. */
 (() => {
   const root = document.documentElement;
   const theme = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
@@ -15,6 +15,16 @@
   });
   new MutationObserver(paintThemeLabel).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   paintThemeLabel();
+
+  /* ---------- sound: a soft tap when the visitor swaps a version ---------- */
+  const soundBtn = document.getElementById('soundBtn');
+  const paintSound = () => {
+    soundBtn.setAttribute('aria-pressed', String(VikalpSound.on));
+    soundBtn.querySelector('use').setAttribute('href', VikalpSound.on ? '#ic-sound-on' : '#ic-sound-off');
+  };
+  soundBtn.addEventListener('click', () => { VikalpSound.on = !VikalpSound.on; paintSound(); });
+  paintSound();
+  document.addEventListener('vk-swap', () => VikalpSound.play());
 
   /* ---------- hero: one word, its other versions pencilled above it ---------- */
   const heroAlts = document.getElementById('heroAlts');

@@ -5,6 +5,8 @@
    createSpan(el, versions, opts) turns an element into a span with versions.
      versions: ['a', 'b', 'ai:c'] (an "ai:" prefix marks an AI version)
      opts: { kind, onChange(span), onEnter(span), onLeave(span), disabled() }
+     A swap fires a bubbling "vk-swap" event on el right away, inside the click or
+     key press that caused it. Only the visitor swaps; nothing in the note does.
 
    createNote(host, data) renders a note and wires every interaction.
      data: { title, paragraphs: [[segment, ...], ...] }
@@ -88,6 +90,7 @@ window.Vikalp = (() => {
       if (k === span.i) return;
       span.prev = span.i;
       span.i = k;
+      el.dispatchEvent(new CustomEvent('vk-swap', { bubbles: true }));
       paintDots();
       const d = ms('--dur-fast');
       clearTimeout(timer);
