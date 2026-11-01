@@ -60,16 +60,8 @@
     ],
   });
 
-  /* ---------- the story: each step is a state of the note ---------- */
+  /* ---------- the story: each step makes one change to the note ---------- */
   const AI_VERSIONS = ['I stayed still and let him sleep.', 'I didn’t move until Unnao.'];
-  const STATES = [{}];
-  const then = change => STATES.push({ ...STATES[STATES.length - 1], ...change });
-  then({ fade: true });
-  then({ cut: true });
-  then({ ai: true });
-  then({ lint: true });
-  then({ lint: false, lab: true });
-  then({ clean: true });
 
   // The order changes land in going forward; going back, they lift off in reverse.
   const ORDER = ['fade', 'cut', 'ai', 'lint', 'lab', 'clean'];
@@ -82,28 +74,62 @@
     clean: on => { story.setClean(on); return wait(400); },
   };
 
-  // What each step marks once its change lands: blue for versions and AI, red for cuts.
+  // Each step, by its clip name: the change it makes, what it marks once the
+  // change lands (blue for versions and AI, red for cuts), and in a narrow note
+  // the paragraph it acts on and the panel section the tray shows.
   const inNote = sel => () => [...noteHost.querySelectorAll(sel)];
-  const MARKS = [
-    { tone: 'blue', parts: () => [story.part('hard'), story.part('sleep')] },
-    { tone: 'red', parts: () => [story.part('fade')] },
-    { tone: 'red', parts: inNote('.vk-caret, .vk-olist button') },
-    { tone: 'blue', parts: () => [story.part('sleep'), ...inNote('.vk-list .d.ai')().map(d => d.closest('button'))] },
-    { tone: 'blue', parts: inNote('.vk-lint.is-on') },
-    { tone: 'red', parts: inNote('.vk-strike.is-struck') },
-    null,
-  ];
-
-  // In a narrow note, the paragraph each step acts on and the panel section the tray shows.
-  const VIEWS = [
-    { paragraph: 0, tray: 'versions' },
-    { paragraph: 1, tray: 'fade' },
-    { paragraph: 1, tray: 'overflow' },
-    { paragraph: 0, tray: 'versions' },
-    { paragraph: 2, tray: 'lint' },
-    { paragraph: 1, tray: 'lab' },
-    { paragraph: 1, tray: 'lab' },
-  ];
+  const STEPS = {
+    alternatives: {
+      view: { paragraph: 0, tray: 'versions' },
+      mark: { tone: 'blue', parts: () => [story.part('hard'), story.part('sleep')] },
+    },
+    ghost: {
+      change: { fade: true },
+      view: { paragraph: 1, tray: 'fade' },
+      mark: { tone: 'red', parts: () => [story.part('fade')] },
+    },
+    overflow: {
+      change: { cut: true },
+      view: { paragraph: 1, tray: 'overflow' },
+      mark: { tone: 'red', parts: inNote('.vk-caret, .vk-olist button') },
+    },
+    ai: {
+      change: { ai: true },
+      view: { paragraph: 0, tray: 'versions' },
+      mark: { tone: 'blue', parts: () => [story.part('sleep'), ...inNote('.vk-list .d.ai')().map(d => d.closest('button'))] },
+    },
+    lint: {
+      change: { lint: true },
+      view: { paragraph: 2, tray: 'lint' },
+      mark: { tone: 'blue', parts: inNote('.vk-lint.is-on') },
+    },
+    lab: {
+      change: { lint: false, lab: true },
+      view: { paragraph: 1, tray: 'lab' },
+      mark: { tone: 'red', parts: inNote('.vk-strike.is-struck') },
+    },
+    read: {
+      change: { clean: true },
+      view: { paragraph: 1, tray: 'lab' },
+    },
+  };
+  // Phones get four steps; the other three stay out of the page there.
+  const LAYOUTS = {
+    wide: ['alternatives', 'ghost', 'overflow', 'ai', 'lint', 'lab', 'read'],
+    phone: ['alternatives', 'ghost', 'ai', 'lab'],
+  };
+  const steps = [...document.querySelectorAll('.step')];
+  // The current layout's steps in order, each with the whole note state it leads to.
+  function layout() {
+    const names = LAYOUTS[narrow.matches ? 'phone' : 'wide'];
+    steps.forEach(s => { s.hidden = !names.includes(s.dataset.clip); });
+    let state = {};
+    return names.map(name => {
+      state = { ...state, ...STEPS[name].change };
+      return { ...STEPS[name], state, el: steps.find(s => s.dataset.clip === name) };
+    });
+  }
+  let plan = layout();
 
   // One change at a time. Going forward, a narrow note first turns to the
   // step's paragraph and then changes; going back, it changes and then turns.
@@ -122,24 +148,23 @@
     if (running) return;
     running = true;
     for (;;) {
-      const want = STATES[Math.max(0, target)];
+      const want = plan[Math.max(0, target)].state;
       const differs = k => !!want[k] !== !!applied[k];
       const key = (back ? [...ORDER].reverse() : ORDER).find(differs);
       const animate = !reduced.matches && ORDER.filter(differs).length <= 1;
-      if (!back || !key) await run(a => story.view(VIEWS[Math.max(0, target)], a), animate);
+      if (!back || !key) await run(a => story.view(plan[Math.max(0, target)].view, a), animate);
       if (!key) break;
       applied[key] = !!want[key];
       await run(a => CHANGES[key](applied[key], a), animate);
       if (animate) await wait(80);
     }
     running = false;
-    const m = MARKS[target];
+    const m = plan[target]?.mark;
     if (m) story.mark(m.parts, m.tone);
   }
 
   /* ---------- which step is being read ---------- */
   const stage = document.getElementById('storyStage');
-  const steps = [...document.querySelectorAll('.step')];
   const frame = noteHost.querySelector('.vk-frame');
   let active = -1, raf = 0;
 
@@ -147,22 +172,34 @@
     document.querySelectorAll('.step-try').forEach(p => { p.textContent = p.textContent.replace(/\bclick\b/g, 'tap'); });
   }
 
-  // The narrow layout's caption: a copy of each step, stacked in one cell so the
-  // caption keeps the tallest step's height. Only the active one shows.
-  const captions = steps.map(step => {
+  // The phone caption: a copy of each phone step, stacked in one cell so the
+  // caption keeps the tallest step's height. Only the active one shows. Above
+  // them, a row of dots says which step this is and that more follow.
+  const capSteps = LAYOUTS.phone.map(name => steps.find(s => s.dataset.clip === name));
+  const captions = capSteps.map(step => {
     const c = document.createElement('div');
     c.className = 'story-cap';
     c.append(...[...step.children].map(n => n.cloneNode(true)));
     c.querySelector('.step-clip').tabIndex = -1;
     return c;
   });
+  const progress = document.createElement('p');
+  progress.className = 'story-progress';
+  progress.innerHTML = capSteps.map(() => '<i></i>').join('') + '<span></span>';
+  const dots = [...progress.querySelectorAll('i')];
+  const paintProgress = k => {
+    dots.forEach((d, n) => d.classList.toggle('on', n === k));
+    progress.lastChild.textContent = `${k + 1} of ${capSteps.length}`;
+  };
+  document.getElementById('storyCaption').append(progress, ...captions);
   captions[0].classList.add('is-active');
-  document.getElementById('storyCaption').append(...captions);
+  paintProgress(0);
 
+  const el = k => plan[k].el;
   // A step is its text, heading through the "In Obsidian" line, not its tall box.
   const text = k => {
-    const top = steps[k].querySelector('h3').getBoundingClientRect().top;
-    return { top, bottom: steps[k].querySelector('.step-keys').getBoundingClientRect().bottom };
+    const top = el(k).querySelector('h3').getBoundingClientRect().top;
+    return { top, bottom: el(k).querySelector('.step-keys').getBoundingClientRect().bottom };
   };
   // On desktop, a step starts when its heading reaches the middle of the screen
   // going down, and the one before comes back when its last line comes down to
@@ -171,36 +208,48 @@
   // back out a little way, so a resting thumb never flips between two.
   function pick() {
     raf = 0;
-    let i = active;
+    let i = Math.max(-1, active);
+    const last = plan.length - 1;
     if (narrow.matches) {
       const line = stage.getBoundingClientRect().bottom;
-      const top = k => steps[k].getBoundingClientRect().top;
-      while (i < steps.length - 1 && top(i + 1) < line) i++;
+      const top = k => el(k).getBoundingClientRect().top;
+      while (i < last && top(i + 1) < line) i++;
       while (i >= 0 && top(i) > line + 24) i--;
     } else {
       const line = innerHeight * 0.5;
-      while (i < steps.length - 1 && text(i + 1).top < line) i++;
+      while (i < last && text(i + 1).top < line) i++;
       while (i >= 0 && (i === 0 ? text(0).top > line : text(i - 1).bottom > line)) i--;
     }
     if (i === active) return;
     back = i < active;
     active = i;
-    steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
-    captions.forEach((c, k) => c.classList.toggle('is-active', k === Math.max(0, i)));
+    steps.forEach(s => s.classList.toggle('is-active', s === plan[i]?.el));
+    const cap = Math.max(0, i);
+    captions.forEach((c, k) => c.classList.toggle('is-active', k === cap));
+    paintProgress(cap);
     target = i;
     story.mark(null);
     settle();
   }
   const schedule = () => { if (!raf) raf = requestAnimationFrame(pick); };
 
-  // The note keeps one height through every step, and on desktop sits in the middle of the screen.
+  // The note keeps one height through every step. On desktop it sits in the
+  // middle of the screen; on phones CSS centres the note and caption together.
   function measure() {
     frame.style.minHeight = '';
     const h = frame.offsetHeight;
     frame.style.minHeight = h + 'px';
     stage.style.setProperty('--stage-top', Math.max(16, Math.round((innerHeight - h) / 2)) + 'px');
+    stage.style.setProperty('--stage-h', stage.offsetHeight + 'px');
     schedule();
   }
+  // Crossing the phone breakpoint swaps the step list; the note then settles
+  // into the state of whichever step is on screen in the new list.
+  narrow.addEventListener('change', () => {
+    plan = layout();
+    active = -2;
+    measure();
+  });
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', measure);
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(measure);
@@ -217,7 +266,7 @@
     video.currentTime = t;
     video.play().catch(() => {});
   }
-  steps.forEach((step, k) => {
+  steps.forEach(step => {
     const open = () => {
       clip = step.dataset.clip;
       document.getElementById('clipTitle').textContent = `${step.querySelector('h3').textContent}, in Obsidian`;
@@ -225,8 +274,9 @@
       loadClip(false);
     };
     const own = step.querySelector('.step-clip');
-    const copy = captions[k].querySelector('.step-clip');
     own.addEventListener('click', open);
+    const copy = captions[capSteps.indexOf(step)]?.querySelector('.step-clip');
+    if (!copy) return;
     copy.addEventListener('click', open);
     // On narrow screens the step's own button is visually hidden, so its copy shows the focus.
     own.addEventListener('focus', () => copy.classList.toggle('is-focus', own.matches(':focus-visible')));
@@ -265,5 +315,5 @@
     tourFrame.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'center' });
   });
 
-  window.__story = { note: story, steps, active: () => active, settled: () => !running && target === active };
+  window.__story = { note: story, get steps() { return plan.map(p => p.el); }, active: () => active, settled: () => !running && target === active };
 })();
