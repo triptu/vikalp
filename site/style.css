@@ -248,6 +248,15 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   .story-cap .step-clip.is-focus { outline: 2px solid var(--blue); outline-offset: 2px; }
 }
 
+/* Short phones (an iPhone SE with Safari's bars showing is about 548px tall):
+   drop the try hint and the Obsidian line from the pinned caption and the
+   tray's extra room, so the note and the step still fit with space below. */
+@media (max-width: 860px) and (max-height: 700px) {
+  .story-cap .step-try, .story-cap .step-keys { display: none; }
+  .story-caption { padding: 10px 2px 12px; }
+  .story-note .vk-panel { --tray-h: 118px; }
+}
+
 /* ---------- the clip lightbox ---------- */
 .clip {
   width: min(1120px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0;
