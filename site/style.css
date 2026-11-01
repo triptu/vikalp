@@ -259,7 +259,9 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   .story-note .vk-frame { min-height: 0; }
   .story-note .vk-editor { padding: 12px 16px 0; }
   .story-note .vk-title { display: none; }
-  .story-note .vk-body { line-height: 1.75; margin-bottom: 10px; }
+  .story-note .vk-body { line-height: 1.95; margin-bottom: 10px; }
+  /* the dots tuck under their underline, so they never reach the next line's ascenders */
+  .story-note .vk-anchor .vk-dots { top: calc(100% + 0.12em); }
   .story-note .vk-status { padding: 6px 0 6px; row-gap: 0; }
   .story-note .vk-panel { --tray-h: 146px; }
 
@@ -304,7 +306,7 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
   .story-caption { padding-top: 10px; }
   .story-progress { margin-bottom: 8px; }
   .story-cap p { font-size: 14px; line-height: 1.45; }
-  .story-note .vk-body { line-height: 1.6; }
+  .story-note .vk-body { line-height: 1.8; }
   .story-note .vk-panel { --tray-h: 136px; }
 }
 
