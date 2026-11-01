@@ -277,10 +277,11 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
     transition: opacity var(--dur) var(--ease) calc(var(--dur-fast) * 0.5), visibility 0s;
   }
   .story-cap h3 { font: 700 var(--step-1)/1.2 var(--mono); letter-spacing: -0.015em; margin: 0 0 6px; }
-  .story-cap p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+  .story-cap p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
   .story-cap .step-try { font-size: var(--hand-size); line-height: 1.1; margin-top: 8px; transform: rotate(-1.5deg); transform-origin: left center; }
   .story-cap .step-keys { margin-top: 6px; font: 400 var(--step--2)/1.4 var(--sans); color: var(--ink-3); }
-  .story-cap .step-clip.is-focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+  /* the per-step clips are desktop recordings, unreadable this narrow; the tour covers them */
+  .step-clip, .step-clip-sep { display: none; }
 }
 
 /* Tall phones: a roomier tray, so the pinned block uses the height. */

@@ -192,7 +192,7 @@
     const c = document.createElement('div');
     c.className = 'story-cap';
     c.append(...[...step.children].map(n => n.cloneNode(true)));
-    c.querySelector('.step-clip').tabIndex = -1;
+    c.querySelectorAll('.step-clip, .step-clip-sep').forEach(n => n.remove());
     return c;
   });
   const progress = document.createElement('p');
@@ -279,20 +279,12 @@
     video.play().catch(() => {});
   }
   steps.forEach(step => {
-    const open = () => {
+    step.querySelector('.step-clip').addEventListener('click', () => {
       clip = step.dataset.clip;
       document.getElementById('clipTitle').textContent = `${step.querySelector('h3').textContent}, in Obsidian`;
       dialog.showModal();
       loadClip(false);
-    };
-    const own = step.querySelector('.step-clip');
-    own.addEventListener('click', open);
-    const copy = captions[capSteps.indexOf(step)]?.querySelector('.step-clip');
-    if (!copy) return;
-    copy.addEventListener('click', open);
-    // On narrow screens the step's own button is visually hidden, so its copy shows the focus.
-    own.addEventListener('focus', () => copy.classList.toggle('is-focus', own.matches(':focus-visible')));
-    own.addEventListener('blur', () => copy.classList.remove('is-focus'));
+    });
   });
   document.getElementById('clipClose').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
