@@ -305,7 +305,7 @@
   const tour = document.getElementById('trailer');
   const tourFrame = tour.closest('.trailer-frame');
   const tourSrc = kind => `media/tour-${kind}-${theme()}-v1`;
-  const paintPoster = () => { tour.poster = `media/tour-poster-${theme()}-v2.jpg`; };
+  const paintPoster = () => { tour.poster = `media/tour-poster-${theme()}-v3.jpg`; };
   paintPoster();
   new MutationObserver(paintPoster).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   function playTour(kind) {
