@@ -85,7 +85,7 @@
   // In a narrow note, the paragraph each step acts on and the panel section the tray shows.
   const VIEWS = [
     { paragraph: 0, tray: 'versions' },
-    { paragraph: 1, tray: 'versions' },
+    { paragraph: 1, tray: 'fade' },
     { paragraph: 1, tray: 'overflow' },
     { paragraph: 0, tray: 'versions' },
     { paragraph: 2, tray: 'lint' },

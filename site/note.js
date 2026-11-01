@@ -161,6 +161,7 @@ window.Vikalp = (() => {
         '</div>' +
         '<aside class="vk-panel" aria-label="Side panel" data-tray="versions">' +
           '<section class="vk-sec" data-sec="versions"><p class="vk-panel-h">Versions</p><ul class="vk-list"></ul></section>' +
+          '<section class="vk-sec" data-sec="fade"><p class="vk-panel-h">Faded</p><p class="vk-fadebox"></p></section>' +
           '<section class="vk-sec" data-sec="overflow"><p class="vk-panel-h">Overflow</p><div class="vk-overflow"></div></section>' +
           '<section class="vk-sec" data-sec="lint" hidden><p class="vk-panel-h">Lint</p><div class="vk-lintbox" aria-live="polite"></div></section>' +
           '<section class="vk-sec" data-sec="lab" hidden><p class="vk-panel-h">The Lab</p>' +
@@ -392,6 +393,9 @@ window.Vikalp = (() => {
       if (over) extra.push(`${over} in Overflow`);
       host.querySelector('.vk-wc').textContent = plural(count, 'word', 'words');
       host.querySelector('.vk-state').textContent = extra.length ? ' · ' + extra.join(' · ') : '';
+      host.querySelector('.vk-fadebox').textContent = faded
+        ? 'The faded line stays in the note and leaves the word count. Tap it to bring it back.'
+        : 'The line is back in the word count. Tap it to fade it again.';
       renderVersions();
       renderOverflow();
       renderLint();

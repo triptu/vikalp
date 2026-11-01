@@ -188,12 +188,10 @@ h2 { font: 700 var(--step-3)/1.15 var(--mono); letter-spacing: -0.025em; margin:
 .step .step-try { margin-top: 16px; transform: rotate(-1.5deg); transform-origin: left center; }
 .step .step-keys { margin-top: 14px; font: 400 var(--step--1)/1.4 var(--sans); color: var(--ink-3); }
 .step-clip {
-  align-self: flex-start; margin-top: 6px; padding: 4px 0; background: none; border: 0; cursor: pointer;
-  font: 400 var(--step--1)/1.3 var(--sans); color: var(--ink-3);
+  padding: 2px 0; background: none; border: 0; cursor: pointer; font: inherit; color: var(--ink-2);
   text-decoration: underline 1px var(--rule-strong); text-underline-offset: 4px;
   transition: color var(--dur), text-decoration-color var(--dur);
 }
-.step-clip::before { content: "▸ "; text-decoration: none; display: inline-block; margin-right: 4px; }
 .step-clip:hover { color: var(--ink); text-decoration-color: var(--ink-2); }
 
 /* phones and narrow windows: the note pins to the top and the steps scroll under it */
@@ -288,6 +286,8 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   font: 400 var(--step--2)/1.4 var(--mono); color: var(--ink-3);
 }
 .vk-count { min-height: 1.4em; }
+.vk-sec[data-sec="fade"] { display: none; }
+.vk-fadebox { margin: 0; font: 400 var(--step--1)/1.5 var(--sans); color: var(--ink-2); }
 .vk-wc { color: var(--ink-2); }
 
 .vk-switch {
@@ -429,10 +429,14 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
     border-left: 0; border-top: 1px solid var(--rule); padding: 10px 16px;
   }
   .vk-sec, .vk-sec[hidden] { display: block; grid-area: 1 / 1; min-width: 0; }
+  .vk-sec[data-sec="fade"] { display: block; }
+  /* count above the switch, so adding "1 in Overflow" never moves the switch */
+  .vk-status { flex-direction: column; align-items: flex-start; gap: 8px; }
   .vk-sec + .vk-sec { margin-top: 0; }
   .vk-panel[data-tray="versions"] [data-sec="versions"],
   .vk-panel[data-tray="overflow"] [data-sec="overflow"],
   .vk-panel[data-tray="lint"] [data-sec="lint"],
+  .vk-panel[data-tray="fade"] [data-sec="fade"],
   .vk-panel[data-tray="lab"] [data-sec="lab"] { opacity: 1; visibility: visible; }
   .vk-note.is-clean .vk-panel[data-tray] .vk-sec { opacity: 0.3; }
   .vk-panel .vk-list button { padding-block: 3px; }
