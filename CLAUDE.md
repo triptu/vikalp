@@ -46,6 +46,14 @@ Lower layers never import higher ones. Only `plugin/` and `views/*View.ts` impor
 - Review screenshots after UI work (`npm run shots`) in light and dark themes before calling it done.
 - Every PR description carries proof. List what was run and its result (tests, e2e, CI), and say plainly what wasn't tested. Attach any useful proof you captured (screenshots, recordings) with `gh pr create/edit --attach` (gh 2.99+): reference the local files in the body, e.g. `![Swap menu, dark](./swap-dark.png)`, and gh uploads them and swaps in the URLs. Never push proof to the repo.
 
+## Site
+
+- The site is the static `site/` folder. Vercel copies it to `public/` and deploys main to https://vikalp.tushar.ai/ (see `vercel.json`).
+- Serve it locally with `python3 -m http.server <port>` inside `site/`.
+- Before merging a site change, run `node scripts/check-site-glyphs.mjs` (every character is in the font it is set in), and look at visible changes on real phone browsers.
+- Site PRs merge without waiting for review once the checks pass. The maintainer asked for this.
+- The narrated tour videos in `site/media/tour-*` come from the maintainer's own recordings, not the explainers studio. Use them rather than generating a new trailer.
+
 ## Learned skills
 
 Repeatable workflows live in `.claude/skills/`.
