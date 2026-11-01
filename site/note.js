@@ -15,6 +15,7 @@
        { lint: 'text', rule, why, fix }    wavy mark; the side panel names the rule
        { cut: 'text', id }                 a line that can move to Overflow
      Fade, cut and lint start off; the page turns them on with fade(), cut() and lint().
+     part(id) is a segment's element; mark(parts, tone) pencils a wash over elements.
 
    The side panel holds Versions, Overflow, Lint and the Lab. In a note narrower
    than 620px it becomes a tray under the text that shows one section at a time,
@@ -117,18 +118,19 @@ window.Vikalp = (() => {
   /* ---------- small motion helpers ---------- */
   const wait = d => new Promise(done => setTimeout(done, d));
 
-  // A copy of a cut line slides in a straight line between the text and Overflow.
-  function fly(text, from, to, d) {
+  // A copy of a cut line slides in a straight line between the text and Overflow,
+  // fading between the opacities in `fade`. Resolves with the copy; the caller removes it.
+  function fly(text, from, to, d, fade = [0.4, 1]) {
     const ghost = document.createElement('div');
     ghost.className = 'vk-fly';
     ghost.textContent = text;
     Object.assign(ghost.style, { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px' });
     document.body.append(ghost);
     const anim = ghost.animate([
-      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: 0.4 },
-      { transform: 'none', opacity: 1 },
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px)`, opacity: fade[0] },
+      { transform: 'none', opacity: fade[1] },
     ], { duration: d, easing: EASE });
-    return anim.finished.then(() => ghost.remove(), () => ghost.remove());
+    return anim.finished.then(() => ghost, () => ghost);
   }
 
   // Run a DOM change, then ease the element's height from what it was to what it is.
@@ -307,8 +309,16 @@ window.Vikalp = (() => {
     }
 
     /* Moving a line to Overflow and back. One motion at a time: the line
-       leaves, then its paragraph closes; going back, the paragraph opens,
-       then the line arrives. */
+       leaves as a card that flies to Overflow, then its paragraph closes
+       around a ‸. Going back is the same in reverse: the card lifts out of
+       Overflow and flies to the ‸, then the paragraph opens and the line
+       settles into it as the card fades. */
+    // Where the line starts in the text, kept inside the note so the card never hangs over the panel.
+    function spot(el, width) {
+      const line = el.getClientRects()[0] || el.getBoundingClientRect();
+      const box = body.getBoundingClientRect();
+      return { left: Math.max(box.left, Math.min(line.left, box.right - width)), top: line.top, width };
+    }
     async function moveCut(r, out, animate = true) {
       if (r.busy || r.on === out) return;
       const d = animate ? ms('--dur-slow') : 0;
@@ -316,21 +326,29 @@ window.Vikalp = (() => {
       r.busy = true;
       await setTray('overflow', animate);
       if (out) {
-        const from = r.el.getBoundingClientRect();
         if (d) {
           const slot = overflow.getBoundingClientRect();
+          const from = spot(r.el, slot.width);
           r.el.style.visibility = 'hidden';
-          await fly(r.seg.cut, { left: from.left, top: from.top }, { left: slot.left, top: slot.top, width: slot.width }, d);
+          (await fly(r.seg.cut, from, { left: slot.left, top: slot.top, width: slot.width }, d)).remove();
         }
         await easeHeight(r.p, () => { r.on = true; update(); r.el.style.visibility = ''; }, close);
       } else {
-        const from = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`).getBoundingClientRect();
-        await easeHeight(r.p, () => { r.on = false; update(); if (d) r.el.style.visibility = 'hidden'; }, close);
+        let ghost = null;
         if (d) {
-          const to = r.el.getBoundingClientRect();
-          await fly(r.seg.cut, { left: from.left, top: from.top }, { left: to.left, top: to.top, width: from.width }, d);
-          r.el.style.visibility = '';
+          const row = overflow.querySelector(`[data-back="${recs.indexOf(r)}"]`);
+          const from = row.getBoundingClientRect();
+          row.style.visibility = 'hidden';
+          ghost = await fly(r.seg.cut, from, spot(r.el, from.width), d, [1, 0.4]);
         }
+        const opened = easeHeight(r.p, () => { r.on = false; update(); }, close);
+        if (ghost) {
+          const settle = { duration: close, easing: EASE };
+          r.el.animate([{ opacity: 0 }, { opacity: 1 }], settle);
+          await Promise.all([opened, ghost.animate([{ opacity: 0.4 }, { opacity: 0 }], settle).finished.catch(() => {})]);
+          ghost.remove();
+        }
+        await opened;
       }
       r.busy = false;
     }
@@ -484,15 +502,50 @@ window.Vikalp = (() => {
       return Promise.resolve();
     }
 
-    new ResizeObserver(() => focus(note.focused)).observe(host);
+    /* Pencil marks: a soft wash over what a step just changed, drawn on once.
+       mark(parts, tone) takes a function returning the elements to mark, so the
+       marks follow them as the note reflows; mark(null) fades them away. */
+    const marks = document.createElement('div');
+    marks.className = 'vk-marks';
+    marks.setAttribute('aria-hidden', 'true');
+    host.append(marks);
+    let marking = null, markFrame = 0;
+    const shown = el => el.isConnected && (!el.checkVisibility || el.checkVisibility({ opacityProperty: true, visibilityProperty: true }));
+    const fadeMark = m => { m.classList.add('is-gone'); setTimeout(() => m.remove(), ms('--dur')); };
+    function placeMarks() {
+      markFrame = 0;
+      const o = host.getBoundingClientRect();
+      const boxes = marking
+        ? marking.parts().filter(el => el && shown(el)).flatMap(el => [...el.getClientRects()]).filter(b => b.width > 1)
+        : [];
+      const live = [...marks.children].filter(m => !m.classList.contains('is-gone'));
+      boxes.forEach((b, k) => {
+        let m = live[k];
+        if (!m) { m = document.createElement('i'); m.className = 'vk-mark'; m.dataset.tone = marking.tone; marks.append(m); }
+        Object.assign(m.style, { left: b.left - o.left - 3 + 'px', top: b.top - o.top - 1 + 'px', width: b.width + 6 + 'px', height: b.height + 2 + 'px' });
+      });
+      live.slice(boxes.length).forEach(fadeMark);
+    }
+    const replaceMarks = () => { if (marking && !markFrame) markFrame = requestAnimationFrame(placeMarks); };
+    function mark(parts, tone = 'blue') {
+      [...marks.children].forEach(fadeMark);
+      marking = parts ? { parts, tone } : null;
+      placeMarks();
+    }
+    new MutationObserver(list => { if (list.some(m => !marks.contains(m.target))) replaceMarks(); })
+      .observe(host, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden', 'data-tray'] });
+    host.addEventListener('transitionend', replaceMarks);
+
+    new ResizeObserver(() => { focus(note.focused); replaceMarks(); }).observe(host);
     note.focused = spans[0] || null;
     paras[0].classList.add('is-shown');
     update();
 
     return {
       el: host, words, isClean: () => note.clean, setClean,
-      fade, cut, lint, lab, trim, addAI, removeAI, view,
+      fade, cut, lint, lab, trim, addAI, removeAI, view, mark,
       focus: id => focus(byId[id]),
+      part: id => byId[id] && byId[id].el,
     };
   }
 
