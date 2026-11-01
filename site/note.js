@@ -15,6 +15,7 @@
        { lint: 'text', rule, why, fix }    wavy mark; the side panel names the rule
        { cut: 'text', id }                 a line that can move to Overflow
      Fade, cut and lint start off; the page turns them on with fade(), cut() and lint().
+     part(id) is a segment's element; mark(parts, tone) pencils a wash over elements.
 
    The side panel holds Versions, Overflow, Lint and the Lab. In a note narrower
    than 620px it becomes a tray under the text that shows one section at a time,
@@ -501,15 +502,50 @@ window.Vikalp = (() => {
       return Promise.resolve();
     }
 
-    new ResizeObserver(() => focus(note.focused)).observe(host);
+    /* Pencil marks: a soft wash over what a step just changed, drawn on once.
+       mark(parts, tone) takes a function returning the elements to mark, so the
+       marks follow them as the note reflows; mark(null) fades them away. */
+    const marks = document.createElement('div');
+    marks.className = 'vk-marks';
+    marks.setAttribute('aria-hidden', 'true');
+    host.append(marks);
+    let marking = null, markFrame = 0;
+    const shown = el => el.isConnected && (!el.checkVisibility || el.checkVisibility({ opacityProperty: true, visibilityProperty: true }));
+    const fadeMark = m => { m.classList.add('is-gone'); setTimeout(() => m.remove(), ms('--dur')); };
+    function placeMarks() {
+      markFrame = 0;
+      const o = host.getBoundingClientRect();
+      const boxes = marking
+        ? marking.parts().filter(el => el && shown(el)).flatMap(el => [...el.getClientRects()]).filter(b => b.width > 1)
+        : [];
+      const live = [...marks.children].filter(m => !m.classList.contains('is-gone'));
+      boxes.forEach((b, k) => {
+        let m = live[k];
+        if (!m) { m = document.createElement('i'); m.className = 'vk-mark'; m.dataset.tone = marking.tone; marks.append(m); }
+        Object.assign(m.style, { left: b.left - o.left - 3 + 'px', top: b.top - o.top - 1 + 'px', width: b.width + 6 + 'px', height: b.height + 2 + 'px' });
+      });
+      live.slice(boxes.length).forEach(fadeMark);
+    }
+    const replaceMarks = () => { if (marking && !markFrame) markFrame = requestAnimationFrame(placeMarks); };
+    function mark(parts, tone = 'blue') {
+      [...marks.children].forEach(fadeMark);
+      marking = parts ? { parts, tone } : null;
+      placeMarks();
+    }
+    new MutationObserver(list => { if (list.some(m => !marks.contains(m.target))) replaceMarks(); })
+      .observe(host, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'hidden', 'data-tray'] });
+    host.addEventListener('transitionend', replaceMarks);
+
+    new ResizeObserver(() => { focus(note.focused); replaceMarks(); }).observe(host);
     note.focused = spans[0] || null;
     paras[0].classList.add('is-shown');
     update();
 
     return {
       el: host, words, isClean: () => note.clean, setClean,
-      fade, cut, lint, lab, trim, addAI, removeAI, view,
+      fade, cut, lint, lab, trim, addAI, removeAI, view, mark,
       focus: id => focus(byId[id]),
+      part: id => byId[id] && byId[id].el,
     };
   }
 

@@ -27,6 +27,9 @@
   --red:          oklch(0.54 0.15 34);
   --red-soft:     oklch(0.54 0.15 34 / 0.55);
   --red-wash:     oklch(0.54 0.15 34 / 0.08);
+  --blue-mark:    oklch(0.62 0.13 256 / 0.22);
+  --red-mark:     oklch(0.66 0.15 34 / 0.24);
+  --mark-blend:   multiply;
 
   --btn-bg:       var(--ink);
   --btn-text:     var(--sheet);
@@ -81,6 +84,9 @@
   --red:          oklch(0.73 0.13 40);
   --red-soft:     oklch(0.73 0.13 40 / 0.6);
   --red-wash:     oklch(0.73 0.13 40 / 0.11);
+  --blue-mark:    oklch(0.72 0.13 246 / 0.17);
+  --red-mark:     oklch(0.70 0.15 40 / 0.2);
+  --mark-blend:   normal;
   --btn-bg:       oklch(0.915 0.02 82);
   --btn-text:     oklch(0.235 0.014 66);
   --btn-hover:    color-mix(in oklch, var(--btn-bg), var(--blue) 35%);
@@ -404,6 +410,19 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-trims button[aria-pressed="true"] { color: var(--sheet); background: var(--red); font-weight: 700; }
 .vk-trims button:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 .vk-trimnums { margin: 8px 0 0; font: 400 var(--step--2)/1.4 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* pencil marks over what a story step changed: a wash drawn on left to right, once */
+.vk-marks { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; mix-blend-mode: var(--mark-blend); transition: opacity var(--dur) var(--ease); }
+.vk-mark {
+  position: absolute; border-radius: 3px 5px 3px 6px / 6px 3px 5px 3px;
+  background: var(--blue-mark);
+  transform-origin: left center; animation: vk-draw var(--dur-slow) var(--ease) both;
+  transition: opacity var(--dur) var(--ease);
+}
+.vk-mark[data-tone="red"] { background: var(--red-mark); }
+.vk-mark.is-gone { opacity: 0; }
+@keyframes vk-draw { from { transform: scaleX(0); } }
+.is-clean .vk-marks { opacity: 0; }
 
 /* a cut line on its way between the text and Overflow */
 .vk-fly {
