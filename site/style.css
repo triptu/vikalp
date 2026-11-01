@@ -400,7 +400,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   transition: background-color var(--dur), text-decoration-color var(--dur-slow) var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
-.vk-v:hover, .vk-v:focus-visible, .vk-v.is-active { background-color: var(--blue-wash); text-decoration-color: var(--blue); }
+.vk-v:focus-visible, .vk-v.is-active { background-color: var(--blue-wash); text-decoration-color: var(--blue); }
 .vk-v:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .vk-v-text { transition: opacity var(--dur-fast) ease-out; }
 .vk-v-text.is-swapping { opacity: 0; }
@@ -413,7 +413,7 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   content: ""; position: absolute; left: 0; right: 0; bottom: var(--glide-line, 0.12em); height: 1.5px;
   background: var(--blue-soft); transition: background-color var(--dur-slow) var(--ease);
 }
-.vk-glide:hover::after, .vk-glide:focus-visible::after, .vk-glide.is-active::after { background: var(--blue); }
+.vk-glide:focus-visible::after, .vk-glide.is-active::after { background: var(--blue); }
 .vk-glide .vk-anchor { position: absolute; right: 0; top: 0; bottom: 0; }
 /* an empty inline anchor: unlike an inline-block, it adds no line break before trailing punctuation */
 .vk-anchor { position: relative; }
@@ -429,7 +429,6 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
 .vk-fade { transition: color var(--dur-slow) var(--ease), background-color var(--dur); }
 .vk-fade.is-faded { color: var(--ink-faded); }
 .vk-fade.is-live, .vk-cut-back { cursor: pointer; }
-.vk-fade.is-live:hover, .vk-strike.is-armed:hover, .vk-cut-back:hover { background-color: var(--red-wash); }
 .vk-fade:focus-visible, .vk-strike:focus-visible, .vk-cut-back:focus-visible, .vk-caret:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 /* the strike is a red pencil line drawn left to right */
 .vk-strike {
@@ -452,8 +451,20 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   transition: text-decoration-color var(--dur-slow) var(--ease), background-color var(--dur-slow) var(--ease);
 }
 .vk-lint.is-on { cursor: help; text-decoration-color: var(--blue); }
-.vk-lint.is-on:hover, .vk-lint.is-active { background-color: var(--blue-wash); }
+.vk-lint.is-active { background-color: var(--blue-wash); }
 .vk-lint.is-on:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Hover washes only where there is a real pointer. A touch screen keeps
+   :hover on whatever was last tapped, which would leave a box around it. */
+@media (hover: hover) {
+  .vk-v:hover { background-color: var(--blue-wash); text-decoration-color: var(--blue); }
+  .vk-glide:hover::after { background: var(--blue); }
+  .vk-fade.is-live:hover, .vk-strike.is-armed:hover, .vk-cut-back:hover { background-color: var(--red-wash); }
+  .vk-lint.is-on:hover { background-color: var(--blue-wash); }
+  .vk-list button:hover { background: var(--blue-wash); color: var(--ink); }
+  .vk-olist button:hover { color: var(--ink); background: var(--red-wash); }
+  .vk-trims button:hover { color: var(--ink); background: var(--red-wash); }
+}
 
 /* read it clean: every marker fades away; faded text stays dim, as in the plugin */
 .is-clean .vk-v, .is-clean .vk-v:hover { text-decoration-color: transparent; background-color: transparent; cursor: text; }
@@ -482,7 +493,6 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   padding: 6px 8px; cursor: pointer; color: var(--ink-2); line-height: 1.4; border-radius: 1px;
 }
 .vk-panel .vk-list button { margin-inline: -8px; width: calc(100% + 16px); }
-.vk-list button:hover { background: var(--blue-wash); color: var(--ink); }
 .vk-list button:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
 .vk-list .on { color: var(--ink); font-weight: 600; }
 .vk-list .d { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--blue); transform: translateY(-1px); }
@@ -497,13 +507,11 @@ footer a:hover { color: var(--ink); text-decoration-color: var(--blue); }
   all: unset; box-sizing: border-box; display: block; width: 100%; padding: 8px 10px; cursor: pointer;
   font: 400 13.5px/1.45 var(--mono); color: var(--ink-2); background: var(--sheet); border: 1px solid var(--rule); border-left: 2px solid var(--red);
 }
-.vk-olist button:hover { color: var(--ink); background: var(--red-wash); }
 .vk-olist .tag { display: block; margin-top: 4px; text-align: right; font: 400 12px/1 var(--mono); color: var(--ink-3); }
 .vk-olist button:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 .vk-trims { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--rule-strong); border-radius: 2px; }
 .vk-trims button { background: none; border: 0; border-left: 1px solid var(--rule-strong); padding: 8px 0; cursor: pointer; font: 400 var(--step--2)/1 var(--mono); color: var(--ink-2); }
 .vk-trims button:first-child { border-left: 0; }
-.vk-trims button:hover { color: var(--ink); background: var(--red-wash); }
 .vk-trims button[aria-pressed="true"] { color: var(--sheet); background: var(--red); font-weight: 700; }
 .vk-trims button:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 .vk-trimnums { margin: 8px 0 0; font: 400 var(--step--2)/1.4 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
